@@ -120,6 +120,21 @@ export default function App() {
   // Identifies exactly how many operational stamp challenges exist on the interactive map
   const totalRoundsCount = tourStops.filter(s => s.id >= 4.0 && s.id <= 17.0).length;
 
+  // Pulls a dynamic character illustration asset from your Airtable list to display inside the frame
+  const getDynamicArtwork = () => {
+    if (finalCareer.includes('Tech')) {
+      const stop = tourStops.find(s => s.title.toUpperCase().includes('LAB') || s.title.toUpperCase().includes('MECHANICAL'));
+      return stop?.character || 'https://images.unsplash.com/photo-1595433707802-6b2626ef1c91?auto=format&fit=crop&w=120&q=80';
+    }
+    if (finalCareer.includes('Chef') || finalCareer.includes('Wellness')) {
+      const stop = tourStops.find(s => s.title.toUpperCase().includes('CAFE'));
+      return stop?.character || 'https://images.unsplash.com/photo-1595433707802-6b2626ef1c91?auto=format&fit=crop&w=120&q=80';
+    }
+    // Default Fallback: Marketing Turtle/Lobby Artwork
+    const defaultStop = tourStops.find(s => s.title.toUpperCase().includes('MARKETING') || s.title.toUpperCase().includes('CLINIC') || s.id === 16.0);
+    return defaultStop?.character || 'https://images.unsplash.com/photo-1595433707802-6b2626ef1c91?auto=format&fit=crop&w=120&q=80';
+  };
+
   // Setup Initial Arrival Name Gate & Generate TUR-### Unique Key
   const handleNameActivation = () => {
     if (!childName.trim()) return alert("Please drop in your name!");
@@ -215,8 +230,7 @@ export default function App() {
           "Avatar Choice": `Hat: ${avatarHat} | Item: ${avatarProp}`,
           "Notes": assignedPin 
         }
-      }
-    ], (err) => {
+      }], (err) => {
       setSubmittingBadge(false);
       if (err) {
         console.error(err);
@@ -262,6 +276,10 @@ export default function App() {
         pin: data["Notes"] || "TUR-AUTH"
       });
     });
+  };
+
+  const isTargetCompleted = (keyword) => {
+    return completedStops.some(t => t.toUpperCase().includes(keyword.toUpperCase()));
   };
 
   const forceGlobalReset = () => {
@@ -477,66 +495,83 @@ export default function App() {
                     <h2 className="text-sm font-extrabold text-slate-800 mt-1">Finalize Official ID Badge</h2>
                   </div>
 
-                  {/* 🪪 UPGRADED HORIZONTAL CR-80 SMART-21 PRINT SPEC PREVIEW FRAME */}
-                  <div className="w-[340px] h-[215px] bg-white rounded-xl shadow-xl border border-slate-300 mx-auto my-auto overflow-hidden flex flex-col relative flex-shrink-0 text-slate-800 font-sans bg-[url('/assets/card-wheat-bg.png')] bg-cover">
+                  {/* 🪪 UPGRADED HORIZONTAL HIGH-FIDELITY BADGE ENGRAVER PREVIEW */}
+                  <div className="w-[340px] h-[215px] bg-white rounded-2xl shadow-xl border border-slate-300 mx-auto my-auto overflow-hidden flex flex-col relative flex-shrink-0 text-slate-800 font-sans tracking-normal select-none">
                     
-                    {/* TOP BRANDING ROW */}
-                    <div className="flex justify-between items-start px-3 pt-2 z-10">
-                      <div className="flex flex-col text-left">
-                        <span className="text-[11px] font-black tracking-tight text-[#0f2d59] leading-none">Patterson</span>
-                        <span className="text-[8px] font-bold text-[#45b1d9] tracking-wide mt-0.5">Health Center</span>
+                    {/* TOP BADGE SLOT PUNCH SIMULATOR OUTLINE */}
+                    <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-12 h-2.5 bg-slate-200 border border-slate-300 rounded-full opacity-60 z-30"></div>
+
+                    {/* MASTER BRANDING ROW */}
+                    <div className="flex justify-between items-start px-4 pt-5 pb-1 bg-white relative z-10 border-b border-slate-100">
+                      <div className="flex flex-col text-left leading-tight">
+                        <span className="text-[13px] font-black tracking-tighter text-[#0b2545] font-serif">Patterson</span>
+                        <span className="text-[8px] font-bold text-[#1f7a8c] uppercase tracking-widest -mt-0.5">Health Center</span>
                       </div>
-                      <div className="text-right flex flex-col items-end">
-                        <span className="text-[9px] font-extrabold text-[#7fa638] tracking-widest uppercase leading-none">— TURTLE TEAM —</span>
-                        <span className="text-[6px] font-bold text-[#0f2d59] uppercase tracking-wider mt-0.5">HONORARY MEMBER</span>
+                      <div className="text-right flex flex-col items-end leading-none">
+                        <span className="text-[10px] font-black text-[#588157] tracking-widest uppercase flex items-center gap-0.5">★ TURTLE TEAM ★</span>
+                        <span className="text-[6px] font-extrabold text-[#0b2545] uppercase tracking-widest mt-0.5">HONORARY MEMBER</span>
                       </div>
                     </div>
 
-                    {/* MAIN CONTENT SPLIT BLOCK */}
-                    <div className="flex-1 flex px-3 items-center gap-3 z-10">
-                      {/* Left: Portrait frame */}
-                      <div className="w-[85px] h-[110px] bg-white border-2 border-[#d93856] rounded-lg shadow-md relative overflow-visible flex items-center justify-center flex-shrink-0">
-                        <div className="text-4xl relative z-10">🐢</div>
-                        <span className="absolute -top-4 left-0 right-0 text-xl text-center drop-shadow-sm z-20">{avatarHat.split(' ')[0]}</span>
-                        <span className="absolute -bottom-1 -right-2 bg-[#0f2d59] text-white rounded-full w-[22px] h-[22px] flex items-center justify-center shadow text-xs border border-white z-20">{avatarProp.split(' ')[0]}</span>
+                    {/* CORE SPLIT WORKSPACE INTERFACE */}
+                    <div className="flex-1 flex px-4 items-center gap-4 bg-white relative">
+                      {/* Left: Professional Illustrated Portrait Window Frame */}
+                      <div className="w-[85px] h-[100px] bg-slate-50 border-2 border-[#cc2936] rounded-xl shadow-md relative overflow-visible flex items-center justify-center flex-shrink-0 bg-radial from-white to-slate-100">
+                        <img 
+                          src={getDynamicArtwork()} 
+                          alt="Explorer Avatar" 
+                          className="w-full h-full object-contain rounded-lg p-1"
+                        />
+                        {/* Custom Cosmetic Accent Layer Anchors */}
+                        <span className="absolute -top-[18px] left-0 right-0 text-2xl text-center drop-shadow-md z-30 animate-pulse">{avatarHat.split(' ')[0]}</span>
+                        <span className="absolute -bottom-1.5 -right-2.5 bg-[#0b2545] text-white rounded-full w-[24px] h-[24px] flex items-center justify-center shadow-md text-sm border-2 border-white font-bold z-30">{avatarProp.split(' ')[0]}</span>
                       </div>
 
-                      {/* Right: Text elements */}
-                      <div className="flex-1 flex flex-col text-center">
-                        <h2 className="text-2xl font-black text-[#0f2d59] tracking-tight uppercase leading-none truncate max-w-[190px] mx-auto">
+                      {/* Right: Identity Metadata Cluster */}
+                      <div className="flex-1 flex flex-col justify-center text-center pl-1">
+                        <h2 className="text-2xl font-black text-[#0b2545] tracking-tight uppercase leading-none max-w-[170px] mx-auto truncate">
                           {childName || "EXPLORER"}
                         </h2>
-                        <span className="text-[#d93856] text-[7px] font-black tracking-widest block my-0.5">★</span>
-                        <div className="text-[#d93856] font-black text-[11px] uppercase tracking-wider leading-none truncate max-w-[190px] mx-auto">
-                          {finalCareer ? finalCareer.toUpperCase().replace('PATTERSON ', '') : "HONORARY MEMBER"}
+                        
+                        <div className="w-12 h-[2px] bg-[#cc2936] mx-auto my-1.5 rounded-full"></div>
+
+                        <div className="text-[#cc2936] font-black text-[12px] uppercase tracking-wide leading-none max-w-[170px] mx-auto truncate">
+                          {finalCareer ? finalCareer.toUpperCase().replace('PATTERSON ', '') : "STAFF MEMBER"}
                         </div>
                         
-                        <div className="mt-2 text-[5px] text-slate-400 font-bold uppercase tracking-tight">
+                        <div className="mt-2 text-[5px] text-slate-400 font-bold uppercase tracking-widest">
                           HONORARY PATTERSON HEALTH CENTER
                         </div>
-                        <div className="text-[#7fa638] font-black text-[7px] tracking-wider uppercase leading-none mt-0.5">
-                          ★ TURTLE TEAM MEMBER ★
+                        <div className="text-[#588157] font-black text-[7px] tracking-wider uppercase leading-none mt-0.5">
+                          ★ CORRIDOR ADVENTURER ★
                         </div>
+                      </div>
+
+                      {/* EMBOSSED GOLD MEDALLION BADGE SEAL ROSETTE */}
+                      <div className="absolute right-2 bottom-0 w-[42px] h-[42px] bg-gradient-to-tr from-[#b8860b] via-[#ffd700] to-[#daa520] rounded-full shadow-md border border-[#b8860b] flex flex-col items-center justify-center p-0.5 text-center leading-none opacity-90 scale-95 select-none transform rotate-3">
+                        <span className="text-[4px] font-black text-[#4a3600] uppercase tracking-tighter">OFFICIAL</span>
+                        <span className="text-[6px] font-black text-[#4a3600] tracking-tighter my-0.5">TURTLE</span>
+                        <span className="text-[4px] font-black text-[#4a3600] uppercase tracking-tighter">TEAM</span>
                       </div>
                     </div>
 
-                    {/* LOWER METRIC FOOTER STRIP */}
-                    <div className="h-9 px-3 flex items-center justify-between border-t border-slate-100 bg-white/85 backdrop-blur-3xs relative z-10">
+                    {/* LOWER TRACKING BAR METRICS */}
+                    <div className="h-8 px-4 flex items-center justify-between bg-slate-50 border-t border-slate-100 relative z-20">
                       <div className="flex items-center gap-1.5">
-                        <div className="w-5 h-5 bg-[#d93856] text-white rounded-full flex items-center justify-center text-[10px]">🪪</div>
+                        <span className="text-slate-400 text-[10px]">🪪</span>
                         <div className="flex flex-col text-left leading-none">
-                          <span className="text-[5px] font-bold text-slate-400 uppercase">BADGE #</span>
-                          <span className="text-[9px] font-mono font-black text-[#d93856] tracking-wider">{assignedPin}</span>
+                          <span className="text-[5px] font-bold text-slate-400 uppercase tracking-tighter">BADGE ID</span>
+                          <span className="text-[9px] font-mono font-black text-[#cc2936] tracking-wider">{assignedPin}</span>
                         </div>
                       </div>
                       
-                      <span className="text-[6px] font-mono font-bold text-slate-400 border border-slate-300 rounded px-1 py-0.5 bg-white shadow-2xs">
-                        AUTH SYSTEM VALID
-      </span>
+                      <span className="text-[6px] font-mono font-bold text-slate-400 border border-slate-300 rounded-md px-1.5 py-0.5 bg-white shadow-3xs uppercase">
+                        SYS LOGGED
+                      </span>
                     </div>
 
-                    {/* BLUE CORE VALUES SLOGAN BOTTOM BASE STRIP */}
-                    <div className="bg-[#0f2d59] text-white text-[6px] font-bold py-1 flex justify-around items-center uppercase tracking-widest px-2 select-none z-10">
+                    {/* BLUE CORE VALUES SLOGAN STRIP */}
+                    <div className="bg-[#0b2545] text-white text-[6px] font-bold py-1 flex justify-around items-center uppercase tracking-widest px-2 relative z-20">
                       <span>🤍 BE KIND</span>
                       <span>🌱 BE CURIOUS</span>
                       <span>👥 HELP OTHERS</span>
@@ -627,64 +662,78 @@ export default function App() {
                   ) : (
                     <div className="my-auto flex flex-col gap-4">
                       
-                      {/* 🪪 UPGRADED HORIZONTAL CR-80 RETRIEVAL DESIGN FRAME */}
-                      <div className="w-[340px] h-[215px] bg-white rounded-xl shadow-xl border border-slate-300 mx-auto overflow-hidden flex flex-col relative text-slate-800 font-sans">
+                      {/* 🪪 UPGRADED RETRIEVAL DESIGN FRAME CHASSIS */}
+                      <div className="w-[340px] h-[215px] bg-white rounded-2xl shadow-xl border border-slate-300 mx-auto overflow-hidden flex flex-col relative text-slate-800 font-sans tracking-normal select-none">
                         
-                        {/* TOP BRANDING ROW */}
-                        <div className="flex justify-between items-start px-3 pt-2">
-                          <div className="flex flex-col text-left">
-                            <span className="text-[11px] font-black tracking-tight text-[#0f2d59] leading-none">Patterson</span>
-                            <span className="text-[8px] font-bold text-[#45b1d9] tracking-wide mt-0.5">Health Center</span>
+                        {/* TOP SLOT PUNCH SIMULATOR OUTLINE */}
+                        <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-12 h-2.5 bg-slate-200 border border-slate-300 rounded-full opacity-60 z-30"></div>
+
+                        {/* MASTER BRANDING ROW */}
+                        <div className="flex justify-between items-start px-4 pt-5 pb-1 bg-white relative z-10 border-b border-slate-100">
+                          <div className="flex flex-col text-left leading-tight">
+                            <span className="text-[13px] font-black tracking-tighter text-[#0b2545] font-serif">Patterson</span>
+                            <span className="text-[8px] font-bold text-[#1f7a8c] uppercase tracking-widest -mt-0.5">Health Center</span>
                           </div>
-                          <div className="text-right flex flex-col items-end">
-                            <span className="text-[9px] font-extrabold text-[#7fa638] tracking-widest uppercase leading-none">— TURTLE TEAM —</span>
-                            <span className="text-[6px] font-bold text-[#0f2d59] uppercase tracking-wider mt-0.5">HONORARY MEMBER</span>
+                          <div className="text-right flex flex-col items-end leading-none">
+                            <span className="text-[10px] font-black text-[#588157] tracking-widest uppercase flex items-center gap-0.5">★ TURTLE TEAM ★</span>
+                            <span className="text-[6px] font-extrabold text-[#0b2545] uppercase tracking-widest mt-0.5">HONORARY MEMBER</span>
                           </div>
                         </div>
 
                         {/* MAIN CONTENT SPLIT BLOCK */}
-                        <div className="flex-1 flex px-3 items-center gap-3">
-                          <div className="w-[85px] h-[110px] bg-white border-2 border-[#d93856] rounded-lg shadow-md relative overflow-visible flex items-center justify-center flex-shrink-0">
-                            <div className="text-4xl relative z-10">🐢</div>
-                            <span className="absolute -top-4 left-0 right-0 text-xl text-center z-20">{foundBadge.avatarHat.split(' ')[0]}</span>
-                            <span className="absolute -bottom-1 -right-2 bg-[#0f2d59] text-white rounded-full w-[22px] h-[22px] flex items-center justify-center text-xs border border-white z-20">{foundBadge.avatarProp.split(' ')[0]}</span>
+                        <div className="flex-1 flex px-4 items-center gap-4 bg-white relative">
+                          <div className="w-[85px] h-[100px] bg-slate-50 border-2 border-[#cc2936] rounded-xl shadow-md relative overflow-visible flex items-center justify-center flex-shrink-0 bg-radial from-white to-slate-100">
+                            <img 
+                              src={getDynamicArtwork()} 
+                              alt="Staff Character illustration" 
+                              className="w-full h-full object-contain rounded-lg p-1"
+                            />
+                            <span className="absolute -top-[18px] left-0 right-0 text-2xl text-center drop-shadow-md z-30">{foundBadge.avatarHat.split(' ')[0]}</span>
+                            <span className="absolute -bottom-1.5 -right-2.5 bg-[#0b2545] text-white rounded-full w-[24px] h-[24px] flex items-center justify-center text-xs border-2 border-white font-bold z-30">{foundBadge.avatarProp.split(' ')[0]}</span>
                           </div>
 
-                          <div className="flex-1 flex flex-col text-center">
-                            <h2 className="text-2xl font-black text-[#0f2d59] tracking-tight uppercase leading-none truncate max-w-[190px] mx-auto">
+                          <div className="flex-1 flex flex-col justify-center text-center pl-1">
+                            <h2 className="text-2xl font-black text-[#0b2545] tracking-tight uppercase leading-none max-w-[170px] mx-auto truncate">
                               {foundBadge.name}
                             </h2>
-                            <span className="text-[#d93856] text-[7px] font-black tracking-widest block my-0.5">★</span>
-                            <div className="text-[#d93856] font-black text-[11px] uppercase tracking-wider leading-none truncate max-w-[190px] mx-auto">
+                            <div className="w-12 h-[2px] bg-[#cc2936] mx-auto my-1.5 rounded-full"></div>
+                            <div className="text-[#cc2936] font-black text-[12px] uppercase tracking-wide leading-none max-w-[170px] mx-auto truncate">
                               {foundBadge.career ? foundBadge.career.toUpperCase().replace('PATTERSON ', '') : "STAFF EXPLORER"}
                             </div>
                             
-                            <div className="mt-2 text-[5px] text-slate-400 font-bold uppercase tracking-tight">
+                            <div className="mt-2 text-[5px] text-slate-400 font-bold uppercase tracking-widest">
                               HONORARY PATTERSON HEALTH CENTER
                             </div>
-                            <div className="text-[#7fa638] font-black text-[7px] tracking-wider uppercase leading-none mt-0.5">
-                              ★ TURTLE TEAM MEMBER ★
+                            <div className="text-[#588157] font-black text-[7px] tracking-wider uppercase leading-none mt-0.5">
+                              ★ CORRIDOR ADVENTURER ★
                             </div>
+                          </div>
+
+                          {/* EMBOSSED GOLD MEDALLION BADGE SEAL ROSETTE */}
+                          <div className="absolute right-2 bottom-0 w-[42px] h-[42px] bg-gradient-to-tr from-[#b8860b] via-[#ffd700] to-[#daa520] rounded-full shadow-md border border-[#b8860b] flex flex-col items-center justify-center p-0.5 text-center leading-none opacity-90 scale-95 select-none transform rotate-3">
+                            <span className="text-[4px] font-black text-[#4a3600] uppercase tracking-tighter">OFFICIAL</span>
+                            <span className="text-[6px] font-black text-[#4a3600] tracking-tighter my-0.5">TURTLE</span>
+                            <span className="text-[4px] font-black text-[#4a3600] uppercase tracking-tighter">TEAM</span>
                           </div>
                         </div>
 
                         {/* LOWER METRIC FOOTER STRIP */}
-                        <div className="h-9 px-3 flex items-center justify-between border-t border-slate-100 bg-white/85 relative">
+                        <div className="h-9 px-4 flex items-center justify-between border-t border-slate-100 bg-slate-50 relative">
                           <div className="flex items-center gap-1.5">
-                            <div className="w-5 h-5 bg-[#d93856] text-white rounded-full flex items-center justify-center text-[10px]">🪪</div>
+                            <span className="text-slate-400 text-[10px]">🪪</span>
                             <div className="flex flex-col text-left leading-none">
-                              <span className="text-[5px] font-bold text-slate-400 uppercase">BADGE #</span>
-                              <span className="text-[9px] font-mono font-black text-[#d93856] tracking-wider">{foundBadge.pin}</span>
+                              <span className="text-[5px] font-bold text-slate-400 uppercase tracking-tighter">BADGE ID</span>
+                              <span className="text-[9px] font-mono font-black text-[#cc2936] tracking-wider">{foundBadge.pin}</span>
                             </div>
                           </div>
                           
-                          <span className="text-[6px] font-mono font-bold text-emerald-600 border border-emerald-300 rounded px-1 py-0.5 bg-white shadow-2xs uppercase">
-                            Active Personnel
+                          <span className="text-[6px] font-mono font-bold text-emerald-600 border border-emerald-300 rounded px-1.5 py-0.5 bg-white shadow-3xs uppercase">
+                            Active Card
                           </span>
                         </div>
 
                         {/* BLUE CORE VALUES SLOGAN BOTTOM BASE STRIP */}
-                        <div className="bg-[#0f2d59] text-white text-[6px] font-bold py-1 flex justify-around items-center uppercase tracking-widest px-2 select-none">
+                        <div className="bg-[#0b2545] text-white text-[6px] font-bold py-1 flex justify-around items-center uppercase tracking-widest px-2 select-none">
                           <span>🤍 BE KIND</span>
                           <span>🌱 BE CURIOUS</span>
                           <span>👥 HELP OTHERS</span>
