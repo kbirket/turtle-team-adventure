@@ -155,30 +155,32 @@ export default function App() {
     }
   }, [currentQuizQuestion, appMode]);
 
-  // Shuffles Department Stop Quiz Options
-  const handleNextAction = () => {
-    if (currentStep.question && !completedStops.includes(currentStep.title) && !quizActive) {
-      const items = [
-        { text: currentStep.correctAnswer, correct: true },
-        { text: currentStep.wrongAnswer, correct: false }
-      ];
-      if (Math.random() > 0.5) items.reverse();
-      setShuffledStopOptions(items);
-      setQuizActive(true);
-      return;
-    }
-    const nextIndex = tourStops.findIndex(stop => stop.id === currentStep.nextStepIndex);
-    if (nextIndex !== -1) {
-      setCurrentStepIndex(nextIndex);
-      setQuizActive(false);
-      setQuizFeedback(null);
-    } else {
-      const mapIdx = tourStops.findIndex(s => s.type === 'map');
-      if (mapIdx !== -1) setCurrentStepIndex(mapIdx);
-      setQuizActive(false);
-      setQuizFeedback(null);
-    }
-  };
+const handleNextAction = () => {
+  // If the user is currently looking at the character dialogue and a question exists, NOW trigger the quiz phase
+  if (currentStep.question && !completedStops.includes(currentStep.title) && !quizActive) {
+    const items = [
+      { text: currentStep.correctAnswer, correct: true },
+      { text: currentStep.wrongAnswer, correct: false }
+    ];
+    if (Math.random() > 0.5) items.reverse();
+    setShuffledStopOptions(items);
+    setQuizActive(true);
+    return;
+  }
+  
+  // Moving between steps or back to the map always guarantees the quiz panel is hidden initially
+  const nextIndex = tourStops.findIndex(stop => stop.id === currentStep.nextStepIndex);
+  if (nextIndex !== -1) {
+    setCurrentStepIndex(nextIndex);
+  } else {
+    const mapIdx = tourStops.findIndex(s => s.type === 'map');
+    if (mapIdx !== -1) setCurrentStepIndex(mapIdx);
+  }
+  
+  // CRITICAL RESET FIX: Always hide the quiz box when landing on a fresh stop!
+  setQuizActive(false);
+  setQuizFeedback(null);
+};
 
   const handleAnswerSubmit = (isCorrect) => {
     if (isCorrect) {
