@@ -10,8 +10,9 @@ export default function App() {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   
-  // LOGGED-IN EXPLORER IDENTIFICATION STATE
+  // LOGGED-IN EXPLORER IDENTIFICATION & UNIQUE ID STATE
   const [childName, setChildName] = useState('');
+  const [assignedPin, setAssignedPin] = useState('');
   const [isNameConfirmed, setIsNameConfirmed] = useState(false);
 
   // GAME PROGRESS STATE
@@ -22,7 +23,7 @@ export default function App() {
 
   // NAVIGATION ENGINE & LOOKUP STATES
   const [appMode, setAppMode] = useState('tour'); // 'tour', 'careerQuiz', 'avatarBuilder', 'badgeSuccess', 'gamesHub', 'viewBadge'
-  const [lookupName, setLookupName] = useState('');
+  const [lookupValue, setLookupValue] = useState('');
   const [foundBadge, setFoundBadge] = useState(null);
   const [searchError, setSearchError] = useState('');
   
@@ -119,6 +120,14 @@ export default function App() {
   // Identifies exactly how many operational stamp challenges exist on the interactive map
   const totalRoundsCount = tourStops.filter(s => s.id >= 4.0 && s.id <= 17.0).length;
 
+  // Setup Initial Arrival Name Gate & Generate TUR-### Unique Key
+  const handleNameActivation = () => {
+    if (!childName.trim()) return alert("Please drop in your name!");
+    const randomThreeDigit = Math.floor(100 + Math.random() * 900);
+    setAssignedPin(`TUR-${randomThreeDigit}`);
+    setIsNameConfirmed(true);
+  };
+
   // Shuffles Career Question Options
   useEffect(() => {
     if (appMode === 'careerQuiz' && matchmakerQuestions[currentQuizQuestion]) {
@@ -203,7 +212,8 @@ export default function App() {
         fields: {
           "Child Name": childName,
           "Assigned Career": finalCareer,
-          "Avatar Choice": `Hat: ${avatarHat} | Item: ${avatarProp}`
+          "Avatar Choice": `Hat: ${avatarHat} | Item: ${avatarProp}`,
+          "Notes": assignedPin 
         }
       }
     ], (err) => {
@@ -218,15 +228,18 @@ export default function App() {
   };
 
   const handleLookupBadge = () => {
-    if (!lookupName.trim()) return;
+    if (!lookupValue.trim()) return;
     setSearchError('');
     
+    const targetQuery = lookupValue.toUpperCase().trim();
+    const formula = `OR(UPPER({Child Name}) = '${targetQuery}', UPPER({Notes}) = '${targetQuery}')`;
+
     base('Badge Orders').select({
-      filterByFormula: `UPPER({Child Name}) = '${lookupName.toUpperCase().trim()}'`,
+      filterByFormula: formula,
       maxRecords: 1
     }).firstPage((err, records) => {
       if (err || records.length === 0) {
-        setSearchError('🔍 Name not found. Make sure it matches your printed badge exactly!');
+        setSearchError('🔍 Code or Name not found. Make sure it matches perfectly!');
         return;
       }
       
@@ -245,18 +258,16 @@ export default function App() {
         name: data["Child Name"],
         career: data["Assigned Career"],
         avatarHat: hat,
-        avatarProp: prop
+        avatarProp: prop,
+        pin: data["Notes"] || "TUR-AUTH"
       });
     });
-  };
-
-  const isTargetCompleted = (keyword) => {
-    return completedStops.some(t => t.toUpperCase().includes(keyword.toUpperCase()));
   };
 
   const forceGlobalReset = () => {
     setCompletedStops([]);
     setChildName('');
+    setAssignedPin('');
     setIsNameConfirmed(false);
     setCurrentQuizQuestion(0);
     setCareerScores({ clinical: 0, technical: 0, creative: 0 });
@@ -310,7 +321,7 @@ export default function App() {
                     className="w-full bg-white border-3 border-indigo-400 rounded-2xl p-3.5 font-black text-slate-900 text-center text-sm focus:border-emerald-400 focus:outline-none tracking-widest uppercase placeholder:text-slate-300 shadow-inner"
                   />
                   <button 
-                    onClick={() => { if (!childName.trim()) return alert("Please drop in your name!"); setIsNameConfirmed(true); }}
+                    onClick={handleNameActivation}
                     className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-3.5 rounded-2xl text-xs uppercase tracking-widest shadow-md transition-all active:scale-95 cursor-pointer"
                   >
                     Start Adventure ➔
@@ -379,9 +390,14 @@ export default function App() {
               {/* MODE 2: Map System */}
               {appMode === 'tour' && currentStep.type === 'map' && (
                 <div className="flex-1 bg-slate-50 p-4 flex flex-col justify-between overflow-y-auto h-full">
-                  <div className="text-center mb-2">
-                    <h2 className="text-lg font-extrabold text-slate-800">Patterson Health Hub</h2>
-                    <p className="text-xs text-slate-500">Welcome, <strong>{childName}</strong>! Unlock all {totalRoundsCount} stamps!</p>
+                  <div className="text-center mb-2 flex justify-between items-center bg-white p-2 rounded-xl shadow-sm border border-slate-200">
+                    <div className="text-left">
+                      <h2 className="text-sm font-extrabold text-slate-800">Agent: {childName}</h2>
+                      <p className="text-[10px] text-slate-400">Unlock stamps at all {totalRoundsCount} locations!</p>
+                    </div>
+                    <span className="text-xs bg-indigo-100 text-indigo-700 font-black px-2.5 py-1 rounded-lg border border-indigo-300 font-mono tracking-wider">
+                      {assignedPin}
+                    </span>
                   </div>
 
                   <div className="flex flex-col gap-3 my-auto">
@@ -461,37 +477,69 @@ export default function App() {
                     <h2 className="text-sm font-extrabold text-slate-800 mt-1">Finalize Official ID Badge</h2>
                   </div>
 
-                  {/* CR-80 Badge Frame */}
-                  <div className="w-[324px] h-[204px] bg-white rounded-xl shadow-xl border border-slate-300 mx-auto my-auto overflow-hidden flex flex-row relative before:content-[''] before:absolute before:top-0 before:bottom-0 before:left-0 before:w-2 before:bg-gradient-to-b before:from-blue-600 before:to-emerald-500 flex-shrink-0">
-                    <div className="flex-1 p-3 flex flex-col justify-between relative bg-gradient-to-r from-slate-50 to-white pl-4">
-                      <div>
-                        <span className="text-[10px] font-black tracking-widest text-slate-800 block uppercase leading-none">PATTERSON</span>
-                        <span className="text-[7px] font-bold text-slate-400 uppercase tracking-wider block mt-0.5">HEALTH CENTER</span>
-                        <div className="mt-4">
-                          <div className="w-full font-black text-slate-900 text-sm border-b border-slate-300 tracking-wide pb-0.5">
-                            {childName}
-                          </div>
-                          <div className="mt-2 text-left text-emerald-600 font-black text-[9px] uppercase tracking-wider truncate max-w-[190px]">
-                            🛡️ {finalCareer || "Honorary Staff member"}
-                          </div>
-                        </div>
+                  {/* 🪪 UPGRADED HORIZONTAL CR-80 SMART-21 PRINT SPEC PREVIEW FRAME */}
+                  <div className="w-[340px] h-[215px] bg-white rounded-xl shadow-xl border border-slate-300 mx-auto my-auto overflow-hidden flex flex-col relative flex-shrink-0 text-slate-800 font-sans bg-[url('/assets/card-wheat-bg.png')] bg-cover">
+                    
+                    {/* TOP BRANDING ROW */}
+                    <div className="flex justify-between items-start px-3 pt-2 z-10">
+                      <div className="flex flex-col text-left">
+                        <span className="text-[11px] font-black tracking-tight text-[#0f2d59] leading-none">Patterson</span>
+                        <span className="text-[8px] font-bold text-[#45b1d9] tracking-wide mt-0.5">Health Center</span>
                       </div>
-                      <div className="flex flex-col gap-0.5">
-                        <div className="w-36 h-4 flex gap-[1px] items-center opacity-70">
-                          <div className="h-full bg-slate-800 w-[2px]"></div><div className="h-full bg-slate-800 w-[1px]"></div><div className="h-full bg-slate-800 w-[3px]"></div><div className="h-full bg-slate-800 w-[1px]"></div><div className="h-full bg-slate-800 w-[4px]"></div>
-                        </div>
-                        <span className="text-[6px] font-mono tracking-widest text-slate-400">SMART21-AUTH-VALID</span>
+                      <div className="text-right flex flex-col items-end">
+                        <span className="text-[9px] font-extrabold text-[#7fa638] tracking-widest uppercase leading-none">— TURTLE TEAM —</span>
+                        <span className="text-[6px] font-bold text-[#0f2d59] uppercase tracking-wider mt-0.5">HONORARY MEMBER</span>
                       </div>
                     </div>
-                    <div className="w-28 bg-slate-900 flex flex-col justify-center items-center p-2 border-l border-slate-800 relative">
-                      <span className="absolute top-2 text-[7px] font-black tracking-widest text-slate-500 uppercase">OFFICIAL STAFF</span>
-                      <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-blue-500 to-emerald-400 p-0.5 shadow-md relative mt-2">
-                        <div className="w-full h-full bg-white rounded-full flex items-center justify-center text-3xl relative overflow-visible">
-                          🐢
-                          <span className="absolute -top-3 left-0 right-0 text-xl text-center drop-shadow-sm">{avatarHat.split(' ')[0]}</span>
-                          <span className="absolute -bottom-1 -right-1 bg-slate-800 text-white rounded-full w-5 h-5 flex items-center justify-center shadow text-xs border border-white">{avatarProp.split(' ')[0]}</span>
+
+                    {/* MAIN CONTENT SPLIT BLOCK */}
+                    <div className="flex-1 flex px-3 items-center gap-3 z-10">
+                      {/* Left: Portrait frame */}
+                      <div className="w-[85px] h-[110px] bg-white border-2 border-[#d93856] rounded-lg shadow-md relative overflow-visible flex items-center justify-center flex-shrink-0">
+                        <div className="text-4xl relative z-10">🐢</div>
+                        <span className="absolute -top-4 left-0 right-0 text-xl text-center drop-shadow-sm z-20">{avatarHat.split(' ')[0]}</span>
+                        <span className="absolute -bottom-1 -right-2 bg-[#0f2d59] text-white rounded-full w-[22px] h-[22px] flex items-center justify-center shadow text-xs border border-white z-20">{avatarProp.split(' ')[0]}</span>
+                      </div>
+
+                      {/* Right: Text elements */}
+                      <div className="flex-1 flex flex-col text-center">
+                        <h2 className="text-2xl font-black text-[#0f2d59] tracking-tight uppercase leading-none truncate max-w-[190px] mx-auto">
+                          {childName || "EXPLORER"}
+                        </h2>
+                        <span className="text-[#d93856] text-[7px] font-black tracking-widest block my-0.5">★</span>
+                        <div className="text-[#d93856] font-black text-[11px] uppercase tracking-wider leading-none truncate max-w-[190px] mx-auto">
+                          {finalCareer ? finalCareer.toUpperCase().replace('PATTERSON ', '') : "HONORARY MEMBER"}
+                        </div>
+                        
+                        <div className="mt-2 text-[5px] text-slate-400 font-bold uppercase tracking-tight">
+                          HONORARY PATTERSON HEALTH CENTER
+                        </div>
+                        <div className="text-[#7fa638] font-black text-[7px] tracking-wider uppercase leading-none mt-0.5">
+                          ★ TURTLE TEAM MEMBER ★
                         </div>
                       </div>
+                    </div>
+
+                    {/* LOWER METRIC FOOTER STRIP */}
+                    <div className="h-9 px-3 flex items-center justify-between border-t border-slate-100 bg-white/85 backdrop-blur-3xs relative z-10">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-5 h-5 bg-[#d93856] text-white rounded-full flex items-center justify-center text-[10px]">🪪</div>
+                        <div className="flex flex-col text-left leading-none">
+                          <span className="text-[5px] font-bold text-slate-400 uppercase">BADGE #</span>
+                          <span className="text-[9px] font-mono font-black text-[#d93856] tracking-wider">{assignedPin}</span>
+                        </div>
+                      </div>
+                      
+                      <span className="text-[6px] font-mono font-bold text-slate-400 border border-slate-300 rounded px-1 py-0.5 bg-white shadow-2xs">
+                        AUTH SYSTEM VALID
+      </span>
+                    </div>
+
+                    {/* BLUE CORE VALUES SLOGAN BOTTOM BASE STRIP */}
+                    <div className="bg-[#0f2d59] text-white text-[6px] font-bold py-1 flex justify-around items-center uppercase tracking-widest px-2 select-none z-10">
+                      <span>🤍 BE KIND</span>
+                      <span>🌱 BE CURIOUS</span>
+                      <span>👥 HELP OTHERS</span>
                     </div>
                   </div>
 
@@ -527,7 +575,7 @@ export default function App() {
                   <div className="w-20 h-20 bg-emerald-500 rounded-full text-white flex items-center justify-center text-4xl shadow-xl animate-bounce mb-6">🎉</div>
                   <h2 className="text-2xl font-black text-emerald-800">Badge Ordered!</h2>
                   <p className="text-slate-600 text-sm font-medium mt-3 px-2 leading-relaxed">
-                    Awesome job, <strong>{childName}</strong>! Your customized <strong>{finalCareer}</strong> official ID card layout has been sent directly to the front reception desk terminal.
+                    Awesome job, <strong>{childName}</strong>! Your customized <strong>{finalCareer}</strong> official ID card layout has been sent directly to the front reception desk terminal under Security Key: <strong>{assignedPin}</strong>.
                   </p>
                   <button onClick={forceGlobalReset} className="mt-8 bg-slate-800 text-white text-xs font-bold py-3 px-6 rounded-xl shadow uppercase tracking-wide">
                     Start a New Tour 🔄
@@ -559,17 +607,17 @@ export default function App() {
                   <div className="text-center mb-2">
                     <span className="text-xl">🪪</span>
                     <h2 className="text-md font-extrabold text-slate-800 mt-1">Staff Credential Retrieval</h2>
-                    <p className="text-xs text-slate-500">Type your name to view your official card file</p>
+                    <p className="text-xs text-slate-500">Type your unique TUR code or your name</p>
                   </div>
 
                   {!foundBadge ? (
                     <div className="bg-white rounded-2xl p-4 shadow-md border border-slate-200 my-auto flex flex-col gap-3">
                       <input 
                         type="text" 
-                        placeholder="ENTER REGISTERED NAME" 
-                        value={lookupName} 
-                        onChange={(e) => setLookupName(e.target.value.toUpperCase())} 
-                        className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl p-3 font-black text-slate-900 text-center text-sm focus:border-indigo-500 focus:outline-none tracking-wide"
+                        placeholder="ENTER NAME OR CODE (e.g. TUR-123)" 
+                        value={lookupValue} 
+                        onChange={(e) => setLookupValue(e.target.value.toUpperCase())} 
+                        className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl p-3 font-black text-slate-900 text-center text-sm focus:border-indigo-500 focus:outline-none tracking-wide placeholder:text-slate-300"
                       />
                       {searchError && <p className="text-rose-600 text-[11px] font-bold text-center">{searchError}</p>}
                       <button onClick={handleLookupBadge} className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl text-xs uppercase tracking-wider shadow active:scale-95">
@@ -578,30 +626,73 @@ export default function App() {
                     </div>
                   ) : (
                     <div className="my-auto flex flex-col gap-4">
-                      <div className="w-[324px] h-[204px] bg-white rounded-xl shadow-xl border border-slate-300 mx-auto overflow-hidden flex flex-row relative before:content-[''] before:absolute before:top-0 before:bottom-0 before:left-0 before:w-2 before:bg-gradient-to-b before:from-blue-600 before:to-emerald-500 flex-shrink-0">
-                        <div className="flex-1 p-3 flex flex-col justify-between bg-gradient-to-r from-slate-50 to-white pl-4">
-                          <div>
-                            <span className="text-[10px] font-black text-slate-800 block uppercase">PATTERSON</span>
-                            <span className="text-[7px] font-bold text-slate-400 block">HEALTH CENTER</span>
-                            <div className="mt-4">
-                              <div className="font-black text-slate-900 text-sm border-b border-slate-300 pb-0.5">{foundBadge.name}</div>
-                              <div className="mt-2 text-emerald-600 font-black text-[9px] uppercase">🛡️ {foundBadge.career}</div>
-                            </div>
+                      
+                      {/* 🪪 UPGRADED HORIZONTAL CR-80 RETRIEVAL DESIGN FRAME */}
+                      <div className="w-[340px] h-[215px] bg-white rounded-xl shadow-xl border border-slate-300 mx-auto overflow-hidden flex flex-col relative text-slate-800 font-sans">
+                        
+                        {/* TOP BRANDING ROW */}
+                        <div className="flex justify-between items-start px-3 pt-2">
+                          <div className="flex flex-col text-left">
+                            <span className="text-[11px] font-black tracking-tight text-[#0f2d59] leading-none">Patterson</span>
+                            <span className="text-[8px] font-bold text-[#45b1d9] tracking-wide mt-0.5">Health Center</span>
                           </div>
-                          <span className="text-[6px] font-mono text-slate-400">STATUS: ACTIVE PERSONNEL</span>
+                          <div className="text-right flex flex-col items-end">
+                            <span className="text-[9px] font-extrabold text-[#7fa638] tracking-widest uppercase leading-none">— TURTLE TEAM —</span>
+                            <span className="text-[6px] font-bold text-[#0f2d59] uppercase tracking-wider mt-0.5">HONORARY MEMBER</span>
+                          </div>
                         </div>
-                        <div className="w-28 bg-slate-900 flex flex-col justify-center items-center p-2 relative">
-                          <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-blue-500 to-emerald-400 p-0.5 relative">
-                            <div className="w-full h-full bg-white rounded-full flex items-center justify-center text-3xl relative overflow-visible">
-                              🐢
-                              <span className="absolute -top-3 left-0 right-0 text-xl text-center">{foundBadge.avatarHat.split(' ')[0]}</span>
-                              <span className="absolute -bottom-1 -right-1 bg-slate-800 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">{foundBadge.avatarProp.split(' ')[0]}</span>
+
+                        {/* MAIN CONTENT SPLIT BLOCK */}
+                        <div className="flex-1 flex px-3 items-center gap-3">
+                          <div className="w-[85px] h-[110px] bg-white border-2 border-[#d93856] rounded-lg shadow-md relative overflow-visible flex items-center justify-center flex-shrink-0">
+                            <div className="text-4xl relative z-10">🐢</div>
+                            <span className="absolute -top-4 left-0 right-0 text-xl text-center z-20">{foundBadge.avatarHat.split(' ')[0]}</span>
+                            <span className="absolute -bottom-1 -right-2 bg-[#0f2d59] text-white rounded-full w-[22px] h-[22px] flex items-center justify-center text-xs border border-white z-20">{foundBadge.avatarProp.split(' ')[0]}</span>
+                          </div>
+
+                          <div className="flex-1 flex flex-col text-center">
+                            <h2 className="text-2xl font-black text-[#0f2d59] tracking-tight uppercase leading-none truncate max-w-[190px] mx-auto">
+                              {foundBadge.name}
+                            </h2>
+                            <span className="text-[#d93856] text-[7px] font-black tracking-widest block my-0.5">★</span>
+                            <div className="text-[#d93856] font-black text-[11px] uppercase tracking-wider leading-none truncate max-w-[190px] mx-auto">
+                              {foundBadge.career ? foundBadge.career.toUpperCase().replace('PATTERSON ', '') : "STAFF EXPLORER"}
+                            </div>
+                            
+                            <div className="mt-2 text-[5px] text-slate-400 font-bold uppercase tracking-tight">
+                              HONORARY PATTERSON HEALTH CENTER
+                            </div>
+                            <div className="text-[#7fa638] font-black text-[7px] tracking-wider uppercase leading-none mt-0.5">
+                              ★ TURTLE TEAM MEMBER ★
                             </div>
                           </div>
+                        </div>
+
+                        {/* LOWER METRIC FOOTER STRIP */}
+                        <div className="h-9 px-3 flex items-center justify-between border-t border-slate-100 bg-white/85 relative">
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-5 h-5 bg-[#d93856] text-white rounded-full flex items-center justify-center text-[10px]">🪪</div>
+                            <div className="flex flex-col text-left leading-none">
+                              <span className="text-[5px] font-bold text-slate-400 uppercase">BADGE #</span>
+                              <span className="text-[9px] font-mono font-black text-[#d93856] tracking-wider">{foundBadge.pin}</span>
+                            </div>
+                          </div>
+                          
+                          <span className="text-[6px] font-mono font-bold text-emerald-600 border border-emerald-300 rounded px-1 py-0.5 bg-white shadow-2xs uppercase">
+                            Active Personnel
+                          </span>
+                        </div>
+
+                        {/* BLUE CORE VALUES SLOGAN BOTTOM BASE STRIP */}
+                        <div className="bg-[#0f2d59] text-white text-[6px] font-bold py-1 flex justify-around items-center uppercase tracking-widest px-2 select-none">
+                          <span>🤍 BE KIND</span>
+                          <span>🌱 BE CURIOUS</span>
+                          <span>👥 HELP OTHERS</span>
                         </div>
                       </div>
-                      <button onClick={() => { setFoundBadge(null); setLookupName(''); }} className="mx-auto text-xs font-bold text-slate-500 underline">
-                        Search Another Name
+
+                      <button onClick={() => { setFoundBadge(null); setLookupValue(''); }} className="mx-auto text-xs font-bold text-slate-500 underline">
+                        Search Another Code
                       </button>
                     </div>
                   )}
@@ -650,7 +741,7 @@ export default function App() {
           </button>
 
           <button 
-            onClick={() => { if(!isNameConfirmed) return; setAppMode('viewBadge'); setFoundBadge(null); setLookupName(''); setSearchError(''); }} 
+            onClick={() => { if(!isNameConfirmed) return; setAppMode('viewBadge'); setFoundBadge(null); setLookupValue(''); setSearchError(''); }} 
             className={`flex flex-col items-center justify-center gap-0.5 transition-all ${!isNameConfirmed ? 'opacity-20 cursor-not-allowed' : ''} ${appMode === 'viewBadge' ? 'text-indigo-600 font-black scale-105' : 'text-slate-400'}`}
           >
             <span className="text-base">🪪</span>
