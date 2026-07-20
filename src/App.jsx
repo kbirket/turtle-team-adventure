@@ -10,15 +10,21 @@ export default function App() {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   
+  // LOGGED-IN EXPLORER IDENTIFICATION STATE
+  const [childName, setChildName] = useState('');
+  const [isNameConfirmed, setIsNameConfirmed] = useState(false);
+
   // GAME PROGRESS STATE
   const [completedStops, setCompletedStops] = useState([]);
   const [quizActive, setQuizActive] = useState(false);
   const [quizFeedback, setQuizFeedback] = useState(null);
   const [shuffledStopOptions, setShuffledStopOptions] = useState([]);
 
-  // NAVIGATION ENGINE & TAB STATES
-  const [appMode, setAppMode] = useState('tour'); // 'tour', 'careerQuiz', 'avatarBuilder', 'badgeSuccess', 'gamesHub'
-  const [childName, setChildName] = useState('');
+  // NAVIGATION ENGINE & LOOKUP STATES
+  const [appMode, setAppMode] = useState('tour'); // 'tour', 'careerQuiz', 'avatarBuilder', 'badgeSuccess', 'gamesHub', 'viewBadge'
+  const [lookupName, setLookupName] = useState('');
+  const [foundBadge, setFoundBadge] = useState(null);
+  const [searchError, setSearchError] = useState('');
   
   // Matchmaker tracking scoring weights
   const [careerScores, setCareerScores] = useState({ clinical: 0, technical: 0, creative: 0 });
@@ -143,7 +149,6 @@ export default function App() {
       setQuizActive(false);
       setQuizFeedback(null);
     } else {
-      // Direct safety default fallback if no explicit index path maps out
       const mapIdx = tourStops.findIndex(s => s.type === 'map');
       if (mapIdx !== -1) setCurrentStepIndex(mapIdx);
       setQuizActive(false);
@@ -190,7 +195,7 @@ export default function App() {
   };
 
   const submitBadgeOrder = () => {
-    if (!childName.trim()) return alert("Please type your name first!");
+    if (!childName.trim()) return alert("Please confirm your name first!");
     setSubmittingBadge(true);
 
     base('Badge Orders').create([
@@ -212,18 +217,50 @@ export default function App() {
     });
   };
 
+  const handleLookupBadge = () => {
+    if (!lookupName.trim()) return;
+    setSearchError('');
+    
+    base('Badge Orders').select({
+      filterByFormula: `UPPER({Child Name}) = '${lookupName.toUpperCase().trim()}'`,
+      maxRecords: 1
+    }).firstPage((err, records) => {
+      if (err || records.length === 0) {
+        setSearchError('🔍 Name not found. Make sure it matches your printed badge exactly!');
+        return;
+      }
+      
+      const data = records[0].fields;
+      const choiceStr = data["Avatar Choice"] || "";
+      let hat = "🎓 Graduate Cap";
+      let prop = "🩺 Stethoscope";
+      
+      if (choiceStr.includes("Hat:")) {
+        const parts = choiceStr.split(" | Item: ");
+        hat = parts[0].replace("Hat: ", "");
+        prop = parts[1] || "";
+      }
+
+      setFoundBadge({
+        name: data["Child Name"],
+        career: data["Assigned Career"],
+        avatarHat: hat,
+        avatarProp: prop
+      });
+    });
+  };
+
   const isTargetCompleted = (keyword) => {
     return completedStops.some(t => t.toUpperCase().includes(keyword.toUpperCase()));
   };
 
-  // Safe global reset tool helper
   const forceGlobalReset = () => {
     setCompletedStops([]);
     setChildName('');
+    setIsNameConfirmed(false);
     setCurrentQuizQuestion(0);
     setCareerScores({ clinical: 0, technical: 0, creative: 0 });
-    const mapIdx = tourStops.findIndex(s => s.type === 'map');
-    setCurrentStepIndex(mapIdx !== -1 ? mapIdx : 0);
+    setCurrentStepIndex(0);
     setAppMode('tour');
   };
 
@@ -242,290 +279,390 @@ export default function App() {
         {/* HEADER BAR */}
         <div className="bg-slate-800 text-white px-4 py-3 font-bold tracking-wide shadow-md flex justify-between items-center gap-2">
           <span className="truncate text-sm sm:text-base">
-            {appMode === 'tour' ? currentStep.title : appMode === 'gamesHub' ? '🎮 Game Arcade' : '🎓 Graduation Center'}
+            {!isNameConfirmed ? '👋 Welcome Arrival' : appMode === 'tour' ? currentStep.title : appMode === 'gamesHub' ? '🎮 Game Arcade' : appMode === 'viewBadge' ? '🪪 Badge File' : '🎓 Graduation Center'}
           </span>
-          <span className="flex-shrink-0 text-xs bg-white/20 px-2 py-0.5 rounded-full whitespace-nowrap">
-            📖 {completedStops.length} / {totalRoundsCount} Stamps
-          </span>
+          {isNameConfirmed && (
+            <span className="flex-shrink-0 text-xs bg-white/20 px-2 py-0.5 rounded-full whitespace-nowrap">
+              📖 {completedStops.length} / {totalRoundsCount} Stamps
+            </span>
+          )}
         </div>
 
         {/* CONTAINER VIEW BODY LAYOUT */}
         <div className="flex-1 overflow-hidden relative flex flex-col mb-[65px]">
           
-          {/* MODE 1: Standard Tour System */}
-          {appMode === 'tour' && currentStep.type === 'tour' && (
-            <div className="flex-1 bg-no-repeat relative flex flex-col justify-end p-4 h-full" style={{ backgroundImage: `url(${currentStep.background})`, backgroundPosition: currentStep.bgPosition, backgroundSize: currentStep.bgSize }}>
-              {!quizActive && (
-                <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
-                  <img src={currentStep.character} alt={currentStep.characterName} className="w-4/5 h-auto object-contain mt-12" />
+          {/* STEP 0: INITIAL NAME LOG-IN GATE */}
+          {!isNameConfirmed ? (
+            <div className="flex-1 bg-gradient-to-b from-blue-900 to-indigo-950 p-6 flex flex-col justify-between h-full text-white text-center">
+              <div className="my-auto flex flex-col items-center gap-4">
+                <div className="text-5xl animate-bounce">🐢</div>
+                <h1 className="text-2xl font-black tracking-wide">Patterson Health Adventure</h1>
+                <p className="text-xs text-indigo-200 px-4 leading-relaxed">
+                  Welcome! Before we kick off our digital corridor tour, tell us your name to print your official security ID card file at the end!
+                </p>
+                
+                <div className="w-full max-w-xs mt-4 flex flex-col gap-3">
+                  <input 
+                    type="text" 
+                    placeholder="ENTER YOUR FIRST NAME" 
+                    value={childName} 
+                    onChange={(e) => setChildName(e.target.value.toUpperCase())} 
+                    className="w-full bg-white border-3 border-indigo-400 rounded-2xl p-3.5 font-black text-slate-900 text-center text-sm focus:border-emerald-400 focus:outline-none tracking-widest uppercase placeholder:text-slate-300 shadow-inner"
+                  />
+                  <button 
+                    onClick={() => { if (!childName.trim()) return alert("Please drop in your name!"); setIsNameConfirmed(true); }}
+                    className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-3.5 rounded-2xl text-xs uppercase tracking-widest shadow-md transition-all active:scale-95 cursor-pointer"
+                  >
+                    Start Adventure ➔
+                  </button>
                 </div>
-              )}
-              <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-xl border border-gray-200 z-10 text-center mb-2 min-h-[160px] flex flex-col justify-center">
-                {!quizActive ? (
-                  <>
-                    <h3 className="font-bold text-lg text-emerald-700 mb-1">{currentStep.characterName} {isTargetCompleted(currentStep.title) && '✅'}</h3>
-                    <p className="text-gray-700 text-sm leading-relaxed">{currentStep.dialogue}</p>
-                  </>
-                ) : (
-                  <div className="flex flex-col gap-2">
-                    <h3 className="font-extrabold text-indigo-700 text-base">✨ Stamp Challenge! ✨</h3>
-                    <p className="text-sm font-medium text-gray-800 mb-2">{currentStep.question}</p>
-                    
-                    <div className="grid grid-cols-2 gap-2">
-                      {shuffledStopOptions.map((opt, i) => {
-                        let buttonStyle = "bg-slate-50 border border-slate-300 text-slate-700 hover:bg-slate-100";
-                        if (quizFeedback !== null) {
-                          if (opt.correct) {
-                            buttonStyle = "bg-emerald-50 border border-emerald-400 text-emerald-700 pointer-events-none";
-                          } else {
-                            buttonStyle = "bg-rose-50 border border-rose-400 text-rose-700 pointer-events-none";
-                          }
-                        }
-                        return (
-                          <button key={i} onClick={() => handleAnswerSubmit(opt.correct)} className={`p-2 font-bold text-xs rounded-xl cursor-pointer transition-all ${buttonStyle}`}>
-                            {opt.text}
-                          </button>
-                        );
-                      })}
+              </div>
+              <div className="text-[10px] text-indigo-400 font-bold">Secure Clinic Device Profile Pipeline</div>
+            </div>
+          ) : (
+            <>
+              {/* MODE 1: Standard Tour System */}
+              {appMode === 'tour' && currentStep.type === 'tour' && (
+                <div className="flex-1 bg-no-repeat relative flex flex-col justify-end p-4 h-full" style={{ backgroundImage: `url(${currentStep.background})`, backgroundPosition: currentStep.bgPosition, backgroundSize: currentStep.bgSize }}>
+                  {!quizActive && (
+                    <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
+                      <img src={currentStep.character} alt={currentStep.characterName} className="w-4/5 h-auto object-contain mt-12" />
                     </div>
+                  )}
+                  <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-xl border border-gray-200 z-10 text-center mb-2 min-h-[160px] flex flex-col justify-center">
+                    {!quizActive ? (
+                      <>
+                        <h3 className="font-bold text-lg text-emerald-700 mb-1">{currentStep.characterName} {isTargetCompleted(currentStep.title) && '✅'}</h3>
+                        <p className="text-gray-700 text-sm leading-relaxed">
+                          <strong>{childName}</strong>, {currentStep.dialogue.charAt(0).toLowerCase() + currentStep.dialogue.slice(1)}
+                        </p>
+                      </>
+                    ) : (
+                      <div className="flex flex-col gap-2">
+                        <h3 className="font-extrabold text-indigo-700 text-base">✨ Stamp Challenge! ✨</h3>
+                        <p className="text-sm font-medium text-gray-800 mb-2">{currentStep.question}</p>
+                        
+                        <div className="grid grid-cols-2 gap-2">
+                          {shuffledStopOptions.map((opt, i) => {
+                            let buttonStyle = "bg-slate-50 border border-slate-300 text-slate-700 hover:bg-slate-100";
+                            if (quizFeedback !== null) {
+                              if (opt.correct) {
+                                buttonStyle = "bg-emerald-50 border border-emerald-400 text-emerald-700 pointer-events-none";
+                              } else {
+                                buttonStyle = "bg-rose-50 border border-rose-400 text-rose-700 pointer-events-none";
+                              }
+                            }
+                            return (
+                              <button key={i} onClick={() => handleAnswerSubmit(opt.correct)} className={`p-2 font-bold text-xs rounded-xl cursor-pointer transition-all ${buttonStyle}`}>
+                                {opt.text}
+                              </button>
+                            );
+                          })}
+                        </div>
 
-                    {quizFeedback === 'wrong' && (
-                      <div className="text-center mt-1">
-                        <button onClick={() => setQuizFeedback(null)} className="text-[10px] bg-slate-700 text-white px-2.5 py-1 rounded-lg">Retry Choice 🔄</button>
+                        {quizFeedback === 'wrong' && (
+                          <div className="text-center mt-1">
+                            <button onClick={() => setQuizFeedback(null)} className="text-[10px] bg-slate-700 text-white px-2.5 py-1 rounded-lg">Retry Choice 🔄</button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
-                )}
-              </div>
-              {(!quizActive || quizFeedback === 'correct') && (
-                <button onClick={handleNextAction} className="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl z-10 uppercase tracking-wider cursor-pointer shadow-md hover:bg-emerald-700">
-                  {quizFeedback === 'correct' ? 'Collect Stamp & Map Hub ➔' : currentStep.buttonText}
-                </button>
+                  {(!quizActive || quizFeedback === 'correct') && (
+                    <button onClick={handleNextAction} className="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl z-10 uppercase tracking-wider cursor-pointer shadow-md hover:bg-emerald-700">
+                      {quizFeedback === 'correct' ? 'Collect Stamp & Map Hub ➔' : currentStep.buttonText}
+                    </button>
+                  )}
+                </div>
               )}
-            </div>
-          )}
 
-          {/* MODE 2: Map System */}
-          {appMode === 'tour' && currentStep.type === 'map' && (
-            <div className="flex-1 bg-slate-50 p-4 flex flex-col justify-between overflow-y-auto h-full">
-              <div className="text-center mb-2">
-                <h2 className="text-lg font-extrabold text-slate-800">Patterson Health Hub</h2>
-                <p className="text-xs text-slate-500">Unlock stamps at all {totalRoundsCount} locations to graduate!</p>
-              </div>
-
-              <div className="flex flex-col gap-3 my-auto">
-                <div className="border-b border-gray-200 pb-2">
-                  <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 block mb-1">Main Hallway</span>
-                  <div className="grid grid-cols-3 gap-2">
-                    <button onClick={() => { const i = tourStops.findIndex(s => s.id === 4.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-blue-50 border border-blue-400 rounded-lg text-center text-xs font-bold text-blue-700 cursor-pointer relative active:scale-95">🏃‍♂️ PT {isTargetCompleted("PT") && '⭐'}</button>
-                    <button onClick={() => { const i = tourStops.findIndex(s => s.id === 5.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-blue-50 border border-blue-400 rounded-lg text-center text-xs font-bold text-blue-700 cursor-pointer relative active:scale-95">🩺 Clinic {isTargetCompleted("CLINIC") && '⭐'}</button>
-                    <button onClick={() => { const i = tourStops.findIndex(s => s.id === 6.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-purple-50 border border-purple-400 rounded-lg text-center text-xs font-bold text-purple-700 cursor-pointer relative active:scale-95">🧠 Behav. {isTargetCompleted("BEHAVIORAL") && '⭐'}</button>
-                    <button onClick={() => { const i = tourStops.findIndex(s => s.id === 7.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-blue-50 border border-blue-400 rounded-lg text-center text-xs font-bold text-blue-700 cursor-pointer relative active:scale-95">🔬 Lab {isTargetCompleted("LAB") && '⭐'}</button>
-                    <button onClick={() => { const i = tourStops.findIndex(s => s.id === 8.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-blue-50 border border-blue-400 rounded-lg text-center text-xs font-bold text-blue-700 cursor-pointer relative active:scale-95">🏥 Surg. {isTargetCompleted("SURGERY") && '⭐'}</button>
-                    <button onClick={() => { const i = tourStops.findIndex(s => s.id === 9.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-blue-50 border border-blue-400 rounded-lg text-center text-xs font-bold text-blue-700 cursor-pointer relative active:scale-95">🩻 Radio. {isTargetCompleted("RADIOLOGY") && '⭐'}</button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-2">
-                    <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Left Wing & Tech</span>
-                    <button onClick={() => { const i = tourStops.findIndex(s => s.id === 10.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2.5 bg-amber-50 border border-amber-500 rounded-xl text-center text-xs font-bold text-amber-800 cursor-pointer relative active:scale-95">☕ Cafe {isTargetCompleted("CAFE") && '⭐'}</button>
-                    <button onClick={() => { const i = tourStops.findIndex(s => s.id === 11.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-slate-100 border border-slate-400 rounded-lg text-center text-[11px] font-medium text-slate-700 cursor-pointer relative active:scale-95">💼 Business {isTargetCompleted("BUSINESS") && '⭐'}</button>
-                    <button onClick={() => { const i = tourStops.findIndex(s => s.id === 12.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-zinc-100 border border-zinc-400 rounded-lg text-center text-[11px] font-medium text-zinc-700 cursor-pointer relative active:scale-95">⚙️ Mech. Room {isTargetCompleted("MECHANICAL") && '⭐'}</button>
+              {/* MODE 2: Map System */}
+              {appMode === 'tour' && currentStep.type === 'map' && (
+                <div className="flex-1 bg-slate-50 p-4 flex flex-col justify-between overflow-y-auto h-full">
+                  <div className="text-center mb-2">
+                    <h2 className="text-lg font-extrabold text-slate-800">Patterson Health Hub</h2>
+                    <p className="text-xs text-slate-500">Welcome, <strong>{childName}</strong>! Unlock all {totalRoundsCount} stamps!</p>
                   </div>
 
-                  <div className="flex flex-col gap-2">
-                    <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Right Wing & Admin</span>
-                    <button onClick={() => { const i = tourStops.findIndex(s => s.id === 13.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2.5 bg-red-50 border border-red-400 rounded-xl text-center text-xs font-bold text-red-700 cursor-pointer relative active:scale-95">🚨 Emergency {isTargetCompleted("EMERGENCY") && '⭐'}</button>
-                    <button onClick={() => { const i = tourStops.findIndex(s => s.id === 15.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-slate-100 border border-slate-400 rounded-lg text-center text-[11px] font-medium text-slate-700 cursor-pointer relative active:scale-95">🏨 Hospital Beds {isTargetCompleted("HOSPITAL") && '⭐'}</button>
-                    <button onClick={() => { const i = tourStops.findIndex(s => s.id === 14.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-slate-100 border border-slate-400 rounded-lg text-center text-[11px] font-medium text-slate-700 cursor-pointer relative active:scale-95">👔 Admin Offices {isTargetCompleted("ADMIN") && '⭐'}</button>
-                    <button onClick={() => { const i = tourStops.findIndex(s => s.id === 16.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-slate-100 border border-slate-400 rounded-lg text-center text-[11px] font-medium text-slate-700 cursor-pointer relative active:scale-95">📣 Marketing {isTargetCompleted("COMMUNITY") && '⭐'}</button>
+                  <div className="flex flex-col gap-3 my-auto">
+                    <div className="border-b border-gray-200 pb-2">
+                      <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 block mb-1">Main Hallway</span>
+                      <div className="grid grid-cols-3 gap-2">
+                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 4.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-blue-50 border border-blue-400 rounded-lg text-center text-xs font-bold text-blue-700 cursor-pointer relative active:scale-95">🏃‍♂️ PT {isTargetCompleted("PT") && '⭐'}</button>
+                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 5.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-blue-50 border border-blue-400 rounded-lg text-center text-xs font-bold text-blue-700 cursor-pointer relative active:scale-95">🩺 Clinic {isTargetCompleted("CLINIC") && '⭐'}</button>
+                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 6.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-purple-50 border border-purple-400 rounded-lg text-center text-xs font-bold text-purple-700 cursor-pointer relative active:scale-95">🧠 Behav. {isTargetCompleted("BEHAVIORAL") && '⭐'}</button>
+                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 7.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-blue-50 border border-blue-400 rounded-lg text-center text-xs font-bold text-blue-700 cursor-pointer relative active:scale-95">🔬 Lab {isTargetCompleted("LAB") && '⭐'}</button>
+                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 8.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-blue-50 border border-blue-400 rounded-lg text-center text-xs font-bold text-blue-700 cursor-pointer relative active:scale-95">🏥 Surg. {isTargetCompleted("SURGERY") && '⭐'}</button>
+                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 9.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-blue-50 border border-blue-400 rounded-lg text-center text-xs font-bold text-blue-700 cursor-pointer relative active:scale-95">🩻 Radio. {isTargetCompleted("RADIOLOGY") && '⭐'}</button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex flex-col gap-2">
+                        <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Left Wing & Tech</span>
+                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 10.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2.5 bg-amber-50 border border-amber-500 rounded-xl text-center text-xs font-bold text-amber-800 cursor-pointer relative active:scale-95">☕ Cafe {isTargetCompleted("CAFE") && '⭐'}</button>
+                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 11.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-slate-100 border border-slate-400 rounded-lg text-center text-[11px] font-medium text-slate-700 cursor-pointer relative active:scale-95">💼 Business {isTargetCompleted("BUSINESS") && '⭐'}</button>
+                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 12.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-zinc-100 border border-zinc-400 rounded-lg text-center text-[11px] font-medium text-zinc-700 cursor-pointer relative active:scale-95">⚙️ Mech. Room {isTargetCompleted("MECHANICAL") && '⭐'}</button>
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Right Wing & Admin</span>
+                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 13.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2.5 bg-red-50 border border-red-400 rounded-xl text-center text-xs font-bold text-red-700 cursor-pointer relative active:scale-95">🚨 Emergency {isTargetCompleted("EMERGENCY") && '⭐'}</button>
+                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 15.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-slate-100 border border-slate-400 rounded-lg text-center text-[11px] font-medium text-slate-700 cursor-pointer relative active:scale-95">🏨 Hospital Beds {isTargetCompleted("HOSPITAL") && '⭐'}</button>
+                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 14.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-slate-100 border border-slate-400 rounded-lg text-center text-[11px] font-medium text-slate-700 cursor-pointer relative active:scale-95">👔 Admin Offices {isTargetCompleted("ADMIN") && '⭐'}</button>
+                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 16.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-slate-100 border border-slate-400 rounded-lg text-center text-[11px] font-medium text-slate-700 cursor-pointer relative active:scale-95">📣 Marketing {isTargetCompleted("COMMUNITY") && '⭐'}</button>
+                      </div>
+                    </div>
+
+                    {/* OUTSIDE / OPERATIONS SECTION */}
+                    <div className="border-t border-gray-200 pt-2 mt-1">
+                      <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 block mb-1">Facility Ground Operations</span>
+                      <button onClick={() => { const i = tourStops.findIndex(s => s.id === 17.0); if (i !== -1) setCurrentStepIndex(i); }} className="w-full p-2.5 bg-zinc-800 border border-zinc-900 rounded-xl text-center text-xs font-bold text-white cursor-pointer relative active:scale-95 flex items-center justify-center gap-2 shadow-sm">
+                        🛠️ Maintenance Support Crew {isTargetCompleted("MAINTENANCE") && '⭐'}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 pt-2 border-t border-gray-200">
+                    <button 
+                      onClick={() => setAppMode('careerQuiz')} 
+                      disabled={completedStops.length < totalRoundsCount} 
+                      className={`w-full py-3 rounded-xl font-bold text-sm text-center uppercase transition-all duration-300 ${completedStops.length >= totalRoundsCount ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white animate-pulse cursor-pointer' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
+                    >
+                      {completedStops.length >= totalRoundsCount ? '🎓 Claim Graduation Badge!' : `🔒 Complete All ${completedStops.length}/${totalRoundsCount} Rounds to Graduate`}
+                    </button>
                   </div>
                 </div>
+              )}
 
-                {/* OUTSIDE / OPERATIONS SECTION */}
-                <div className="border-t border-gray-200 pt-2 mt-1">
-                  <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 block mb-1">Facility Ground Operations</span>
-                  <button onClick={() => { const i = tourStops.findIndex(s => s.id === 17.0); if (i !== -1) setCurrentStepIndex(i); }} className="w-full p-2.5 bg-zinc-800 border border-zinc-900 rounded-xl text-center text-xs font-bold text-white cursor-pointer relative active:scale-95 flex items-center justify-center gap-2 shadow-sm">
-                    🛠️ Maintenance Support Crew {isTargetCompleted("MAINTENANCE") && '⭐'}
-                  </button>
+              {/* MODE 3: Career Matchmaker Quiz */}
+              {appMode === 'careerQuiz' && (
+                <div className="flex-1 bg-indigo-50 p-6 flex flex-col justify-between h-full">
+                  <div className="text-center">
+                    <span className="text-xs uppercase bg-indigo-200 text-indigo-800 px-3 py-1 rounded-full font-bold">Career Explorer Quiz</span>
+                    <h2 className="text-lg font-black text-slate-800 mt-4">{matchmakerQuestions[currentQuizQuestion].q}</h2>
+                  </div>
+                  <div className="flex flex-col gap-3 my-auto overflow-y-auto max-h-[460px] p-1">
+                    {shuffledCareerOptions.map((opt, idx) => (
+                      <button key={idx} onClick={() => handleCareerAnswer(opt.type)} className="w-full p-4 bg-white hover:bg-indigo-100 border-2 border-indigo-400 font-bold text-xs text-slate-700 rounded-2xl shadow-sm text-left transition-all active:scale-95 cursor-pointer mb-2">
+                        {opt.text}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="text-center text-xs text-indigo-400 font-bold">Question {currentQuizQuestion + 1} of {matchmakerQuestions.length}</div>
                 </div>
-              </div>
+              )}
 
-              <div className="mt-4 pt-2 border-t border-gray-200">
-                <button 
-                  onClick={() => setAppMode('careerQuiz')} 
-                  disabled={completedStops.length < totalRoundsCount} 
-                  className={`w-full py-3 rounded-xl font-bold text-sm text-center uppercase transition-all duration-300 ${completedStops.length >= totalRoundsCount ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white animate-pulse cursor-pointer' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
-                >
-                  {completedStops.length >= totalRoundsCount ? '🎓 Claim Graduation Badge!' : `🔒 Complete All ${completedStops.length}/${totalRoundsCount} Rounds to Graduate`}
-                </button>
-              </div>
-            </div>
-          )}
+              {/* MODE 4: Character / Avatar Builder */}
+              {appMode === 'avatarBuilder' && (
+                <div className="flex-1 bg-slate-100 p-4 flex flex-col justify-between overflow-y-auto h-full">
+                  <div className="text-center mb-1">
+                    <span className="text-[10px] uppercase font-black text-indigo-600 bg-indigo-100 px-2.5 py-0.5 rounded-full tracking-wider">Step 2: Security Credentials</span>
+                    <h2 className="text-sm font-extrabold text-slate-800 mt-1">Finalize Official ID Badge</h2>
+                  </div>
 
-          {/* MODE 3: Career Matchmaker Quiz */}
-          {appMode === 'careerQuiz' && (
-            <div className="flex-1 bg-indigo-50 p-6 flex flex-col justify-between h-full">
-              <div className="text-center">
-                <span className="text-xs uppercase bg-indigo-200 text-indigo-800 px-3 py-1 rounded-full font-bold">Career Explorer Quiz</span>
-                <h2 className="text-lg font-black text-slate-800 mt-4">{matchmakerQuestions[currentQuizQuestion].q}</h2>
-              </div>
-              <div className="flex flex-col gap-3 my-auto overflow-y-auto max-h-[460px] p-1">
-                {shuffledCareerOptions.map((opt, idx) => (
-                  <button key={idx} onClick={() => handleCareerAnswer(opt.type)} className="w-full p-4 bg-white hover:bg-indigo-100 border-2 border-indigo-400 font-bold text-xs text-slate-700 rounded-2xl shadow-sm text-left transition-all active:scale-95 cursor-pointer mb-2">
-                    {opt.text}
-                  </button>
-                ))}
-              </div>
-              <div className="text-center text-xs text-indigo-400 font-bold">Question {currentQuizQuestion + 1} of {matchmakerQuestions.length}</div>
-            </div>
-          )}
-
-          {/* MODE 4: Character / Avatar Builder */}
-          {appMode === 'avatarBuilder' && (
-            <div className="flex-1 bg-slate-100 p-4 flex flex-col justify-between overflow-y-auto h-full">
-              <div className="text-center mb-1">
-                <span className="text-[10px] uppercase font-black text-indigo-600 bg-indigo-100 px-2.5 py-0.5 rounded-full tracking-wider">Step 2: Security Credentials</span>
-                <h2 className="text-sm font-extrabold text-slate-800 mt-1">Finalize Official ID Badge</h2>
-              </div>
-
-              {/* CR-80 Badge Frame */}
-              <div className="w-[324px] h-[204px] bg-white rounded-xl shadow-xl border border-slate-300 mx-auto my-auto overflow-hidden flex flex-row relative before:content-[''] before:absolute before:top-0 before:bottom-0 before:left-0 before:w-2 before:bg-gradient-to-b before:from-blue-600 before:to-emerald-500 flex-shrink-0">
-                <div className="flex-1 p-3 flex flex-col justify-between relative bg-gradient-to-r from-slate-50 to-white pl-4">
-                  <div>
-                    <span className="text-[10px] font-black tracking-widest text-slate-800 block uppercase leading-none">PATTERSON</span>
-                    <span className="text-[7px] font-bold text-slate-400 uppercase tracking-wider block mt-0.5">HEALTH CENTER</span>
-                    <div className="mt-4">
-                      <input 
-                        type="text" 
-                        placeholder="ENTER FULL NAME" 
-                        value={childName} 
-                        onChange={(e) => setChildName(e.target.value.toUpperCase())} 
-                        className="w-full bg-transparent font-black text-slate-900 text-sm border-b border-dashed border-slate-400 focus:border-blue-500 focus:outline-none tracking-wide pb-0.5 placeholder:text-slate-300" 
-                      />
-                      <div className="mt-2 text-left text-emerald-600 font-black text-[9px] uppercase tracking-wider truncate max-w-[190px]">
-                        🛡️ {finalCareer || "Honorary Staff member"}
+                  {/* CR-80 Badge Frame */}
+                  <div className="w-[324px] h-[204px] bg-white rounded-xl shadow-xl border border-slate-300 mx-auto my-auto overflow-hidden flex flex-row relative before:content-[''] before:absolute before:top-0 before:bottom-0 before:left-0 before:w-2 before:bg-gradient-to-b before:from-blue-600 before:to-emerald-500 flex-shrink-0">
+                    <div className="flex-1 p-3 flex flex-col justify-between relative bg-gradient-to-r from-slate-50 to-white pl-4">
+                      <div>
+                        <span className="text-[10px] font-black tracking-widest text-slate-800 block uppercase leading-none">PATTERSON</span>
+                        <span className="text-[7px] font-bold text-slate-400 uppercase tracking-wider block mt-0.5">HEALTH CENTER</span>
+                        <div className="mt-4">
+                          <div className="w-full font-black text-slate-900 text-sm border-b border-slate-300 tracking-wide pb-0.5">
+                            {childName}
+                          </div>
+                          <div className="mt-2 text-left text-emerald-600 font-black text-[9px] uppercase tracking-wider truncate max-w-[190px]">
+                            🛡️ {finalCareer || "Honorary Staff member"}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <div className="w-36 h-4 flex gap-[1px] items-center opacity-70">
+                          <div className="h-full bg-slate-800 w-[2px]"></div><div className="h-full bg-slate-800 w-[1px]"></div><div className="h-full bg-slate-800 w-[3px]"></div><div className="h-full bg-slate-800 w-[1px]"></div><div className="h-full bg-slate-800 w-[4px]"></div>
+                        </div>
+                        <span className="text-[6px] font-mono tracking-widest text-slate-400">SMART21-AUTH-VALID</span>
+                      </div>
+                    </div>
+                    <div className="w-28 bg-slate-900 flex flex-col justify-center items-center p-2 border-l border-slate-800 relative">
+                      <span className="absolute top-2 text-[7px] font-black tracking-widest text-slate-500 uppercase">OFFICIAL STAFF</span>
+                      <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-blue-500 to-emerald-400 p-0.5 shadow-md relative mt-2">
+                        <div className="w-full h-full bg-white rounded-full flex items-center justify-center text-3xl relative overflow-visible">
+                          🐢
+                          <span className="absolute -top-3 left-0 right-0 text-xl text-center drop-shadow-sm">{avatarHat.split(' ')[0]}</span>
+                          <span className="absolute -bottom-1 -right-1 bg-slate-800 text-white rounded-full w-5 h-5 flex items-center justify-center shadow text-xs border border-white">{avatarProp.split(' ')[0]}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                  <div className="flex flex-col gap-0.5">
-                    <div className="w-36 h-4 flex gap-[1px] items-center opacity-70">
-                      <div className="h-full bg-slate-800 w-[2px]"></div><div className="h-full bg-slate-800 w-[1px]"></div><div className="h-full bg-slate-800 w-[3px]"></div><div className="h-full bg-slate-800 w-[1px]"></div><div className="h-full bg-slate-800 w-[4px]"></div>
+
+                  {/* Selector Controls */}
+                  <div className="flex flex-col gap-2 mt-2 mb-2">
+                    <div>
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Select Custom Hat Option</label>
+                      <div className="grid grid-cols-2 gap-1">
+                        {['🎓 Graduate Cap', '🤠 Cowboy Hat', '🧑‍🍳 Chef Hat', '👑 Golden Crown'].map(h => (
+                          <button key={h} onClick={() => setAvatarHat(h)} className={`py-1 px-2 text-xs font-bold rounded-lg border text-center transition-all ${avatarHat === h ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white text-slate-600'}`}>{h}</button>
+                        ))}
+                      </div>
                     </div>
-                    <span className="text-[6px] font-mono tracking-widest text-slate-400">SMART21-AUTH-VALID</span>
-                  </div>
-                </div>
-                <div className="w-28 bg-slate-900 flex flex-col justify-center items-center p-2 border-l border-slate-800 relative">
-                  <span className="absolute top-2 text-[7px] font-black tracking-widest text-slate-500 uppercase">OFFICIAL STAFF</span>
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-blue-500 to-emerald-400 p-0.5 shadow-md relative mt-2">
-                    <div className="w-full h-full bg-white rounded-full flex items-center justify-center text-3xl relative overflow-visible">
-                      🐢
-                      <span className="absolute -top-3 left-0 right-0 text-xl text-center drop-shadow-sm">{avatarHat.split(' ')[0]}</span>
-                      <span className="absolute -bottom-1 -right-1 bg-slate-800 text-white rounded-full w-5 h-5 flex items-center justify-center shadow text-xs border border-white">{avatarProp.split(' ')[0]}</span>
+                    <div>
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Select Specialized Tool Accessory</label>
+                      <div className="grid grid-cols-2 gap-1">
+                        {['🩺 Stethoscope', '🔬 Microscope', '🩹 Bandages', '🩻 Shell X-Ray'].map(p => (
+                          <button key={p} onClick={() => setAvatarProp(p)} className={`py-1 px-2 text-xs font-bold rounded-lg border text-center transition-all ${avatarProp === p ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white text-slate-600'}`}>{p}</button>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
 
-              {/* Selector Controls */}
-              <div className="flex flex-col gap-2 mt-2 mb-2">
-                <div>
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Select Custom Hat Option</label>
-                  <div className="grid grid-cols-2 gap-1">
-                    {['🎓 Graduate Cap', '🤠 Cowboy Hat', '🧑‍🍳 Chef Hat', '👑 Golden Crown'].map(h => (
-                      <button key={h} onClick={() => setAvatarHat(h)} className={`py-1 px-2 text-xs font-bold rounded-lg border text-center transition-all ${avatarHat === h ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white text-slate-600'}`}>{h}</button>
-                    ))}
+                  <button onClick={submitBadgeOrder} disabled={submittingBadge} className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black py-3 rounded-xl shadow-lg text-xs uppercase tracking-wider">
+                    {submittingBadge ? '🖨️ Transmitting to Smart-21 Spooler...' : '🔒 Authorize & Print CR-80 ID Card ➔'}
+                  </button>
+                </div>
+              )}
+
+              {/* MODE 5: Badge Print Queue Success Splash Screen */}
+              {appMode === 'badgeSuccess' && (
+                <div className="flex-1 bg-gradient-to-b from-emerald-50 to-teal-100 p-6 flex flex-col justify-center items-center text-center h-full">
+                  <div className="w-20 h-20 bg-emerald-500 rounded-full text-white flex items-center justify-center text-4xl shadow-xl animate-bounce mb-6">🎉</div>
+                  <h2 className="text-2xl font-black text-emerald-800">Badge Ordered!</h2>
+                  <p className="text-slate-600 text-sm font-medium mt-3 px-2 leading-relaxed">
+                    Awesome job, <strong>{childName}</strong>! Your customized <strong>{finalCareer}</strong> official ID card layout has been sent directly to the front reception desk terminal.
+                  </p>
+                  <button onClick={forceGlobalReset} className="mt-8 bg-slate-800 text-white text-xs font-bold py-3 px-6 rounded-xl shadow uppercase tracking-wide">
+                    Start a New Tour 🔄
+                  </button>
+                </div>
+              )}
+
+              {/* MODE 6: Fun & Games Arcade Hub */}
+              {appMode === 'gamesHub' && (
+                <div className="flex-1 bg-indigo-900 p-4 flex flex-col justify-between h-full text-white">
+                  <div className="text-center mt-4">
+                    <span className="text-4xl">🎮</span>
+                    <h2 className="text-xl font-black mt-2">Turtle Team Play Zone</h2>
+                    <p className="text-xs text-indigo-200 mt-1">Extra mini-games and coloring pages coming soon!</p>
                   </div>
-                </div>
-                <div>
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Select Specialized Tool Accessory</label>
-                  <div className="grid grid-cols-2 gap-1">
-                    {['🩺 Stethoscope', '🔬 Microscope', '🩹 Bandages', '🩻 Shell X-Ray'].map(p => (
-                      <button key={p} onClick={() => setAvatarProp(p)} className={`py-1 px-2 text-xs font-bold rounded-lg border text-center transition-all ${avatarProp === p ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white text-slate-600'}`}>{p}</button>
-                    ))}
+                  <div className="bg-white/10 border border-white/10 rounded-2xl p-6 text-center my-auto">
+                    <p className="text-sm font-medium text-indigo-100">🐢 Turtle Shell Memory Matcher</p>
+                    <span className="inline-block mt-2 text-[10px] bg-amber-400 text-slate-900 px-2 py-0.5 rounded font-bold uppercase tracking-widest">Under Construction</span>
                   </div>
+                  <button onClick={() => setAppMode('tour')} className="w-full bg-white text-indigo-950 font-bold py-2.5 rounded-xl text-xs uppercase shadow-md">
+                    Return to Adventure Map ➔
+                  </button>
                 </div>
-              </div>
+              )}
 
-              <button onClick={submitBadgeOrder} disabled={submittingBadge} className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black py-3 rounded-xl shadow-lg text-xs uppercase tracking-wider">
-                {submittingBadge ? '🖨️ Transmitting to Smart-21 Spooler...' : '🔒 Authorize & Print CR-80 ID Card ➔'}
-              </button>
-            </div>
-          )}
+              {/* MODE 7: Look Up Existing Badge */}
+              {appMode === 'viewBadge' && (
+                <div className="flex-1 bg-slate-100 p-4 flex flex-col justify-between overflow-y-auto h-full">
+                  <div className="text-center mb-2">
+                    <span className="text-xl">🪪</span>
+                    <h2 className="text-md font-extrabold text-slate-800 mt-1">Staff Credential Retrieval</h2>
+                    <p className="text-xs text-slate-500">Type your name to view your official card file</p>
+                  </div>
 
-          {/* MODE 5: Badge Print Queue Success Splash Screen */}
-          {appMode === 'badgeSuccess' && (
-            <div className="flex-1 bg-gradient-to-b from-emerald-50 to-teal-100 p-6 flex flex-col justify-center items-center text-center h-full">
-              <div className="w-20 h-20 bg-emerald-500 rounded-full text-white flex items-center justify-center text-4xl shadow-xl animate-bounce mb-6">🎉</div>
-              <h2 className="text-2xl font-black text-emerald-800">Badge Ordered!</h2>
-              <p className="text-slate-600 text-sm font-medium mt-3 px-2 leading-relaxed">
-                Awesome job, <strong>{childName}</strong>! Your customized <strong>{finalCareer}</strong> official ID card layout has been sent directly to the front reception desk terminal.
-              </p>
-              <button onClick={forceGlobalReset} className="mt-8 bg-slate-800 text-white text-xs font-bold py-3 px-6 rounded-xl shadow uppercase tracking-wide">
-                Start a New Tour 🔄
-              </button>
-            </div>
-          )}
+                  {!foundBadge ? (
+                    <div className="bg-white rounded-2xl p-4 shadow-md border border-slate-200 my-auto flex flex-col gap-3">
+                      <input 
+                        type="text" 
+                        placeholder="ENTER REGISTERED NAME" 
+                        value={lookupName} 
+                        onChange={(e) => setLookupName(e.target.value.toUpperCase())} 
+                        className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl p-3 font-black text-slate-900 text-center text-sm focus:border-indigo-500 focus:outline-none tracking-wide"
+                      />
+                      {searchError && <p className="text-rose-600 text-[11px] font-bold text-center">{searchError}</p>}
+                      <button onClick={handleLookupBadge} className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl text-xs uppercase tracking-wider shadow active:scale-95">
+                        Search Database ➔
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="my-auto flex flex-col gap-4">
+                      <div className="w-[324px] h-[204px] bg-white rounded-xl shadow-xl border border-slate-300 mx-auto overflow-hidden flex flex-row relative before:content-[''] before:absolute before:top-0 before:bottom-0 before:left-0 before:w-2 before:bg-gradient-to-b before:from-blue-600 before:to-emerald-500 flex-shrink-0">
+                        <div className="flex-1 p-3 flex flex-col justify-between bg-gradient-to-r from-slate-50 to-white pl-4">
+                          <div>
+                            <span className="text-[10px] font-black text-slate-800 block uppercase">PATTERSON</span>
+                            <span className="text-[7px] font-bold text-slate-400 block">HEALTH CENTER</span>
+                            <div className="mt-4">
+                              <div className="font-black text-slate-900 text-sm border-b border-slate-300 pb-0.5">{foundBadge.name}</div>
+                              <div className="mt-2 text-emerald-600 font-black text-[9px] uppercase">🛡️ {foundBadge.career}</div>
+                            </div>
+                          </div>
+                          <span className="text-[6px] font-mono text-slate-400">STATUS: ACTIVE PERSONNEL</span>
+                        </div>
+                        <div className="w-28 bg-slate-900 flex flex-col justify-center items-center p-2 relative">
+                          <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-blue-500 to-emerald-400 p-0.5 relative">
+                            <div className="w-full h-full bg-white rounded-full flex items-center justify-center text-3xl relative overflow-visible">
+                              🐢
+                              <span className="absolute -top-3 left-0 right-0 text-xl text-center">{foundBadge.avatarHat.split(' ')[0]}</span>
+                              <span className="absolute -bottom-1 -right-1 bg-slate-800 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">{foundBadge.avatarProp.split(' ')[0]}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <button onClick={() => { setFoundBadge(null); setLookupName(''); }} className="mx-auto text-xs font-bold text-slate-500 underline">
+                        Search Another Name
+                      </button>
+                    </div>
+                  )}
 
-          {/* MODE 6: Fun & Games Arcade Hub (Ready for extensions) */}
-          {appMode === 'gamesHub' && (
-            <div className="flex-1 bg-indigo-900 p-4 flex flex-col justify-between h-full text-white">
-              <div className="text-center mt-4">
-                <span className="text-4xl">🎮</span>
-                <h2 className="text-xl font-black mt-2">Turtle Team Play Zone</h2>
-                <p className="text-xs text-indigo-200 mt-1">Extra mini-games and coloring pages coming soon!</p>
-              </div>
-              <div className="bg-white/10 border border-white/10 rounded-2xl p-6 text-center my-auto">
-                <p className="text-sm font-medium text-indigo-100">🐢 Turtle Shell Memory Matcher</p>
-                <span className="inline-block mt-2 text-[10px] bg-amber-400 text-slate-900 px-2 py-0.5 rounded font-bold uppercase tracking-widest">Under Construction</span>
-              </div>
-              <button onClick={() => setAppMode('tour')} className="w-full bg-white text-indigo-950 font-bold py-2.5 rounded-xl text-xs uppercase shadow-md">
-                Return to Adventure Map ➔
-              </button>
-            </div>
+                  <button onClick={() => setAppMode('tour')} className="w-full bg-slate-800 text-white font-bold py-2.5 rounded-xl text-xs uppercase shadow-md mt-2">
+                    Return to Map Hub
+                  </button>
+                </div>
+              )}
+            </>
           )}
 
         </div>
 
         {/* STICKY VISUAL BOTTOM NAVIGATION BAR */}
-        <div className="absolute bottom-0 left-0 right-0 h-[65px] bg-white border-t border-slate-200 grid grid-cols-4 items-center px-2 z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+        <div className="absolute bottom-0 left-0 right-0 h-[65px] bg-white border-t border-slate-200 grid grid-cols-5 items-center px-1 z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
           <button 
-            onClick={() => { setAppMode('tour'); const idx = tourStops.findIndex(s => s.type === 'map'); if (idx !== -1) setCurrentStepIndex(idx); }} 
-            className={`flex flex-col items-center justify-center gap-0.5 transition-all ${appMode === 'tour' && currentStep?.type === 'map' ? 'text-indigo-600 font-extrabold scale-105' : 'text-slate-400 font-medium'}`}
+            onClick={() => { if(!isNameConfirmed) return; setAppMode('tour'); const idx = tourStops.findIndex(s => s.type === 'map'); if (idx !== -1) setCurrentStepIndex(idx); }} 
+            className={`flex flex-col items-center justify-center gap-0.5 transition-all ${!isNameConfirmed ? 'opacity-20 cursor-not-allowed' : ''} ${appMode === 'tour' && currentStep?.type === 'map' ? 'text-indigo-600 font-black scale-105' : 'text-slate-400'}`}
           >
-            <span className="text-lg">🗺️</span>
-            <span className="text-[10px] tracking-tight">Map Hub</span>
+            <span className="text-base">🗺️</span>
+            <span className="text-[9px] font-bold tracking-tighter">Map</span>
           </button>
           
           <button 
             onClick={() => {
+              if(!isNameConfirmed) return;
               if (completedStops.length < totalRoundsCount) {
-                alert(`🔒 Locked! Complete all ${totalRoundsCount} departments to start the Graduation Quiz!`);
+                alert(`🔒 Locked! Unlock all ${totalRoundsCount} maps first! (${completedStops.length}/${totalRoundsCount} completed)`);
                 return;
               }
               setAppMode('careerQuiz');
             }} 
-            className={`flex flex-col items-center justify-center gap-0.5 transition-all ${completedStops.length < totalRoundsCount ? 'opacity-40' : ''} ${appMode === 'careerQuiz' || appMode === 'avatarBuilder' || appMode === 'badgeSuccess' ? 'text-indigo-600 font-extrabold scale-105' : 'text-slate-400 font-medium'}`}
+            className={`flex flex-col items-center justify-center gap-0.5 transition-all ${(!isNameConfirmed || completedStops.length < totalRoundsCount) ? 'opacity-30' : ''} ${appMode === 'careerQuiz' || appMode === 'avatarBuilder' || appMode === 'badgeSuccess' ? 'text-indigo-600 font-black scale-105' : 'text-slate-400'}`}
           >
-            <span className="text-lg">🎓</span>
-            <span className="text-[10px] tracking-tight">Job Quiz</span>
+            <span className="text-base">🎓</span>
+            <span className="text-[9px] font-bold tracking-tighter">Grad Quiz</span>
           </button>
 
           <button 
-            onClick={() => setAppMode('gamesHub')} 
-            className={`flex flex-col items-center justify-center gap-0.5 transition-all ${appMode === 'gamesHub' ? 'text-indigo-600 font-extrabold scale-105' : 'text-slate-400 font-medium'}`}
+            onClick={() => { if(!isNameConfirmed) return; setAppMode('gamesHub'); }} 
+            className={`flex flex-col items-center justify-center gap-0.5 transition-all ${!isNameConfirmed ? 'opacity-20 cursor-not-allowed' : ''} ${appMode === 'gamesHub' ? 'text-indigo-600 font-black scale-105' : 'text-slate-400'}`}
           >
-            <span className="text-lg">🎮</span>
-            <span className="text-[10px] tracking-tight">Arcade</span>
+            <span className="text-base">🎮</span>
+            <span className="text-[9px] font-bold tracking-tighter">Arcade</span>
+          </button>
+
+          <button 
+            onClick={() => { if(!isNameConfirmed) return; setAppMode('viewBadge'); setFoundBadge(null); setLookupName(''); setSearchError(''); }} 
+            className={`flex flex-col items-center justify-center gap-0.5 transition-all ${!isNameConfirmed ? 'opacity-20 cursor-not-allowed' : ''} ${appMode === 'viewBadge' ? 'text-indigo-600 font-black scale-105' : 'text-slate-400'}`}
+          >
+            <span className="text-base">🪪</span>
+            <span className="text-[9px] font-bold tracking-tighter">My Badge</span>
           </button>
 
           <button 
             onClick={forceGlobalReset} 
             className="flex flex-col items-center justify-center gap-0.5 text-slate-400 hover:text-rose-600 transition-all"
           >
-            <span className="text-lg">🔄</span>
-            <span className="text-[10px] tracking-tight">Reset All</span>
+            <span className="text-base">🔄</span>
+            <span className="text-[9px] font-bold tracking-tighter">Reset</span>
           </button>
         </div>
 
