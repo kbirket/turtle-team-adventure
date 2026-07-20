@@ -275,29 +275,38 @@ export default function App() {
               <div className="border-b border-gray-200 pb-2">
                 <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 block mb-1">Main Hallway</span>
                 <div className="grid grid-cols-3 gap-2">
-                  <button onClick={() => { const i = tourStops.findIndex(s => s.title.toUpperCase().includes("PT")); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-blue-50 border border-blue-400 rounded-lg text-center text-xs font-bold text-blue-700 cursor-pointer relative active:scale-95">🏃‍♂️ PT {isTargetCompleted("PT") && '⭐'}</button>
-                  <button onClick={() => { const i = tourStops.findIndex(s => s.title.toUpperCase().includes("CLINIC")); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-blue-50 border border-blue-400 rounded-lg text-center text-xs font-bold text-blue-700 cursor-pointer relative active:scale-95">🩺 Clinic {isTargetCompleted("CLINIC") && '⭐'}</button>
-                  <button onClick={() => { const i = tourStops.findIndex(s => s.title.toUpperCase().includes("BEHAVIORAL")); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-purple-50 border border-purple-400 rounded-lg text-center text-xs font-bold text-purple-700 cursor-pointer relative active:scale-95">🧠 Behav. {isTargetCompleted("BEHAVIORAL") && '⭐'}</button>
-                  <button onClick={() => { const i = tourStops.findIndex(s => s.title.toUpperCase().includes("LAB")); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-blue-50 border border-blue-400 rounded-lg text-center text-xs font-bold text-blue-700 cursor-pointer relative active:scale-95">🔬 Lab {isTargetCompleted("LAB") && '⭐'}</button>
-                  <button onClick={() => { const i = tourStops.findIndex(s => s.title.toUpperCase().includes("SURGERY")); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-blue-50 border border-blue-400 rounded-lg text-center text-xs font-bold text-blue-700 cursor-pointer relative active:scale-95">🏥 Surg. {isTargetCompleted("SURGERY") && '⭐'}</button>
-                  <button onClick={() => { const i = tourStops.findIndex(s => s.title.toUpperCase().includes("RADIOLOGY")); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-blue-50 border border-blue-400 rounded-lg text-center text-xs font-bold text-blue-700 cursor-pointer relative active:scale-95">🩻 Radio. {isTargetCompleted("RADIOLOGY") && '⭐'}</button>
+                  <button onClick={() => { const i = tourStops.findIndex(s => s.id === 4.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-blue-50 border border-blue-400 rounded-lg text-center text-xs font-bold text-blue-700 cursor-pointer relative active:scale-95">🏃‍♂️ PT {isTargetCompleted("PT") && '⭐'}</button>
+                  <button onClick={() => { const i = tourStops.findIndex(s => s.id === 5.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-blue-50 border border-blue-400 rounded-lg text-center text-xs font-bold text-blue-700 cursor-pointer relative active:scale-95">🩺 Clinic {isTargetCompleted("CLINIC") && '⭐'}</button>
+                  <button onClick={() => { const i = tourStops.findIndex(s => s.id === 6.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-purple-50 border border-purple-400 rounded-lg text-center text-xs font-bold text-purple-700 cursor-pointer relative active:scale-95">🧠 Behav. {isTargetCompleted("BEHAVIORAL") && '⭐'}</button>
+                  <button onClick={() => { const i = tourStops.findIndex(s => s.id === 7.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-blue-50 border border-blue-400 rounded-lg text-center text-xs font-bold text-blue-700 cursor-pointer relative active:scale-95">🔬 Lab {isTargetCompleted("LAB") && '⭐'}</button>
+                  <button onClick={() => { const i = tourStops.findIndex(s => s.id === 8.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-blue-50 border border-blue-400 rounded-lg text-center text-xs font-bold text-blue-700 cursor-pointer relative active:scale-95">🏥 Surg. {isTargetCompleted("SURGERY") && '⭐'}</button>
+                  <button onClick={() => { const i = tourStops.findIndex(s => s.id === 9.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-blue-50 border border-blue-400 rounded-lg text-center text-xs font-bold text-blue-700 cursor-pointer relative active:scale-95">🩻 Radio. {isTargetCompleted("RADIOLOGY") && '⭐'}</button>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-2">
                   <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Left Wing & Tech</span>
-                  <button onClick={() => { const i = tourStops.findIndex(s => s.title.toUpperCase().includes("CAFE")); if (i !== -1) setCurrentStepIndex(i); }} className="p-2.5 bg-amber-50 border border-amber-500 rounded-xl text-center text-xs font-bold text-amber-800 cursor-pointer relative active:scale-95">☕ Cafe {isTargetCompleted("CAFE") && '⭐'}</button>
-                  <button onClick={() => { const i = tourStops.findIndex(s => s.title.toUpperCase().includes("BUSINESS")); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-slate-100 border border-slate-400 rounded-lg text-center text-[11px] font-medium text-slate-700 cursor-pointer relative active:scale-95">💼 Business {isTargetCompleted("BUSINESS") && '⭐'}</button>
-                  <button onClick={() => { const i = tourStops.findIndex(s => s.title.toUpperCase().includes("MECHANICAL")); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-zinc-100 border border-zinc-400 rounded-lg text-center text-[11px] font-medium text-zinc-700 cursor-pointer relative active:scale-95">⚙️ Mech. Room {isTargetCompleted("MECHANICAL") && '⭐'}</button>
+                  <button onClick={() => { const i = tourStops.findIndex(s => s.id === 10.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2.5 bg-amber-50 border border-amber-500 rounded-xl text-center text-xs font-bold text-amber-800 cursor-pointer relative active:scale-95">☕ Cafe {isTargetCompleted("CAFE") && '⭐'}</button>
+                  <button onClick={() => { const i = tourStops.findIndex(s => s.id === 11.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-slate-100 border border-slate-400 rounded-lg text-center text-[11px] font-medium text-slate-700 cursor-pointer relative active:scale-95">💼 Business {isTargetCompleted("BUSINESS") && '⭐'}</button>
+                  <button onClick={() => { const i = tourStops.findIndex(s => s.id === 12.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-zinc-100 border border-zinc-400 rounded-lg text-center text-[11px] font-medium text-zinc-700 cursor-pointer relative active:scale-95">⚙️ Mech. Room {isTargetCompleted("MECHANICAL") && '⭐'}</button>
                 </div>
 
                 <div className="flex flex-col gap-2">
                   <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Right Wing & Admin</span>
-                  <button onClick={() => { const i = tourStops.findIndex(s => s.title.toUpperCase().includes("EMERGENCY")); if (i !== -1) setCurrentStepIndex(i); }} className="p-2.5 bg-red-50 border border-red-400 rounded-xl text-center text-xs font-bold text-red-700 cursor-pointer relative active:scale-95">🚨 Emergency {isTargetCompleted("EMERGENCY") && '⭐'}</button>
-                  <button onClick={() => { const i = tourStops.findIndex(s => s.title.toUpperCase().includes("HOSPITAL")); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-slate-100 border border-slate-400 rounded-lg text-center text-[11px] font-medium text-slate-700 cursor-pointer relative active:scale-95">🏨 Hospital Beds {isTargetCompleted("HOSPITAL") && '⭐'}</button>
-                  <button onClick={() => { const i = tourStops.findIndex(s => s.title.toUpperCase().includes("ADMIN")); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-slate-100 border border-slate-400 rounded-lg text-center text-[11px] font-medium text-slate-700 cursor-pointer relative active:scale-95">👔 Admin Offices {isTargetCompleted("ADMIN") && '⭐'}</button>
+                  <button onClick={() => { const i = tourStops.findIndex(s => s.id === 13.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2.5 bg-red-50 border border-red-400 rounded-xl text-center text-xs font-bold text-red-700 cursor-pointer relative active:scale-95">🚨 Emergency {isTargetCompleted("EMERGENCY") && '⭐'}</button>
+                  <button onClick={() => { const i = tourStops.findIndex(s => s.id === 15.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-slate-100 border border-slate-400 rounded-lg text-center text-[11px] font-medium text-slate-700 cursor-pointer relative active:scale-95">🏨 Hospital Beds {isTargetCompleted("HOSPITAL") && '⭐'}</button>
+                  <button onClick={() => { const i = tourStops.findIndex(s => s.id === 14.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-slate-100 border border-slate-400 rounded-lg text-center text-[11px] font-medium text-slate-700 cursor-pointer relative active:scale-95">👔 Admin Offices {isTargetCompleted("ADMIN") && '⭐'}</button>
+                  <button onClick={() => { const i = tourStops.findIndex(s => s.id === 16.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-slate-100 border border-slate-400 rounded-lg text-center text-[11px] font-medium text-slate-700 cursor-pointer relative active:scale-95">📣 Marketing {isTargetCompleted("COMMUNITY") && '⭐'}</button>
                 </div>
+              </div>
+
+              {/* OUTSIDE / OPERATIONS SECTION */}
+              <div className="border-t border-gray-200 pt-2 mt-1">
+                <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 block mb-1">Facility Ground Operations</span>
+                <button onClick={() => { const i = tourStops.findIndex(s => s.id === 17.0); if (i !== -1) setCurrentStepIndex(i); }} className="w-full p-2.5 bg-zinc-800 border border-zinc-900 rounded-xl text-center text-xs font-bold text-white cursor-pointer relative active:scale-95 flex items-center justify-center gap-2 shadow-sm">
+                  🛠️ Maintenance Support Crew {isTargetCompleted("MAINTENANCE") && '⭐'}
+                </button>
               </div>
             </div>
 
@@ -427,4 +436,4 @@ export default function App() {
       </div>
     </div>
   );
-}// Vercel Vite Build
+}
