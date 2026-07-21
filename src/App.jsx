@@ -7,8 +7,17 @@ const base = new Airtable({
 
 const MASTER_BADGE_BG = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=340&h=215&q=80"; 
 
-// Memory Game Card Equipment Set
-const GAME_CARDS = ['🩺', '🔬', '🩹', '💉', '❤️', '💊', '🚑', '🩻'];
+// Memory Game Character Avatars Set (Using real local character images instead of emojis)
+const GAME_CARDS = [
+  '/characters/doctor/avatar.png',
+  '/characters/nurse/avatar.png',
+  '/characters/lab-tech/avatar.png',
+  '/characters/pt/avatar.png',
+  '/characters/radiology/avatar.png',
+  '/characters/dietary/avatar.png',
+  '/characters/behavioral-health/avatar.png',
+  '/characters/marketing/avatar.png'
+];
 
 export default function App() {
   const [tourStops, setTourStops] = useState([]);
@@ -129,11 +138,10 @@ export default function App() {
   const currentStep = tourStops[currentStepIndex];
   const totalRoundsCount = tourStops.filter(s => s.id >= 4.0 && s.id <= 17.0).length;
 
-  // DIRECT LOCAL ASSET MAPPER FOR avatar.png
   const getDynamicArtwork = (careerTrack) => {
     const track = (careerTrack || finalCareer || '').toLowerCase();
 
-    let folder = 'marketing'; // Default fallback character
+    let folder = 'marketing';
 
     if (track.includes('doctor')) folder = 'doctor';
     else if (track.includes('nurse')) folder = 'nurse';
@@ -150,7 +158,6 @@ export default function App() {
     else if (track.includes('receptionist')) folder = 'receptionist';
     else if (track.includes('evs')) folder = 'evs';
 
-    // Direct path to public/characters/[folder]/avatar.png
     return `/characters/${folder}/avatar.png`;
   };
 
@@ -553,7 +560,6 @@ export default function App() {
                     <h2 className="text-sm font-extrabold text-slate-800 mt-0.5">Finalize Official ID Badge</h2>
                   </div>
 
-                  {/* HIGH-FIDELITY BADGE OVERLAY DISPLAY WITH LOCAL avatar.png */}
                   <div className="w-full max-w-[340px] aspect-[340/215] rounded-2xl shadow-xl border border-slate-300 mx-auto my-auto overflow-hidden relative flex-shrink-0 bg-cover bg-center select-none" style={{ backgroundImage: `url(${MASTER_BADGE_BG})` }}>
                     <div className="absolute top-[24%] left-[4.4%] w-[26.4%] h-[50.2%] rounded-lg overflow-hidden flex items-center justify-center">
                       <img 
@@ -608,13 +614,13 @@ export default function App() {
                 </div>
               )}
 
-              {/* MODE 6: Interactive Memory Mini-Game Arcade */}
+              {/* MODE 6: Interactive Character Memory Mini-Game Arcade (Emoji-Free) */}
               {appMode === 'gamesHub' && (
                 <div className="flex-1 bg-gradient-to-b from-indigo-900 to-slate-900 p-4 flex flex-col justify-between h-full text-white overflow-y-auto">
                   <div className="text-center mt-1">
                     <span className="text-3xl">🧩</span>
-                    <h2 className="text-base font-black tracking-wide">Medical Memory Matcher</h2>
-                    <p className="text-[10px] text-indigo-200">Tap cards to find matching equipment pairs!</p>
+                    <h2 className="text-base font-black tracking-wide">Turtle Character Memory Match</h2>
+                    <p className="text-[10px] text-indigo-200">Tap cards to find matching character avatar pairs!</p>
                   </div>
 
                   {!gameWon ? (
@@ -625,13 +631,17 @@ export default function App() {
                           <button
                             key={idx}
                             onClick={() => handleCardClick(idx)}
-                            className={`aspect-square rounded-xl font-bold text-2xl flex items-center justify-center shadow-md transition-all active:scale-95 touch-manipulation cursor-pointer ${
+                            className={`aspect-square rounded-xl font-bold text-2xl flex items-center justify-center shadow-md transition-all active:scale-95 touch-manipulation cursor-pointer overflow-hidden ${
                               isFlipped 
-                                ? 'bg-white text-slate-800 rotate-0' 
+                                ? 'bg-white rotate-0' 
                                 : 'bg-indigo-600/80 border-2 border-indigo-400/50 text-transparent'
                             }`}
                           >
-                            {isFlipped ? card.icon : '❓'}
+                            {isFlipped ? (
+                              <img src={card.icon} alt="Character Card" className="w-full h-full object-contain p-1" />
+                            ) : (
+                              '❓'
+                            )}
                           </button>
                         );
                       })}
@@ -640,7 +650,7 @@ export default function App() {
                     <div className="my-auto bg-white/10 border border-white/20 rounded-2xl p-6 text-center animate-fade-in">
                       <div className="text-4xl mb-2">🏆</div>
                       <h3 className="text-lg font-black text-emerald-300">Matching Master!</h3>
-                      <p className="text-xs text-indigo-100 mt-1">You found all the hospital equipment pairs!</p>
+                      <p className="text-xs text-indigo-100 mt-1">You found all the character avatar pairs!</p>
                       <button 
                         onClick={startNewMemoryGame}
                         className="mt-4 bg-emerald-500 active:bg-emerald-600 text-white font-bold text-xs py-2.5 px-5 rounded-xl shadow uppercase tracking-wider active:scale-95 touch-manipulation cursor-pointer"
