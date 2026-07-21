@@ -7,6 +7,9 @@ const base = new Airtable({
 
 const MASTER_BADGE_BG = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=340&h=215&q=80"; 
 
+// Memory Game Card Equipment Set
+const GAME_CARDS = ['🩺', '🔬', '🩹', '💉', '❤️', '💊', '🚑', '🩻'];
+
 export default function App() {
   const [tourStops, setTourStops] = useState([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -39,6 +42,12 @@ export default function App() {
   const [avatarHat, setAvatarHat] = useState('🎓 Graduate Cap');
   const [avatarProp, setAvatarProp] = useState('🩺 Stethoscope');
   const [submittingBadge, setSubmittingBadge] = useState(false);
+
+  // MEMORY MINI-GAME STATES
+  const [memoryDeck, setMemoryDeck] = useState([]);
+  const [flippedIndices, setFlippedIndices] = useState([]);
+  const [matchedPairs, setMatchedPairs] = useState([]);
+  const [gameWon, setGameWon] = useState(false);
 
   const matchmakerQuestions = [
     { q: "What sounds like the most fun thing to do?", options: [{ text: "Helping someone feel better when they are sick", type: "clinical" }, { text: "Fixing a broken machine or using a computer", type: "technical" }, { text: "Cooking a delicious meal or drawing a poster", type: "creative" }] },
@@ -120,15 +129,66 @@ export default function App() {
   const currentStep = tourStops[currentStepIndex];
   const totalRoundsCount = tourStops.filter(s => s.id >= 4.0 && s.id <= 17.0).length;
 
+  // DIRECT LOCAL ASSET MAPPER FOR avatar.png
   const getDynamicArtwork = (careerTrack) => {
-    const track = careerTrack || finalCareer;
-    if (track.includes('Tech')) {
-      return tourStops.find(s => s.title.toUpperCase().includes('LAB'))?.character || '';
+    const track = (careerTrack || finalCareer || '').toLowerCase();
+
+    let folder = 'marketing'; // Default fallback character
+
+    if (track.includes('doctor')) folder = 'doctor';
+    else if (track.includes('nurse')) folder = 'nurse';
+    else if (track.includes('tech') || track.includes('lab')) folder = 'lab-tech';
+    else if (track.includes('chef') || track.includes('dietary')) folder = 'dietary';
+    else if (track.includes('pt')) folder = 'pt';
+    else if (track.includes('radiology')) folder = 'radiology';
+    else if (track.includes('behavioral')) folder = 'behavioral-health';
+    else if (track.includes('maintenance')) folder = 'maintenance';
+    else if (track.includes('marketing')) folder = 'marketing';
+    else if (track.includes('it')) folder = 'it';
+    else if (track.includes('cna')) folder = 'cna';
+    else if (track.includes('hr')) folder = 'hr';
+    else if (track.includes('receptionist')) folder = 'receptionist';
+    else if (track.includes('evs')) folder = 'evs';
+
+    // Direct path to public/characters/[folder]/avatar.png
+    return `/characters/${folder}/avatar.png`;
+  };
+
+  const startNewMemoryGame = () => {
+    const fullDeck = [...GAME_CARDS, ...GAME_CARDS]
+      .sort(() => Math.random() - 0.5)
+      .map((icon, id) => ({ id, icon }));
+    setMemoryDeck(fullDeck);
+    setFlippedIndices([]);
+    setMatchedPairs([]);
+    setGameWon(false);
+  };
+
+  useEffect(() => {
+    if (appMode === 'gamesHub') {
+      startNewMemoryGame();
     }
-    if (track.includes('Chef') || track.includes('Wellness')) {
-      return tourStops.find(s => s.title.toUpperCase().includes('CAFE'))?.character || '';
+  }, [appMode]);
+
+  const handleCardClick = (index) => {
+    if (flippedIndices.length === 2 || flippedIndices.includes(index) || matchedPairs.includes(index)) return;
+
+    const newFlipped = [...flippedIndices, index];
+    setFlippedIndices(newFlipped);
+
+    if (newFlipped.length === 2) {
+      const [firstIdx, secondIdx] = newFlipped;
+      if (memoryDeck[firstIdx].icon === memoryDeck[secondIdx].icon) {
+        const newMatches = [...matchedPairs, firstIdx, secondIdx];
+        setMatchedPairs(newMatches);
+        setFlippedIndices([]);
+        if (newMatches.length === memoryDeck.length) {
+          setGameWon(true);
+        }
+      } else {
+        setTimeout(() => setFlippedIndices([]), 900);
+      }
     }
-    return tourStops.find(s => s.title.toUpperCase().includes('MARKETING') || s.id === 16.0)?.character || '';
   };
 
   const handleNameActivation = () => {
@@ -199,7 +259,7 @@ export default function App() {
       });
 
       const careerMap = {
-        clinical: 'Patterson Star Doctor/Nurse',
+        clinical: 'Patterson Doctor',
         technical: 'Expert Hospital Tech Wizard',
         creative: 'Marketing Turtle'
       };
@@ -296,7 +356,7 @@ export default function App() {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-100 p-4 select-none">
-        <div className="text-center font-bold text-slate-600 animate-pulse">🐢 Waking up the hospital turtles...</div>
+        <div className="text-center font-bold text-slate-600 animate-pulse">Waking up the hospital turtles...</div>
       </div>
     );
   }
@@ -324,7 +384,6 @@ export default function App() {
           {!isNameConfirmed ? (
             <div className="flex-1 bg-gradient-to-b from-blue-900 to-indigo-950 p-6 flex flex-col justify-between h-full text-white text-center overflow-y-auto">
               <div className="my-auto flex flex-col items-center gap-4">
-                <div className="text-5xl animate-bounce">🐢</div>
                 <h1 className="text-2xl font-black tracking-wide">Patterson Health Adventure</h1>
                 <p className="text-xs text-indigo-200 px-2 sm:px-4 leading-relaxed">
                   Welcome! Before we kick off our digital corridor tour, tell us your name to print your official security ID card file at the end!
@@ -442,7 +501,7 @@ export default function App() {
                       <div className="flex flex-col gap-1.5 sm:gap-2">
                         <span className="text-[9px] sm:text-[10px] uppercase tracking-wider font-bold text-slate-400">Right Wing & Admin</span>
                         <button onClick={() => { const i = tourStops.findIndex(s => s.id === 13.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 min-h-[44px] bg-red-50 border border-red-400 rounded-xl text-center text-xs font-bold text-red-700 cursor-pointer active:scale-95 touch-manipulation">🚨 Emergency {isTargetCompleted("EMERGENCY") && '⭐'}</button>
-                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 15.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 min-h-[44px] bg-slate-100 border border-slate-400 rounded-lg text-center text-[11px] font-medium text-slate-700 cursor-pointer active:scale-95 touch-manipulation">🏨 Hospital Beds {isTargetCompleted("HOSPITAL") && '⭐'}</button>
+                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 15.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 min-h-[44px] bg-slate-100 border border-slate-400 rounded-lg text-center text-[11px] font-medium text-slate-700 cursor-pointer active:scale-95 touch-manipulation">🏥 Hospital {isTargetCompleted("HOSPITAL") && '⭐'}</button>
                         <button onClick={() => { const i = tourStops.findIndex(s => s.id === 14.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 min-h-[44px] bg-slate-100 border border-slate-400 rounded-lg text-center text-[11px] font-medium text-slate-700 cursor-pointer active:scale-95 touch-manipulation">👔 Admin Offices {isTargetCompleted("ADMIN") && '⭐'}</button>
                         <button onClick={() => { const i = tourStops.findIndex(s => s.id === 16.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 min-h-[44px] bg-slate-100 border border-slate-400 rounded-lg text-center text-[11px] font-medium text-slate-700 cursor-pointer active:scale-95 touch-manipulation">📣 Marketing {isTargetCompleted("COMMUNITY") && '⭐'}</button>
                       </div>
@@ -494,12 +553,14 @@ export default function App() {
                     <h2 className="text-sm font-extrabold text-slate-800 mt-0.5">Finalize Official ID Badge</h2>
                   </div>
 
-                  {/* Scaled Responsive Frame Container */}
+                  {/* HIGH-FIDELITY BADGE OVERLAY DISPLAY WITH LOCAL avatar.png */}
                   <div className="w-full max-w-[340px] aspect-[340/215] rounded-2xl shadow-xl border border-slate-300 mx-auto my-auto overflow-hidden relative flex-shrink-0 bg-cover bg-center select-none" style={{ backgroundImage: `url(${MASTER_BADGE_BG})` }}>
-                    <div className="absolute top-[24%] left-[4.4%] w-[26.4%] h-[50.2%] rounded-lg overflow-visible flex items-center justify-center">
-                      <img src={getDynamicArtwork()} alt="Illustrated Profile Turtle" className="w-full h-[95%] object-contain" />
-                      <span className="absolute -top-[16%] left-0 right-0 text-xl sm:text-2xl text-center drop-shadow-md z-30">{avatarHat.split(' ')[0]}</span>
-                      <span className="absolute -bottom-[5%] -right-[5%] bg-[#0f2d59] text-white rounded-full w-[22px] h-[22px] flex items-center justify-center shadow-md text-xs border border-white font-bold z-30">{avatarProp.split(' ')[0]}</span>
+                    <div className="absolute top-[24%] left-[4.4%] w-[26.4%] h-[50.2%] rounded-lg overflow-hidden flex items-center justify-center">
+                      <img 
+                        src={getDynamicArtwork()} 
+                        alt="Official Turtle Character Avatar" 
+                        className="w-full h-full object-contain" 
+                      />
                     </div>
 
                     <div className="absolute top-[22%] left-[35%] right-[4.4%] text-center">
@@ -527,26 +588,7 @@ export default function App() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-1.5 my-1">
-                    <div>
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Select Custom Hat Option</label>
-                      <div className="grid grid-cols-2 gap-1">
-                        {['🎓 Graduate Cap', '🤠 Cowboy Hat', '🧑‍🍳 Chef Hat', '👑 Golden Crown'].map(h => (
-                          <button key={h} onClick={() => setAvatarHat(h)} className={`py-1.5 px-2 text-xs font-bold rounded-lg border text-center transition-all active:scale-95 touch-manipulation ${avatarHat === h ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white text-slate-600'}`}>{h}</button>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Select Specialized Tool Accessory</label>
-                      <div className="grid grid-cols-2 gap-1">
-                        {['🩺 Stethoscope', '🔬 Microscope', '🩹 Bandages', '🩻 Shell X-Ray'].map(p => (
-                          <button key={p} onClick={() => setAvatarProp(p)} className={`py-1.5 px-2 text-xs font-bold rounded-lg border text-center transition-all active:scale-95 touch-manipulation ${avatarProp === p ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white text-slate-600'}`}>{p}</button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <button onClick={submitBadgeOrder} disabled={submittingBadge} className="w-full min-h-[48px] bg-gradient-to-r from-emerald-600 to-teal-600 active:from-emerald-700 active:to-teal-700 text-white font-black py-3 rounded-xl shadow-lg text-xs uppercase tracking-wider cursor-pointer active:scale-95 transition-all touch-manipulation">
+                  <button onClick={submitBadgeOrder} disabled={submittingBadge} className="w-full min-h-[48px] bg-gradient-to-r from-emerald-600 to-teal-600 active:from-emerald-700 active:to-teal-700 text-white font-black py-3 rounded-xl shadow-lg text-xs uppercase tracking-wider cursor-pointer active:scale-95 transition-all touch-manipulation my-auto">
                     {submittingBadge ? '🖨️ Transmitting to Smart-21 Spooler...' : '🔒 Authorize & Print CR-80 ID Card ➔'}
                   </button>
                 </div>
@@ -566,20 +608,50 @@ export default function App() {
                 </div>
               )}
 
-              {/* MODE 6: Fun & Games Arcade Hub */}
+              {/* MODE 6: Interactive Memory Mini-Game Arcade */}
               {appMode === 'gamesHub' && (
-                <div className="flex-1 bg-indigo-900 p-4 flex flex-col justify-between h-full text-white">
-                  <div className="text-center mt-4">
-                    <span className="text-4xl">🎮</span>
-                    <h2 className="text-xl font-black mt-2">Turtle Team Play Zone</h2>
-                    <p className="text-xs text-indigo-200 mt-1">Extra mini-games and coloring pages coming soon!</p>
+                <div className="flex-1 bg-gradient-to-b from-indigo-900 to-slate-900 p-4 flex flex-col justify-between h-full text-white overflow-y-auto">
+                  <div className="text-center mt-1">
+                    <span className="text-3xl">🧩</span>
+                    <h2 className="text-base font-black tracking-wide">Medical Memory Matcher</h2>
+                    <p className="text-[10px] text-indigo-200">Tap cards to find matching equipment pairs!</p>
                   </div>
-                  <div className="bg-white/10 border border-white/10 rounded-2xl p-6 text-center my-auto">
-                    <p className="text-sm font-medium text-indigo-100">🐢 Turtle Shell Memory Matcher</p>
-                    <span className="inline-block mt-2 text-[10px] bg-amber-400 text-slate-900 px-2 py-0.5 rounded font-bold uppercase tracking-widest">Under Construction</span>
-                  </div>
-                  <button onClick={() => setAppMode('tour')} className="w-full min-h-[48px] bg-white active:bg-indigo-50 text-indigo-950 font-bold py-2.5 rounded-xl text-xs uppercase shadow-md cursor-pointer active:scale-95 transition-all touch-manipulation">
-                    Return to Adventure Map ➔
+
+                  {!gameWon ? (
+                    <div className="grid grid-cols-4 gap-2 my-auto max-w-[280px] mx-auto w-full">
+                      {memoryDeck.map((card, idx) => {
+                        const isFlipped = flippedIndices.includes(idx) || matchedPairs.includes(idx);
+                        return (
+                          <button
+                            key={idx}
+                            onClick={() => handleCardClick(idx)}
+                            className={`aspect-square rounded-xl font-bold text-2xl flex items-center justify-center shadow-md transition-all active:scale-95 touch-manipulation cursor-pointer ${
+                              isFlipped 
+                                ? 'bg-white text-slate-800 rotate-0' 
+                                : 'bg-indigo-600/80 border-2 border-indigo-400/50 text-transparent'
+                            }`}
+                          >
+                            {isFlipped ? card.icon : '❓'}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="my-auto bg-white/10 border border-white/20 rounded-2xl p-6 text-center animate-fade-in">
+                      <div className="text-4xl mb-2">🏆</div>
+                      <h3 className="text-lg font-black text-emerald-300">Matching Master!</h3>
+                      <p className="text-xs text-indigo-100 mt-1">You found all the hospital equipment pairs!</p>
+                      <button 
+                        onClick={startNewMemoryGame}
+                        className="mt-4 bg-emerald-500 active:bg-emerald-600 text-white font-bold text-xs py-2.5 px-5 rounded-xl shadow uppercase tracking-wider active:scale-95 touch-manipulation cursor-pointer"
+                      >
+                        Play Again 🔄
+                      </button>
+                    </div>
+                  )}
+
+                  <button onClick={() => setAppMode('tour')} className="w-full min-h-[44px] bg-white/20 active:bg-white/30 text-white font-bold py-2 rounded-xl text-xs uppercase shadow-md cursor-pointer active:scale-95 transition-all touch-manipulation">
+                    Return to Map ➔
                   </button>
                 </div>
               )}
@@ -610,10 +682,12 @@ export default function App() {
                   ) : (
                     <div className="my-auto flex flex-col gap-3">
                       <div className="w-full max-w-[340px] aspect-[340/215] rounded-2xl shadow-xl border border-slate-300 mx-auto overflow-hidden relative bg-cover bg-center select-none" style={{ backgroundImage: `url(${MASTER_BADGE_BG})` }}>
-                        <div className="absolute top-[24%] left-[4.4%] w-[26.4%] h-[50.2%] rounded-lg overflow-visible flex items-center justify-center">
-                          <img src={getDynamicArtwork(foundBadge.career)} alt="Database Illustrated Character Turtle" className="w-full h-[95%] object-contain" />
-                          <span className="absolute -top-[16%] left-0 right-0 text-xl sm:text-2xl text-center drop-shadow-md z-30">{foundBadge.avatarHat.split(' ')[0]}</span>
-                          <span className="absolute -bottom-[5%] -right-[5%] bg-[#0f2d59] text-white rounded-full w-[22px] h-[22px] flex items-center justify-center text-xs border border-white font-bold z-30">{foundBadge.avatarProp.split(' ')[0]}</span>
+                        <div className="absolute top-[24%] left-[4.4%] w-[26.4%] h-[50.2%] rounded-lg overflow-hidden flex items-center justify-center">
+                          <img 
+                            src={getDynamicArtwork(foundBadge.career)} 
+                            alt="Database Character Avatar" 
+                            className="w-full h-full object-contain" 
+                          />
                         </div>
 
                         <div className="absolute top-[22%] left-[35%] right-[4.4%] text-center">
@@ -657,7 +731,7 @@ export default function App() {
 
         </div>
 
-        {/* STICKY BOTTOM NAVIGATION BAR WITH TOUCH OPTIMIZATION */}
+        {/* STICKY BOTTOM NAVIGATION BAR */}
         <div className="absolute bottom-0 left-0 right-0 h-[65px] bg-white border-t border-slate-200 grid grid-cols-5 items-center px-1 z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] pb-safe">
           <button 
             onClick={() => { if(!isNameConfirmed) return; setAppMode('tour'); const idx = tourStops.findIndex(s => s.type === 'map'); if (idx !== -1) setCurrentStepIndex(idx); }} 
