@@ -5,6 +5,8 @@ const base = new Airtable({
   apiKey: import.meta.env.VITE_AIRTABLE_PAT 
 }).base(import.meta.env.VITE_AIRTABLE_BASE_ID);
 
+const MASTER_BADGE_BG = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=340&h=215&q=80"; 
+
 export default function App() {
   const [tourStops, setTourStops] = useState([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -22,7 +24,7 @@ export default function App() {
   const [shuffledStopOptions, setShuffledStopOptions] = useState([]);
 
   // NAVIGATION ENGINE & LOOKUP STATES
-  const [appMode, setAppMode] = useState('tour'); // 'tour', 'careerQuiz', 'avatarBuilder', 'badgeSuccess', 'gamesHub', 'viewBadge'
+  const [appMode, setAppMode] = useState('tour'); 
   const [lookupValue, setLookupValue] = useState('');
   const [foundBadge, setFoundBadge] = useState(null);
   const [searchError, setSearchError] = useState('');
@@ -38,7 +40,6 @@ export default function App() {
   const [avatarProp, setAvatarProp] = useState('🩺 Stethoscope');
   const [submittingBadge, setSubmittingBadge] = useState(false);
 
-  // Deep 25-Question Matchmaker Diagnostic Data
   const matchmakerQuestions = [
     { q: "What sounds like the most fun thing to do?", options: [{ text: "Helping someone feel better when they are sick", type: "clinical" }, { text: "Fixing a broken machine or using a computer", type: "technical" }, { text: "Cooking a delicious meal or drawing a poster", type: "creative" }] },
     { q: "If you were given a superpower tool, which one would you pick?", options: [{ text: "A magical healing bandage", type: "clinical" }, { text: "Super-vision X-Ray glasses", type: "technical" }, { text: "A magical wooden mixing spoon", type: "creative" }] },
@@ -67,7 +68,6 @@ export default function App() {
     { q: "Finally, pick the words that describe you best:", options: [{ text: "Kind, helpful, and attentive", type: "clinical" }, { text: "Smart, organized, and analytical", type: "technical" }, { text: "Creative, energetic, and organized", type: "creative" }] }
   ];
 
-  // Dynamic Content Fetcher & Image Asset Preloader Engine
   useEffect(() => {
     base('Tour Stops')
       .select({ 
@@ -98,7 +98,6 @@ export default function App() {
           wrongAnswer: record.fields.wrongAnswer || null,
         }));
 
-        // Asset Performance Preloader
         formattedStops.forEach(stop => {
           if (stop.background) {
             const img = new Image();
@@ -110,32 +109,28 @@ export default function App() {
           }
         });
 
+        const bgImg = new Image();
+        bgImg.src = MASTER_BADGE_BG;
+
         setTourStops(formattedStops);
         setLoading(false);
       });
   }, []);
 
   const currentStep = tourStops[currentStepIndex];
-
-  // Identifies exactly how many operational stamp challenges exist on the interactive map
   const totalRoundsCount = tourStops.filter(s => s.id >= 4.0 && s.id <= 17.0).length;
 
-  // Pulls a dynamic character illustration asset from your Airtable list to display inside the frame
-  const getDynamicArtwork = () => {
-    if (finalCareer.includes('Tech')) {
-      const stop = tourStops.find(s => s.title.toUpperCase().includes('LAB') || s.title.toUpperCase().includes('MECHANICAL'));
-      return stop?.character || 'https://images.unsplash.com/photo-1595433707802-6b2626ef1c91?auto=format&fit=crop&w=120&q=80';
+  const getDynamicArtwork = (careerTrack) => {
+    const track = careerTrack || finalCareer;
+    if (track.includes('Tech')) {
+      return tourStops.find(s => s.title.toUpperCase().includes('LAB'))?.character || '';
     }
-    if (finalCareer.includes('Chef') || finalCareer.includes('Wellness')) {
-      const stop = tourStops.find(s => s.title.toUpperCase().includes('CAFE'));
-      return stop?.character || 'https://images.unsplash.com/photo-1595433707802-6b2626ef1c91?auto=format&fit=crop&w=120&q=80';
+    if (track.includes('Chef') || track.includes('Wellness')) {
+      return tourStops.find(s => s.title.toUpperCase().includes('CAFE'))?.character || '';
     }
-    // Default Fallback: Marketing Turtle/Lobby Artwork
-    const defaultStop = tourStops.find(s => s.title.toUpperCase().includes('MARKETING') || s.title.toUpperCase().includes('CLINIC') || s.id === 16.0);
-    return defaultStop?.character || 'https://images.unsplash.com/photo-1595433707802-6b2626ef1c91?auto=format&fit=crop&w=120&q=80';
+    return tourStops.find(s => s.title.toUpperCase().includes('MARKETING') || s.id === 16.0)?.character || '';
   };
 
-  // Setup Initial Arrival Name Gate & Generate TUR-### Unique Key
   const handleNameActivation = () => {
     if (!childName.trim()) return alert("Please drop in your name!");
     const randomThreeDigit = Math.floor(100 + Math.random() * 900);
@@ -143,7 +138,6 @@ export default function App() {
     setIsNameConfirmed(true);
   };
 
-  // Shuffles Career Question Options
   useEffect(() => {
     if (appMode === 'careerQuiz' && matchmakerQuestions[currentQuizQuestion]) {
       const optionsCopy = [...matchmakerQuestions[currentQuizQuestion].options];
@@ -155,32 +149,27 @@ export default function App() {
     }
   }, [currentQuizQuestion, appMode]);
 
-const handleNextAction = () => {
-  // If the user is currently looking at the character dialogue and a question exists, NOW trigger the quiz phase
-  if (currentStep.question && !completedStops.includes(currentStep.title) && !quizActive) {
-    const items = [
-      { text: currentStep.correctAnswer, correct: true },
-      { text: currentStep.wrongAnswer, correct: false }
-    ];
-    if (Math.random() > 0.5) items.reverse();
-    setShuffledStopOptions(items);
-    setQuizActive(true);
-    return;
-  }
-  
-  // Moving between steps or back to the map always guarantees the quiz panel is hidden initially
-  const nextIndex = tourStops.findIndex(stop => stop.id === currentStep.nextStepIndex);
-  if (nextIndex !== -1) {
-    setCurrentStepIndex(nextIndex);
-  } else {
-    const mapIdx = tourStops.findIndex(s => s.type === 'map');
-    if (mapIdx !== -1) setCurrentStepIndex(mapIdx);
-  }
-  
-  // CRITICAL RESET FIX: Always hide the quiz box when landing on a fresh stop!
-  setQuizActive(false);
-  setQuizFeedback(null);
-};
+  const handleNextAction = () => {
+    if (currentStep.question && !completedStops.includes(currentStep.title) && !quizActive) {
+      const items = [
+        { text: currentStep.correctAnswer, correct: true },
+        { text: currentStep.wrongAnswer, correct: false }
+      ];
+      if (Math.random() > 0.5) items.reverse();
+      setShuffledStopOptions(items);
+      setQuizActive(true);
+      return;
+    }
+    const nextIndex = tourStops.findIndex(stop => stop.id === currentStep.nextStepIndex);
+    if (nextIndex !== -1) {
+      setCurrentStepIndex(nextIndex);
+    } else {
+      const mapIdx = tourStops.findIndex(s => s.type === 'map');
+      if (mapIdx !== -1) setCurrentStepIndex(mapIdx);
+    }
+    setQuizActive(false);
+    setQuizFeedback(null);
+  };
 
   const handleAnswerSubmit = (isCorrect) => {
     if (isCorrect) {
@@ -212,7 +201,7 @@ const handleNextAction = () => {
       const careerMap = {
         clinical: 'Patterson Star Doctor/Nurse',
         technical: 'Expert Hospital Tech Wizard',
-        creative: 'Master Wellness Chef'
+        creative: 'Marketing Turtle'
       };
 
       setFinalCareer(careerMap[highestType]);
@@ -270,14 +259,23 @@ const handleNextAction = () => {
         prop = parts[1] || "";
       }
 
+      const rawDate = data["Ordered Date"] ? new Date(data["Ordered Date"]) : new Date();
+      const formattedDate = `${String(rawDate.getMonth() + 1).padStart(2, '0')}/${String(rawDate.getDate()).padStart(2, '0')}/${rawDate.getFullYear()}`;
+
       setFoundBadge({
         name: data["Child Name"],
         career: data["Assigned Career"],
         avatarHat: hat,
         avatarProp: prop,
-        pin: data["Notes"] || "TUR-AUTH"
+        pin: data["Notes"] || "TUR-AUTH",
+        date: formattedDate
       });
     });
+  };
+
+  const getTodayFormatted = () => {
+    const today = new Date();
+    return `${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}/${today.getFullYear()}`;
   };
 
   const isTargetCompleted = (keyword) => {
@@ -297,18 +295,18 @@ const handleNextAction = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-100">
+      <div className="flex justify-center items-center min-h-screen bg-gray-100 p-4 select-none">
         <div className="text-center font-bold text-slate-600 animate-pulse">🐢 Waking up the hospital turtles...</div>
       </div>
     );
   }
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100 p-4">
-      <div className="w-full max-w-sm h-[820px] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col border-8 border-gray-800 relative">
+    <div className="flex justify-center items-center min-h-[100dvh] bg-gray-100 p-0 sm:p-4 select-none touch-manipulation">
+      <div className="w-full max-w-sm h-[100dvh] sm:h-[820px] max-h-[850px] bg-white sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border-0 sm:border-8 border-gray-800 relative">
         
         {/* HEADER BAR */}
-        <div className="bg-slate-800 text-white px-4 py-3 font-bold tracking-wide shadow-md flex justify-between items-center gap-2">
+        <div className="bg-slate-800 text-white px-4 py-3 font-bold tracking-wide shadow-md flex justify-between items-center gap-2 flex-shrink-0 z-20">
           <span className="truncate text-sm sm:text-base">
             {!isNameConfirmed ? '👋 Welcome Arrival' : appMode === 'tour' ? currentStep.title : appMode === 'gamesHub' ? '🎮 Game Arcade' : appMode === 'viewBadge' ? '🪪 Badge File' : '🎓 Graduation Center'}
           </span>
@@ -324,11 +322,11 @@ const handleNextAction = () => {
           
           {/* STEP 0: INITIAL NAME LOG-IN GATE */}
           {!isNameConfirmed ? (
-            <div className="flex-1 bg-gradient-to-b from-blue-900 to-indigo-950 p-6 flex flex-col justify-between h-full text-white text-center">
+            <div className="flex-1 bg-gradient-to-b from-blue-900 to-indigo-950 p-6 flex flex-col justify-between h-full text-white text-center overflow-y-auto">
               <div className="my-auto flex flex-col items-center gap-4">
                 <div className="text-5xl animate-bounce">🐢</div>
                 <h1 className="text-2xl font-black tracking-wide">Patterson Health Adventure</h1>
-                <p className="text-xs text-indigo-200 px-4 leading-relaxed">
+                <p className="text-xs text-indigo-200 px-2 sm:px-4 leading-relaxed">
                   Welcome! Before we kick off our digital corridor tour, tell us your name to print your official security ID card file at the end!
                 </p>
                 
@@ -342,13 +340,13 @@ const handleNextAction = () => {
                   />
                   <button 
                     onClick={handleNameActivation}
-                    className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-3.5 rounded-2xl text-xs uppercase tracking-widest shadow-md transition-all active:scale-95 cursor-pointer"
+                    className="w-full min-h-[48px] bg-emerald-500 active:bg-emerald-600 text-white font-black py-3.5 rounded-2xl text-xs uppercase tracking-widest shadow-md transition-all active:scale-95 cursor-pointer touch-manipulation"
                   >
                     Start Adventure ➔
                   </button>
                 </div>
               </div>
-              <div className="text-[10px] text-indigo-400 font-bold">Secure Clinic Device Profile Pipeline</div>
+              <div className="text-[10px] text-indigo-400 font-bold py-2">Secure Clinic Device Profile Pipeline</div>
             </div>
           ) : (
             <>
@@ -357,10 +355,10 @@ const handleNextAction = () => {
                 <div className="flex-1 bg-no-repeat relative flex flex-col justify-end p-4 h-full" style={{ backgroundImage: `url(${currentStep.background})`, backgroundPosition: currentStep.bgPosition, backgroundSize: currentStep.bgSize }}>
                   {!quizActive && (
                     <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
-                      <img src={currentStep.character} alt={currentStep.characterName} className="w-4/5 h-auto object-contain mt-12" />
+                      <img src={currentStep.character} alt={currentStep.characterName} className="w-4/5 max-h-[60%] object-contain mt-8" />
                     </div>
                   )}
-                  <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-xl border border-gray-200 z-10 text-center mb-2 min-h-[160px] flex flex-col justify-center">
+                  <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-xl border border-gray-200 z-10 text-center mb-2 min-h-[150px] flex flex-col justify-center">
                     {!quizActive ? (
                       <>
                         <h3 className="font-bold text-lg text-emerald-700 mb-1">{currentStep.characterName} {isTargetCompleted(currentStep.title) && '✅'}</h3>
@@ -371,11 +369,11 @@ const handleNextAction = () => {
                     ) : (
                       <div className="flex flex-col gap-2">
                         <h3 className="font-extrabold text-indigo-700 text-base">✨ Stamp Challenge! ✨</h3>
-                        <p className="text-sm font-medium text-gray-800 mb-2">{currentStep.question}</p>
+                        <p className="text-xs sm:text-sm font-medium text-gray-800 mb-1">{currentStep.question}</p>
                         
                         <div className="grid grid-cols-2 gap-2">
                           {shuffledStopOptions.map((opt, i) => {
-                            let buttonStyle = "bg-slate-50 border border-slate-300 text-slate-700 hover:bg-slate-100";
+                            let buttonStyle = "bg-slate-50 border border-slate-300 text-slate-700 active:bg-slate-200";
                             if (quizFeedback !== null) {
                               if (opt.correct) {
                                 buttonStyle = "bg-emerald-50 border border-emerald-400 text-emerald-700 pointer-events-none";
@@ -384,7 +382,7 @@ const handleNextAction = () => {
                               }
                             }
                             return (
-                              <button key={i} onClick={() => handleAnswerSubmit(opt.correct)} className={`p-2 font-bold text-xs rounded-xl cursor-pointer transition-all ${buttonStyle}`}>
+                              <button key={i} onClick={() => handleAnswerSubmit(opt.correct)} className={`p-2.5 font-bold text-xs rounded-xl cursor-pointer transition-all min-h-[44px] active:scale-95 touch-manipulation ${buttonStyle}`}>
                                 {opt.text}
                               </button>
                             );
@@ -393,14 +391,14 @@ const handleNextAction = () => {
 
                         {quizFeedback === 'wrong' && (
                           <div className="text-center mt-1">
-                            <button onClick={() => setQuizFeedback(null)} className="text-[10px] bg-slate-700 text-white px-2.5 py-1 rounded-lg">Retry Choice 🔄</button>
+                            <button onClick={() => setQuizFeedback(null)} className="text-[10px] bg-slate-700 active:bg-slate-800 text-white px-3 py-1.5 rounded-lg active:scale-95 touch-manipulation">Retry Choice 🔄</button>
                           </div>
                         )}
                       </div>
                     )}
                   </div>
                   {(!quizActive || quizFeedback === 'correct') && (
-                    <button onClick={handleNextAction} className="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl z-10 uppercase tracking-wider cursor-pointer shadow-md hover:bg-emerald-700">
+                    <button onClick={handleNextAction} className="w-full min-h-[48px] bg-emerald-600 active:bg-emerald-700 text-white font-bold py-3 rounded-xl z-10 uppercase tracking-wider cursor-pointer shadow-md active:scale-95 transition-all touch-manipulation">
                       {quizFeedback === 'correct' ? 'Collect Stamp & Map Hub ➔' : currentStep.buttonText}
                     </button>
                   )}
@@ -409,61 +407,60 @@ const handleNextAction = () => {
 
               {/* MODE 2: Map System */}
               {appMode === 'tour' && currentStep.type === 'map' && (
-                <div className="flex-1 bg-slate-50 p-4 flex flex-col justify-between overflow-y-auto h-full">
+                <div className="flex-1 bg-slate-50 p-3 sm:p-4 flex flex-col justify-between overflow-y-auto h-full">
                   <div className="text-center mb-2 flex justify-between items-center bg-white p-2 rounded-xl shadow-sm border border-slate-200">
                     <div className="text-left">
-                      <h2 className="text-sm font-extrabold text-slate-800">Agent: {childName}</h2>
-                      <p className="text-[10px] text-slate-400">Unlock stamps at all {totalRoundsCount} locations!</p>
+                      <h2 className="text-xs sm:text-sm font-extrabold text-slate-800">Agent: {childName}</h2>
+                      <p className="text-[9px] sm:text-[10px] text-slate-400">Unlock stamps at all {totalRoundsCount} locations!</p>
                     </div>
                     <span className="text-xs bg-indigo-100 text-indigo-700 font-black px-2.5 py-1 rounded-lg border border-indigo-300 font-mono tracking-wider">
                       {assignedPin}
                     </span>
                   </div>
 
-                  <div className="flex flex-col gap-3 my-auto">
+                  <div className="flex flex-col gap-2 sm:gap-3 my-auto">
                     <div className="border-b border-gray-200 pb-2">
                       <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 block mb-1">Main Hallway</span>
-                      <div className="grid grid-cols-3 gap-2">
-                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 4.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-blue-50 border border-blue-400 rounded-lg text-center text-xs font-bold text-blue-700 cursor-pointer relative active:scale-95">🏃‍♂️ PT {isTargetCompleted("PT") && '⭐'}</button>
-                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 5.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-blue-50 border border-blue-400 rounded-lg text-center text-xs font-bold text-blue-700 cursor-pointer relative active:scale-95">🩺 Clinic {isTargetCompleted("CLINIC") && '⭐'}</button>
-                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 6.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-purple-50 border border-purple-400 rounded-lg text-center text-xs font-bold text-purple-700 cursor-pointer relative active:scale-95">🧠 Behav. {isTargetCompleted("BEHAVIORAL") && '⭐'}</button>
-                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 7.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-blue-50 border border-blue-400 rounded-lg text-center text-xs font-bold text-blue-700 cursor-pointer relative active:scale-95">🔬 Lab {isTargetCompleted("LAB") && '⭐'}</button>
-                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 8.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-blue-50 border border-blue-400 rounded-lg text-center text-xs font-bold text-blue-700 cursor-pointer relative active:scale-95">🏥 Surg. {isTargetCompleted("SURGERY") && '⭐'}</button>
-                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 9.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-blue-50 border border-blue-400 rounded-lg text-center text-xs font-bold text-blue-700 cursor-pointer relative active:scale-95">🩻 Radio. {isTargetCompleted("RADIOLOGY") && '⭐'}</button>
+                      <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 4.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 min-h-[44px] bg-blue-50 border border-blue-400 rounded-lg text-center text-xs font-bold text-blue-700 cursor-pointer active:scale-95 touch-manipulation">🏃‍♂️ PT {isTargetCompleted("PT") && '⭐'}</button>
+                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 5.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 min-h-[44px] bg-blue-50 border border-blue-400 rounded-lg text-center text-xs font-bold text-blue-700 cursor-pointer active:scale-95 touch-manipulation">🩺 Clinic {isTargetCompleted("CLINIC") && '⭐'}</button>
+                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 6.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 min-h-[44px] bg-purple-50 border border-purple-400 rounded-lg text-center text-xs font-bold text-purple-700 cursor-pointer active:scale-95 touch-manipulation">🧠 Behav. {isTargetCompleted("BEHAVIORAL") && '⭐'}</button>
+                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 7.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 min-h-[44px] bg-blue-50 border border-blue-400 rounded-lg text-center text-xs font-bold text-blue-700 cursor-pointer active:scale-95 touch-manipulation">🔬 Lab {isTargetCompleted("LAB") && '⭐'}</button>
+                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 8.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 min-h-[44px] bg-blue-50 border border-blue-400 rounded-lg text-center text-xs font-bold text-blue-700 cursor-pointer active:scale-95 touch-manipulation">🏥 Surg. {isTargetCompleted("SURGERY") && '⭐'}</button>
+                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 9.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 min-h-[44px] bg-blue-50 border border-blue-400 rounded-lg text-center text-xs font-bold text-blue-700 cursor-pointer active:scale-95 touch-manipulation">🩻 Radio. {isTargetCompleted("RADIOLOGY") && '⭐'}</button>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="flex flex-col gap-2">
-                        <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Left Wing & Tech</span>
-                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 10.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2.5 bg-amber-50 border border-amber-500 rounded-xl text-center text-xs font-bold text-amber-800 cursor-pointer relative active:scale-95">☕ Cafe {isTargetCompleted("CAFE") && '⭐'}</button>
-                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 11.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-slate-100 border border-slate-400 rounded-lg text-center text-[11px] font-medium text-slate-700 cursor-pointer relative active:scale-95">💼 Business {isTargetCompleted("BUSINESS") && '⭐'}</button>
-                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 12.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-zinc-100 border border-zinc-400 rounded-lg text-center text-[11px] font-medium text-zinc-700 cursor-pointer relative active:scale-95">⚙️ Mech. Room {isTargetCompleted("MECHANICAL") && '⭐'}</button>
+                    <div className="grid grid-cols-2 gap-2 sm:gap-4">
+                      <div className="flex flex-col gap-1.5 sm:gap-2">
+                        <span className="text-[9px] sm:text-[10px] uppercase tracking-wider font-bold text-slate-400">Left Wing & Tech</span>
+                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 10.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 min-h-[44px] bg-amber-50 border border-amber-500 rounded-xl text-center text-xs font-bold text-amber-800 cursor-pointer active:scale-95 touch-manipulation">☕ Cafe {isTargetCompleted("CAFE") && '⭐'}</button>
+                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 11.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 min-h-[44px] bg-slate-100 border border-slate-400 rounded-lg text-center text-[11px] font-medium text-slate-700 cursor-pointer active:scale-95 touch-manipulation">💼 Business {isTargetCompleted("BUSINESS") && '⭐'}</button>
+                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 12.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 min-h-[44px] bg-zinc-100 border border-zinc-400 rounded-lg text-center text-[11px] font-medium text-zinc-700 cursor-pointer active:scale-95 touch-manipulation">⚙️ Mech. Room {isTargetCompleted("MECHANICAL") && '⭐'}</button>
                       </div>
 
-                      <div className="flex flex-col gap-2">
-                        <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Right Wing & Admin</span>
-                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 13.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2.5 bg-red-50 border border-red-400 rounded-xl text-center text-xs font-bold text-red-700 cursor-pointer relative active:scale-95">🚨 Emergency {isTargetCompleted("EMERGENCY") && '⭐'}</button>
-                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 15.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-slate-100 border border-slate-400 rounded-lg text-center text-[11px] font-medium text-slate-700 cursor-pointer relative active:scale-95">🏨 Hospital Beds {isTargetCompleted("HOSPITAL") && '⭐'}</button>
-                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 14.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-slate-100 border border-slate-400 rounded-lg text-center text-[11px] font-medium text-slate-700 cursor-pointer relative active:scale-95">👔 Admin Offices {isTargetCompleted("ADMIN") && '⭐'}</button>
-                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 16.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 bg-slate-100 border border-slate-400 rounded-lg text-center text-[11px] font-medium text-slate-700 cursor-pointer relative active:scale-95">📣 Marketing {isTargetCompleted("COMMUNITY") && '⭐'}</button>
+                      <div className="flex flex-col gap-1.5 sm:gap-2">
+                        <span className="text-[9px] sm:text-[10px] uppercase tracking-wider font-bold text-slate-400">Right Wing & Admin</span>
+                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 13.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 min-h-[44px] bg-red-50 border border-red-400 rounded-xl text-center text-xs font-bold text-red-700 cursor-pointer active:scale-95 touch-manipulation">🚨 Emergency {isTargetCompleted("EMERGENCY") && '⭐'}</button>
+                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 15.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 min-h-[44px] bg-slate-100 border border-slate-400 rounded-lg text-center text-[11px] font-medium text-slate-700 cursor-pointer active:scale-95 touch-manipulation">🏨 Hospital Beds {isTargetCompleted("HOSPITAL") && '⭐'}</button>
+                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 14.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 min-h-[44px] bg-slate-100 border border-slate-400 rounded-lg text-center text-[11px] font-medium text-slate-700 cursor-pointer active:scale-95 touch-manipulation">👔 Admin Offices {isTargetCompleted("ADMIN") && '⭐'}</button>
+                        <button onClick={() => { const i = tourStops.findIndex(s => s.id === 16.0); if (i !== -1) setCurrentStepIndex(i); }} className="p-2 min-h-[44px] bg-slate-100 border border-slate-400 rounded-lg text-center text-[11px] font-medium text-slate-700 cursor-pointer active:scale-95 touch-manipulation">📣 Marketing {isTargetCompleted("COMMUNITY") && '⭐'}</button>
                       </div>
                     </div>
 
-                    {/* OUTSIDE / OPERATIONS SECTION */}
-                    <div className="border-t border-gray-200 pt-2 mt-1">
-                      <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 block mb-1">Facility Ground Operations</span>
-                      <button onClick={() => { const i = tourStops.findIndex(s => s.id === 17.0); if (i !== -1) setCurrentStepIndex(i); }} className="w-full p-2.5 bg-zinc-800 border border-zinc-900 rounded-xl text-center text-xs font-bold text-white cursor-pointer relative active:scale-95 flex items-center justify-center gap-2 shadow-sm">
+                    <div className="border-t border-gray-200 pt-2 mt-0.5">
+                      <span className="text-[9px] sm:text-[10px] uppercase tracking-wider font-bold text-slate-400 block mb-1">Facility Ground Operations</span>
+                      <button onClick={() => { const i = tourStops.findIndex(s => s.id === 17.0); if (i !== -1) setCurrentStepIndex(i); }} className="w-full p-2.5 min-h-[44px] bg-zinc-800 border border-zinc-900 rounded-xl text-center text-xs font-bold text-white cursor-pointer active:scale-95 flex items-center justify-center gap-2 shadow-sm touch-manipulation">
                         🛠️ Maintenance Support Crew {isTargetCompleted("MAINTENANCE") && '⭐'}
                       </button>
                     </div>
                   </div>
 
-                  <div className="mt-4 pt-2 border-t border-gray-200">
+                  <div className="mt-2 pt-2 border-t border-gray-200">
                     <button 
                       onClick={() => setAppMode('careerQuiz')} 
                       disabled={completedStops.length < totalRoundsCount} 
-                      className={`w-full py-3 rounded-xl font-bold text-sm text-center uppercase transition-all duration-300 ${completedStops.length >= totalRoundsCount ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white animate-pulse cursor-pointer' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
+                      className={`w-full min-h-[48px] py-3 rounded-xl font-bold text-xs sm:text-sm text-center uppercase transition-all duration-300 active:scale-95 touch-manipulation ${completedStops.length >= totalRoundsCount ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white animate-pulse cursor-pointer' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
                     >
                       {completedStops.length >= totalRoundsCount ? '🎓 Claim Graduation Badge!' : `🔒 Complete All ${completedStops.length}/${totalRoundsCount} Rounds to Graduate`}
                     </button>
@@ -473,120 +470,69 @@ const handleNextAction = () => {
 
               {/* MODE 3: Career Matchmaker Quiz */}
               {appMode === 'careerQuiz' && (
-                <div className="flex-1 bg-indigo-50 p-6 flex flex-col justify-between h-full">
-                  <div className="text-center">
+                <div className="flex-1 bg-indigo-50 p-4 sm:p-6 flex flex-col justify-between h-full overflow-y-auto">
+                  <div className="text-center my-auto">
                     <span className="text-xs uppercase bg-indigo-200 text-indigo-800 px-3 py-1 rounded-full font-bold">Career Explorer Quiz</span>
-                    <h2 className="text-lg font-black text-slate-800 mt-4">{matchmakerQuestions[currentQuizQuestion].q}</h2>
+                    <h2 className="text-base sm:text-lg font-black text-slate-800 mt-3 sm:mt-4 px-2">{matchmakerQuestions[currentQuizQuestion].q}</h2>
                   </div>
-                  <div className="flex flex-col gap-3 my-auto overflow-y-auto max-h-[460px] p-1">
+                  <div className="flex flex-col gap-2.5 my-auto max-h-[420px] p-1">
                     {shuffledCareerOptions.map((opt, idx) => (
-                      <button key={idx} onClick={() => handleCareerAnswer(opt.type)} className="w-full p-4 bg-white hover:bg-indigo-100 border-2 border-indigo-400 font-bold text-xs text-slate-700 rounded-2xl shadow-sm text-left transition-all active:scale-95 cursor-pointer mb-2">
+                      <button key={idx} onClick={() => handleCareerAnswer(opt.type)} className="w-full min-h-[52px] p-3.5 bg-white active:bg-indigo-100 border-2 border-indigo-400 font-bold text-xs text-slate-700 rounded-2xl shadow-sm text-left transition-all active:scale-95 cursor-pointer touch-manipulation">
                         {opt.text}
                       </button>
                     ))}
                   </div>
-                  <div className="text-center text-xs text-indigo-400 font-bold">Question {currentQuizQuestion + 1} of {matchmakerQuestions.length}</div>
+                  <div className="text-center text-xs text-indigo-400 font-bold pb-1">Question {currentQuizQuestion + 1} of {matchmakerQuestions.length}</div>
                 </div>
               )}
 
               {/* MODE 4: Character / Avatar Builder */}
               {appMode === 'avatarBuilder' && (
-                <div className="flex-1 bg-slate-100 p-4 flex flex-col justify-between overflow-y-auto h-full">
+                <div className="flex-1 bg-slate-100 p-3 sm:p-4 flex flex-col justify-between overflow-y-auto h-full">
                   <div className="text-center mb-1">
                     <span className="text-[10px] uppercase font-black text-indigo-600 bg-indigo-100 px-2.5 py-0.5 rounded-full tracking-wider">Step 2: Security Credentials</span>
-                    <h2 className="text-sm font-extrabold text-slate-800 mt-1">Finalize Official ID Badge</h2>
+                    <h2 className="text-sm font-extrabold text-slate-800 mt-0.5">Finalize Official ID Badge</h2>
                   </div>
 
-                  {/* 🪪 UPGRADED HORIZONTAL HIGH-FIDELITY BADGE ENGRAVER PREVIEW */}
-                  <div className="w-[340px] h-[215px] bg-white rounded-2xl shadow-xl border border-slate-300 mx-auto my-auto overflow-hidden flex flex-col relative flex-shrink-0 text-slate-800 font-sans tracking-normal select-none">
-                    
-                    {/* TOP BADGE SLOT PUNCH SIMULATOR OUTLINE */}
-                    <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-12 h-2.5 bg-slate-200 border border-slate-300 rounded-full opacity-60 z-30"></div>
+                  {/* Scaled Responsive Frame Container */}
+                  <div className="w-full max-w-[340px] aspect-[340/215] rounded-2xl shadow-xl border border-slate-300 mx-auto my-auto overflow-hidden relative flex-shrink-0 bg-cover bg-center select-none" style={{ backgroundImage: `url(${MASTER_BADGE_BG})` }}>
+                    <div className="absolute top-[24%] left-[4.4%] w-[26.4%] h-[50.2%] rounded-lg overflow-visible flex items-center justify-center">
+                      <img src={getDynamicArtwork()} alt="Illustrated Profile Turtle" className="w-full h-[95%] object-contain" />
+                      <span className="absolute -top-[16%] left-0 right-0 text-xl sm:text-2xl text-center drop-shadow-md z-30">{avatarHat.split(' ')[0]}</span>
+                      <span className="absolute -bottom-[5%] -right-[5%] bg-[#0f2d59] text-white rounded-full w-[22px] h-[22px] flex items-center justify-center shadow-md text-xs border border-white font-bold z-30">{avatarProp.split(' ')[0]}</span>
+                    </div>
 
-                    {/* MASTER BRANDING ROW */}
-                    <div className="flex justify-between items-start px-4 pt-5 pb-1 bg-white relative z-10 border-b border-slate-100">
-                      <div className="flex flex-col text-left leading-tight">
-                        <span className="text-[13px] font-black tracking-tighter text-[#0b2545] font-serif">Patterson</span>
-                        <span className="text-[8px] font-bold text-[#1f7a8c] uppercase tracking-widest -mt-0.5">Health Center</span>
-                      </div>
-                      <div className="text-right flex flex-col items-end leading-none">
-                        <span className="text-[10px] font-black text-[#588157] tracking-widest uppercase flex items-center gap-0.5">★ TURTLE TEAM ★</span>
-                        <span className="text-[6px] font-extrabold text-[#0b2545] uppercase tracking-widest mt-0.5">HONORARY MEMBER</span>
+                    <div className="absolute top-[22%] left-[35%] right-[4.4%] text-center">
+                      <h2 className="text-xl sm:text-3xl font-black text-[#0f2d59] tracking-tighter uppercase truncate leading-none">
+                        {childName || "EXPLORER"}
+                      </h2>
+                    </div>
+
+                    <div className="absolute top-[44%] left-[35%] right-[4.4%] text-center">
+                      <div className="text-[#d93856] font-black text-[11px] sm:text-[13px] uppercase tracking-wider leading-none truncate">
+                        {finalCareer ? finalCareer.toUpperCase().replace('PATTERSON ', '') : "ADVENTURER"}
                       </div>
                     </div>
 
-                    {/* CORE SPLIT WORKSPACE INTERFACE */}
-                    <div className="flex-1 flex px-4 items-center gap-4 bg-white relative">
-                      {/* Left: Professional Illustrated Portrait Window Frame */}
-                      <div className="w-[85px] h-[100px] bg-slate-50 border-2 border-[#cc2936] rounded-xl shadow-md relative overflow-visible flex items-center justify-center flex-shrink-0 bg-radial from-white to-slate-100">
-                        <img 
-                          src={getDynamicArtwork()} 
-                          alt="Explorer Avatar" 
-                          className="w-full h-full object-contain rounded-lg p-1"
-                        />
-                        {/* Custom Cosmetic Accent Layer Anchors */}
-                        <span className="absolute -top-[18px] left-0 right-0 text-2xl text-center drop-shadow-md z-30 animate-pulse">{avatarHat.split(' ')[0]}</span>
-                        <span className="absolute -bottom-1.5 -right-2.5 bg-[#0b2545] text-white rounded-full w-[24px] h-[24px] flex items-center justify-center shadow-md text-sm border-2 border-white font-bold z-30">{avatarProp.split(' ')[0]}</span>
-                      </div>
-
-                      {/* Right: Identity Metadata Cluster */}
-                      <div className="flex-1 flex flex-col justify-center text-center pl-1">
-                        <h2 className="text-2xl font-black text-[#0b2545] tracking-tight uppercase leading-none max-w-[170px] mx-auto truncate">
-                          {childName || "EXPLORER"}
-                        </h2>
-                        
-                        <div className="w-12 h-[2px] bg-[#cc2936] mx-auto my-1.5 rounded-full"></div>
-
-                        <div className="text-[#cc2936] font-black text-[12px] uppercase tracking-wide leading-none max-w-[170px] mx-auto truncate">
-                          {finalCareer ? finalCareer.toUpperCase().replace('PATTERSON ', '') : "STAFF MEMBER"}
-                        </div>
-                        
-                        <div className="mt-2 text-[5px] text-slate-400 font-bold uppercase tracking-widest">
-                          HONORARY PATTERSON HEALTH CENTER
-                        </div>
-                        <div className="text-[#588157] font-black text-[7px] tracking-wider uppercase leading-none mt-0.5">
-                          ★ CORRIDOR ADVENTURER ★
-                        </div>
-                      </div>
-
-                      {/* EMBOSSED GOLD MEDALLION BADGE SEAL ROSETTE */}
-                      <div className="absolute right-2 bottom-0 w-[42px] h-[42px] bg-gradient-to-tr from-[#b8860b] via-[#ffd700] to-[#daa520] rounded-full shadow-md border border-[#b8860b] flex flex-col items-center justify-center p-0.5 text-center leading-none opacity-90 scale-95 select-none transform rotate-3">
-                        <span className="text-[4px] font-black text-[#4a3600] uppercase tracking-tighter">OFFICIAL</span>
-                        <span className="text-[6px] font-black text-[#4a3600] tracking-tighter my-0.5">TURTLE</span>
-                        <span className="text-[4px] font-black text-[#4a3600] uppercase tracking-tighter">TEAM</span>
-                      </div>
-                    </div>
-
-                    {/* LOWER TRACKING BAR METRICS */}
-                    <div className="h-8 px-4 flex items-center justify-between bg-slate-50 border-t border-slate-100 relative z-20">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-slate-400 text-[10px]">🪪</span>
-                        <div className="flex flex-col text-left leading-none">
-                          <span className="text-[5px] font-bold text-slate-400 uppercase tracking-tighter">BADGE ID</span>
-                          <span className="text-[9px] font-mono font-black text-[#cc2936] tracking-wider">{assignedPin}</span>
-                        </div>
-                      </div>
-                      
-                      <span className="text-[6px] font-mono font-bold text-slate-400 border border-slate-300 rounded-md px-1.5 py-0.5 bg-white shadow-3xs uppercase">
-                        SYS LOGGED
+                    <div className="absolute bottom-[13%] left-[44.7%] leading-none text-left">
+                      <span className="text-[8px] sm:text-[9px] font-mono font-black text-[#d93856] tracking-wide block">
+                        {assignedPin}
                       </span>
                     </div>
 
-                    {/* BLUE CORE VALUES SLOGAN STRIP */}
-                    <div className="bg-[#0b2545] text-white text-[6px] font-bold py-1 flex justify-around items-center uppercase tracking-widest px-2 relative z-20">
-                      <span>🤍 BE KIND</span>
-                      <span>🌱 BE CURIOUS</span>
-                      <span>👥 HELP OTHERS</span>
+                    <div className="absolute bottom-[13%] left-[66%] leading-none text-left">
+                      <span className="text-[7px] sm:text-[8px] font-mono font-bold text-slate-500 tracking-tight block">
+                        {getTodayFormatted()}
+                      </span>
                     </div>
                   </div>
 
-                  {/* Selector Controls */}
-                  <div className="flex flex-col gap-2 mt-2 mb-2">
+                  <div className="flex flex-col gap-1.5 my-1">
                     <div>
                       <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Select Custom Hat Option</label>
                       <div className="grid grid-cols-2 gap-1">
                         {['🎓 Graduate Cap', '🤠 Cowboy Hat', '🧑‍🍳 Chef Hat', '👑 Golden Crown'].map(h => (
-                          <button key={h} onClick={() => setAvatarHat(h)} className={`py-1 px-2 text-xs font-bold rounded-lg border text-center transition-all ${avatarHat === h ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white text-slate-600'}`}>{h}</button>
+                          <button key={h} onClick={() => setAvatarHat(h)} className={`py-1.5 px-2 text-xs font-bold rounded-lg border text-center transition-all active:scale-95 touch-manipulation ${avatarHat === h ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white text-slate-600'}`}>{h}</button>
                         ))}
                       </div>
                     </div>
@@ -594,13 +540,13 @@ const handleNextAction = () => {
                       <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Select Specialized Tool Accessory</label>
                       <div className="grid grid-cols-2 gap-1">
                         {['🩺 Stethoscope', '🔬 Microscope', '🩹 Bandages', '🩻 Shell X-Ray'].map(p => (
-                          <button key={p} onClick={() => setAvatarProp(p)} className={`py-1 px-2 text-xs font-bold rounded-lg border text-center transition-all ${avatarProp === p ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white text-slate-600'}`}>{p}</button>
+                          <button key={p} onClick={() => setAvatarProp(p)} className={`py-1.5 px-2 text-xs font-bold rounded-lg border text-center transition-all active:scale-95 touch-manipulation ${avatarProp === p ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white text-slate-600'}`}>{p}</button>
                         ))}
                       </div>
                     </div>
                   </div>
 
-                  <button onClick={submitBadgeOrder} disabled={submittingBadge} className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black py-3 rounded-xl shadow-lg text-xs uppercase tracking-wider">
+                  <button onClick={submitBadgeOrder} disabled={submittingBadge} className="w-full min-h-[48px] bg-gradient-to-r from-emerald-600 to-teal-600 active:from-emerald-700 active:to-teal-700 text-white font-black py-3 rounded-xl shadow-lg text-xs uppercase tracking-wider cursor-pointer active:scale-95 transition-all touch-manipulation">
                     {submittingBadge ? '🖨️ Transmitting to Smart-21 Spooler...' : '🔒 Authorize & Print CR-80 ID Card ➔'}
                   </button>
                 </div>
@@ -609,12 +555,12 @@ const handleNextAction = () => {
               {/* MODE 5: Badge Print Queue Success Splash Screen */}
               {appMode === 'badgeSuccess' && (
                 <div className="flex-1 bg-gradient-to-b from-emerald-50 to-teal-100 p-6 flex flex-col justify-center items-center text-center h-full">
-                  <div className="w-20 h-20 bg-emerald-500 rounded-full text-white flex items-center justify-center text-4xl shadow-xl animate-bounce mb-6">🎉</div>
-                  <h2 className="text-2xl font-black text-emerald-800">Badge Ordered!</h2>
-                  <p className="text-slate-600 text-sm font-medium mt-3 px-2 leading-relaxed">
-                    Awesome job, <strong>{childName}</strong>! Your customized <strong>{finalCareer}</strong> official ID card layout has been sent directly to the front reception desk terminal under Security Key: <strong>{assignedPin}</strong>.
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-emerald-500 rounded-full text-white flex items-center justify-center text-3xl sm:text-4xl shadow-xl animate-bounce mb-4 sm:mb-6">🎉</div>
+                  <h2 className="text-xl sm:text-2xl font-black text-emerald-800">Badge Ordered!</h2>
+                  <p className="text-slate-600 text-xs sm:text-sm font-medium mt-2 sm:mt-3 px-2 leading-relaxed">
+                    Awesome job, <strong>{childName}</strong>! Your customized layout has been pushed to the clinic queue under Key: <strong>{assignedPin}</strong>.
                   </p>
-                  <button onClick={forceGlobalReset} className="mt-8 bg-slate-800 text-white text-xs font-bold py-3 px-6 rounded-xl shadow uppercase tracking-wide">
+                  <button onClick={forceGlobalReset} className="mt-6 sm:mt-8 min-h-[48px] bg-slate-800 active:bg-slate-900 text-white text-xs font-bold py-3 px-6 rounded-xl shadow uppercase tracking-wide cursor-pointer active:scale-95 transition-all touch-manipulation">
                     Start a New Tour 🔄
                   </button>
                 </div>
@@ -632,7 +578,7 @@ const handleNextAction = () => {
                     <p className="text-sm font-medium text-indigo-100">🐢 Turtle Shell Memory Matcher</p>
                     <span className="inline-block mt-2 text-[10px] bg-amber-400 text-slate-900 px-2 py-0.5 rounded font-bold uppercase tracking-widest">Under Construction</span>
                   </div>
-                  <button onClick={() => setAppMode('tour')} className="w-full bg-white text-indigo-950 font-bold py-2.5 rounded-xl text-xs uppercase shadow-md">
+                  <button onClick={() => setAppMode('tour')} className="w-full min-h-[48px] bg-white active:bg-indigo-50 text-indigo-950 font-bold py-2.5 rounded-xl text-xs uppercase shadow-md cursor-pointer active:scale-95 transition-all touch-manipulation">
                     Return to Adventure Map ➔
                   </button>
                 </div>
@@ -640,11 +586,11 @@ const handleNextAction = () => {
 
               {/* MODE 7: Look Up Existing Badge */}
               {appMode === 'viewBadge' && (
-                <div className="flex-1 bg-slate-100 p-4 flex flex-col justify-between overflow-y-auto h-full">
-                  <div className="text-center mb-2">
+                <div className="flex-1 bg-slate-100 p-3 sm:p-4 flex flex-col justify-between overflow-y-auto h-full">
+                  <div className="text-center mb-1">
                     <span className="text-xl">🪪</span>
-                    <h2 className="text-md font-extrabold text-slate-800 mt-1">Staff Credential Retrieval</h2>
-                    <p className="text-xs text-slate-500">Type your unique TUR code or your name</p>
+                    <h2 className="text-sm sm:text-md font-extrabold text-slate-800 mt-0.5">Staff Credential Retrieval</h2>
+                    <p className="text-[11px] text-slate-500">Type your unique TUR code or your name</p>
                   </div>
 
                   {!foundBadge ? (
@@ -654,101 +600,54 @@ const handleNextAction = () => {
                         placeholder="ENTER NAME OR CODE (e.g. TUR-123)" 
                         value={lookupValue} 
                         onChange={(e) => setLookupValue(e.target.value.toUpperCase())} 
-                        className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl p-3 font-black text-slate-900 text-center text-sm focus:border-indigo-500 focus:outline-none tracking-wide placeholder:text-slate-300"
+                        className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl p-3 font-black text-slate-900 text-center text-xs sm:text-sm focus:border-indigo-500 focus:outline-none tracking-wide placeholder:text-slate-300"
                       />
                       {searchError && <p className="text-rose-600 text-[11px] font-bold text-center">{searchError}</p>}
-                      <button onClick={handleLookupBadge} className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl text-xs uppercase tracking-wider shadow active:scale-95">
+                      <button onClick={handleLookupBadge} className="w-full min-h-[48px] bg-indigo-600 active:bg-indigo-700 text-white font-bold py-3 rounded-xl text-xs uppercase tracking-wider shadow active:scale-95 cursor-pointer touch-manipulation">
                         Search Database ➔
                       </button>
                     </div>
                   ) : (
-                    <div className="my-auto flex flex-col gap-4">
-                      
-                      {/* 🪪 UPGRADED RETRIEVAL DESIGN FRAME CHASSIS */}
-                      <div className="w-[340px] h-[215px] bg-white rounded-2xl shadow-xl border border-slate-300 mx-auto overflow-hidden flex flex-col relative text-slate-800 font-sans tracking-normal select-none">
-                        
-                        {/* TOP SLOT PUNCH SIMULATOR OUTLINE */}
-                        <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-12 h-2.5 bg-slate-200 border border-slate-300 rounded-full opacity-60 z-30"></div>
+                    <div className="my-auto flex flex-col gap-3">
+                      <div className="w-full max-w-[340px] aspect-[340/215] rounded-2xl shadow-xl border border-slate-300 mx-auto overflow-hidden relative bg-cover bg-center select-none" style={{ backgroundImage: `url(${MASTER_BADGE_BG})` }}>
+                        <div className="absolute top-[24%] left-[4.4%] w-[26.4%] h-[50.2%] rounded-lg overflow-visible flex items-center justify-center">
+                          <img src={getDynamicArtwork(foundBadge.career)} alt="Database Illustrated Character Turtle" className="w-full h-[95%] object-contain" />
+                          <span className="absolute -top-[16%] left-0 right-0 text-xl sm:text-2xl text-center drop-shadow-md z-30">{foundBadge.avatarHat.split(' ')[0]}</span>
+                          <span className="absolute -bottom-[5%] -right-[5%] bg-[#0f2d59] text-white rounded-full w-[22px] h-[22px] flex items-center justify-center text-xs border border-white font-bold z-30">{foundBadge.avatarProp.split(' ')[0]}</span>
+                        </div>
 
-                        {/* MASTER BRANDING ROW */}
-                        <div className="flex justify-between items-start px-4 pt-5 pb-1 bg-white relative z-10 border-b border-slate-100">
-                          <div className="flex flex-col text-left leading-tight">
-                            <span className="text-[13px] font-black tracking-tighter text-[#0b2545] font-serif">Patterson</span>
-                            <span className="text-[8px] font-bold text-[#1f7a8c] uppercase tracking-widest -mt-0.5">Health Center</span>
-                          </div>
-                          <div className="text-right flex flex-col items-end leading-none">
-                            <span className="text-[10px] font-black text-[#588157] tracking-widest uppercase flex items-center gap-0.5">★ TURTLE TEAM ★</span>
-                            <span className="text-[6px] font-extrabold text-[#0b2545] uppercase tracking-widest mt-0.5">HONORARY MEMBER</span>
+                        <div className="absolute top-[22%] left-[35%] right-[4.4%] text-center">
+                          <h2 className="text-xl sm:text-3xl font-black text-[#0f2d59] tracking-tighter uppercase truncate leading-none">
+                            {foundBadge.name}
+                          </h2>
+                        </div>
+
+                        <div className="absolute top-[44%] left-[35%] right-[4.4%] text-center">
+                          <div className="text-[#d93856] font-black text-[11px] sm:text-[13px] uppercase tracking-wider leading-none truncate">
+                            {foundBadge.career ? foundBadge.career.toUpperCase().replace('PATTERSON ', '') : "STAFF EXPLORER"}
                           </div>
                         </div>
 
-                        {/* MAIN CONTENT SPLIT BLOCK */}
-                        <div className="flex-1 flex px-4 items-center gap-4 bg-white relative">
-                          <div className="w-[85px] h-[100px] bg-slate-50 border-2 border-[#cc2936] rounded-xl shadow-md relative overflow-visible flex items-center justify-center flex-shrink-0 bg-radial from-white to-slate-100">
-                            <img 
-                              src={getDynamicArtwork()} 
-                              alt="Staff Character illustration" 
-                              className="w-full h-full object-contain rounded-lg p-1"
-                            />
-                            <span className="absolute -top-[18px] left-0 right-0 text-2xl text-center drop-shadow-md z-30">{foundBadge.avatarHat.split(' ')[0]}</span>
-                            <span className="absolute -bottom-1.5 -right-2.5 bg-[#0b2545] text-white rounded-full w-[24px] h-[24px] flex items-center justify-center text-xs border-2 border-white font-bold z-30">{foundBadge.avatarProp.split(' ')[0]}</span>
-                          </div>
-
-                          <div className="flex-1 flex flex-col justify-center text-center pl-1">
-                            <h2 className="text-2xl font-black text-[#0b2545] tracking-tight uppercase leading-none max-w-[170px] mx-auto truncate">
-                              {foundBadge.name}
-                            </h2>
-                            <div className="w-12 h-[2px] bg-[#cc2936] mx-auto my-1.5 rounded-full"></div>
-                            <div className="text-[#cc2936] font-black text-[12px] uppercase tracking-wide leading-none max-w-[170px] mx-auto truncate">
-                              {foundBadge.career ? foundBadge.career.toUpperCase().replace('PATTERSON ', '') : "STAFF EXPLORER"}
-                            </div>
-                            
-                            <div className="mt-2 text-[5px] text-slate-400 font-bold uppercase tracking-widest">
-                              HONORARY PATTERSON HEALTH CENTER
-                            </div>
-                            <div className="text-[#588157] font-black text-[7px] tracking-wider uppercase leading-none mt-0.5">
-                              ★ CORRIDOR ADVENTURER ★
-                            </div>
-                          </div>
-
-                          {/* EMBOSSED GOLD MEDALLION BADGE SEAL ROSETTE */}
-                          <div className="absolute right-2 bottom-0 w-[42px] h-[42px] bg-gradient-to-tr from-[#b8860b] via-[#ffd700] to-[#daa520] rounded-full shadow-md border border-[#b8860b] flex flex-col items-center justify-center p-0.5 text-center leading-none opacity-90 scale-95 select-none transform rotate-3">
-                            <span className="text-[4px] font-black text-[#4a3600] uppercase tracking-tighter">OFFICIAL</span>
-                            <span className="text-[6px] font-black text-[#4a3600] tracking-tighter my-0.5">TURTLE</span>
-                            <span className="text-[4px] font-black text-[#4a3600] uppercase tracking-tighter">TEAM</span>
-                          </div>
-                        </div>
-
-                        {/* LOWER METRIC FOOTER STRIP */}
-                        <div className="h-9 px-4 flex items-center justify-between border-t border-slate-100 bg-slate-50 relative">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-slate-400 text-[10px]">🪪</span>
-                            <div className="flex flex-col text-left leading-none">
-                              <span className="text-[5px] font-bold text-slate-400 uppercase tracking-tighter">BADGE ID</span>
-                              <span className="text-[9px] font-mono font-black text-[#cc2936] tracking-wider">{foundBadge.pin}</span>
-                            </div>
-                          </div>
-                          
-                          <span className="text-[6px] font-mono font-bold text-emerald-600 border border-emerald-300 rounded px-1.5 py-0.5 bg-white shadow-3xs uppercase">
-                            Active Card
+                        <div className="absolute bottom-[13%] left-[44.7%] leading-none text-left">
+                          <span className="text-[8px] sm:text-[9px] font-mono font-black text-[#d93856] tracking-wide block">
+                            {foundBadge.pin}
                           </span>
                         </div>
 
-                        {/* BLUE CORE VALUES SLOGAN BOTTOM BASE STRIP */}
-                        <div className="bg-[#0b2545] text-white text-[6px] font-bold py-1 flex justify-around items-center uppercase tracking-widest px-2 select-none">
-                          <span>🤍 BE KIND</span>
-                          <span>🌱 BE CURIOUS</span>
-                          <span>👥 HELP OTHERS</span>
+                        <div className="absolute bottom-[13%] left-[66%] leading-none text-left">
+                          <span className="text-[7px] sm:text-[8px] font-mono font-bold text-slate-500 tracking-tight block">
+                            {foundBadge.date}
+                          </span>
                         </div>
                       </div>
 
-                      <button onClick={() => { setFoundBadge(null); setLookupValue(''); }} className="mx-auto text-xs font-bold text-slate-500 underline">
+                      <button onClick={() => { setFoundBadge(null); setLookupValue(''); }} className="mx-auto text-xs font-bold text-slate-500 underline cursor-pointer active:opacity-75 touch-manipulation">
                         Search Another Code
                       </button>
                     </div>
                   )}
 
-                  <button onClick={() => setAppMode('tour')} className="w-full bg-slate-800 text-white font-bold py-2.5 rounded-xl text-xs uppercase shadow-md mt-2">
+                  <button onClick={() => setAppMode('tour')} className="w-full min-h-[44px] bg-slate-800 active:bg-slate-900 text-white font-bold py-2.5 rounded-xl text-xs uppercase shadow-md mt-1 cursor-pointer active:scale-95 touch-manipulation">
                     Return to Map Hub
                   </button>
                 </div>
@@ -758,11 +657,11 @@ const handleNextAction = () => {
 
         </div>
 
-        {/* STICKY VISUAL BOTTOM NAVIGATION BAR */}
-        <div className="absolute bottom-0 left-0 right-0 h-[65px] bg-white border-t border-slate-200 grid grid-cols-5 items-center px-1 z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+        {/* STICKY BOTTOM NAVIGATION BAR WITH TOUCH OPTIMIZATION */}
+        <div className="absolute bottom-0 left-0 right-0 h-[65px] bg-white border-t border-slate-200 grid grid-cols-5 items-center px-1 z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] pb-safe">
           <button 
             onClick={() => { if(!isNameConfirmed) return; setAppMode('tour'); const idx = tourStops.findIndex(s => s.type === 'map'); if (idx !== -1) setCurrentStepIndex(idx); }} 
-            className={`flex flex-col items-center justify-center gap-0.5 transition-all ${!isNameConfirmed ? 'opacity-20 cursor-not-allowed' : ''} ${appMode === 'tour' && currentStep?.type === 'map' ? 'text-indigo-600 font-black scale-105' : 'text-slate-400'}`}
+            className={`flex flex-col items-center justify-center gap-0.5 h-full transition-all active:scale-90 touch-manipulation ${!isNameConfirmed ? 'opacity-20 cursor-not-allowed' : ''} ${appMode === 'tour' && currentStep?.type === 'map' ? 'text-indigo-600 font-black' : 'text-slate-400'}`}
           >
             <span className="text-base">🗺️</span>
             <span className="text-[9px] font-bold tracking-tighter">Map</span>
@@ -777,7 +676,7 @@ const handleNextAction = () => {
               }
               setAppMode('careerQuiz');
             }} 
-            className={`flex flex-col items-center justify-center gap-0.5 transition-all ${(!isNameConfirmed || completedStops.length < totalRoundsCount) ? 'opacity-30' : ''} ${appMode === 'careerQuiz' || appMode === 'avatarBuilder' || appMode === 'badgeSuccess' ? 'text-indigo-600 font-black scale-105' : 'text-slate-400'}`}
+            className={`flex flex-col items-center justify-center gap-0.5 h-full transition-all active:scale-90 touch-manipulation ${(!isNameConfirmed || completedStops.length < totalRoundsCount) ? 'opacity-30' : ''} ${appMode === 'careerQuiz' || appMode === 'avatarBuilder' || appMode === 'badgeSuccess' ? 'text-indigo-600 font-black' : 'text-slate-400'}`}
           >
             <span className="text-base">🎓</span>
             <span className="text-[9px] font-bold tracking-tighter">Grad Quiz</span>
@@ -785,7 +684,7 @@ const handleNextAction = () => {
 
           <button 
             onClick={() => { if(!isNameConfirmed) return; setAppMode('gamesHub'); }} 
-            className={`flex flex-col items-center justify-center gap-0.5 transition-all ${!isNameConfirmed ? 'opacity-20 cursor-not-allowed' : ''} ${appMode === 'gamesHub' ? 'text-indigo-600 font-black scale-105' : 'text-slate-400'}`}
+            className={`flex flex-col items-center justify-center gap-0.5 h-full transition-all active:scale-90 touch-manipulation ${!isNameConfirmed ? 'opacity-20 cursor-not-allowed' : ''} ${appMode === 'gamesHub' ? 'text-indigo-600 font-black' : 'text-slate-400'}`}
           >
             <span className="text-base">🎮</span>
             <span className="text-[9px] font-bold tracking-tighter">Arcade</span>
@@ -793,7 +692,7 @@ const handleNextAction = () => {
 
           <button 
             onClick={() => { if(!isNameConfirmed) return; setAppMode('viewBadge'); setFoundBadge(null); setLookupValue(''); setSearchError(''); }} 
-            className={`flex flex-col items-center justify-center gap-0.5 transition-all ${!isNameConfirmed ? 'opacity-20 cursor-not-allowed' : ''} ${appMode === 'viewBadge' ? 'text-indigo-600 font-black scale-105' : 'text-slate-400'}`}
+            className={`flex flex-col items-center justify-center gap-0.5 h-full transition-all active:scale-90 touch-manipulation ${!isNameConfirmed ? 'opacity-20 cursor-not-allowed' : ''} ${appMode === 'viewBadge' ? 'text-indigo-600 font-black' : 'text-slate-400'}`}
           >
             <span className="text-base">🪪</span>
             <span className="text-[9px] font-bold tracking-tighter">My Badge</span>
@@ -801,7 +700,7 @@ const handleNextAction = () => {
 
           <button 
             onClick={forceGlobalReset} 
-            className="flex flex-col items-center justify-center gap-0.5 text-slate-400 hover:text-rose-600 transition-all"
+            className="flex flex-col items-center justify-center gap-0.5 h-full text-slate-400 active:text-rose-600 transition-all active:scale-90 touch-manipulation"
           >
             <span className="text-base">🔄</span>
             <span className="text-[9px] font-bold tracking-tighter">Reset</span>
