@@ -383,7 +383,6 @@ export default function App() {
   const submitBadgeOrder = () => {
     if (!childName.trim()) return alert("Please confirm your name first!");
     
-    // Require explicit permission choice if a selfie was taken
     if (capturedPhoto && photoPermission === null) {
       return alert("Please select YES or NO for photo media permission before printing!");
     }
@@ -530,15 +529,15 @@ export default function App() {
         }
       `}</style>
 
-      {/* DEDICATED PRINT CONTAINER (EXCLUSIVELY FOR SMART-21 PRINTER) */}
+      {/* DEDICATED PRINT CONTAINER (EXCLUSIVELY FOR PRINTER) */}
       <div className="smart21-print-area select-none bg-contain bg-no-repeat bg-center" style={{ backgroundImage: `url(${printSide === 'front' ? '/badge-template.png' : '/card-back.png'})` }}>
         {printSide === 'front' && (
           <>
-            <div className="absolute top-[28%] left-[4.3%] w-[32.2%] h-[58.5%] rounded-full overflow-hidden flex items-end justify-center">
+            <div className="absolute top-[28%] left-[4.3%] w-[32.2%] h-[58.5%] rounded-full overflow-hidden flex items-center justify-center">
               <img 
                 src={capturedPhoto || getDynamicArtwork(activePrintCareer)} 
                 alt="Print Avatar" 
-                className="w-full h-full object-contain p-1 origin-bottom" 
+                className="w-full h-full object-cover" 
               />
             </div>
 
@@ -575,7 +574,7 @@ export default function App() {
       {/* MAIN SCREEN APPLICATION FRAME */}
       <div className="app-main-layout w-full max-w-sm h-[100dvh] sm:h-[820px] max-h-[850px] bg-white sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border-0 sm:border-8 border-gray-800 relative">
         
-        {/* HEADER BAR WITH SECRET ADMIN TOGGLE BUTTON */}
+        {/* HEADER BAR */}
         <div className="bg-slate-800 text-white px-4 py-3 font-bold tracking-wide shadow-md flex justify-between items-center gap-2 flex-shrink-0 z-20">
           <span className="truncate text-sm sm:text-base flex items-center gap-1.5">
             {!isNameConfirmed ? '👋 Welcome Arrival' : appMode === 'tour' ? currentStep.title : appMode === 'gamesHub' ? '🎮 Game Arcade' : appMode === 'viewBadge' ? '🪪 Badge File' : appMode === 'adminPortal' ? '🔒 Staff Admin Portal' : '🎓 Career Explorer'}
@@ -599,7 +598,7 @@ export default function App() {
         {/* CONTAINER VIEW BODY LAYOUT */}
         <div className="flex-1 overflow-hidden relative flex flex-col mb-[65px]">
           
-          {/* ADMIN PIN SECURITY MODAL */}
+          {/* ADMIN PIN MODAL */}
           {showAdminPinModal && (
             <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
               <div className="bg-white rounded-3xl p-6 w-full max-w-[280px] text-center shadow-2xl border border-slate-200">
@@ -668,7 +667,7 @@ export default function App() {
             </div>
           ) : (
             <>
-              {/* MODE 0: STAFF / ADMIN PRINT & BADGE GENERATOR PORTAL */}
+              {/* MODE 0: STAFF / ADMIN PRINT PORTAL */}
               {appMode === 'adminPortal' && (
                 <div className="flex-1 bg-slate-100 p-4 flex flex-col justify-between overflow-y-auto h-full text-slate-800">
                   <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-col gap-3">
@@ -679,7 +678,6 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* PRINT SIDE TOGGLE SWITCH */}
                     <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl border border-slate-200">
                       <button 
                         onClick={() => setPrintSide('front')} 
@@ -741,7 +739,6 @@ export default function App() {
                     )}
                   </div>
 
-                  {/* ADMIN PREVIEW BADGE DISPLAY */}
                   {printSide === 'front' && adminPreviewBadge && (
                     <div className="my-auto flex flex-col gap-2 py-2">
                       <button 
@@ -753,11 +750,11 @@ export default function App() {
 
                       <div className="w-full max-w-[340px] aspect-[1000/630] mx-auto overflow-hidden relative select-none bg-contain bg-no-repeat bg-center rounded-2xl border border-slate-300 shadow-xl" style={{ backgroundImage: `url(/badge-template.png)` }}>
                         
-                        <div className="absolute top-[28%] left-[4.3%] w-[32.2%] h-[58.5%] rounded-full overflow-hidden flex items-end justify-center">
+                        <div className="absolute top-[28%] left-[4.3%] w-[32.2%] h-[58.5%] rounded-full overflow-hidden flex items-center justify-center">
                           <img 
                             src={capturedPhoto || getDynamicArtwork(adminPreviewBadge.career)} 
                             alt="Admin Character Avatar" 
-                            className="w-full h-full object-contain p-1 origin-bottom" 
+                            className="w-full h-full object-cover" 
                           />
                         </div>
 
@@ -799,7 +796,6 @@ export default function App() {
                     </div>
                   )}
 
-                  {/* BATCH BACK PRINT PREVIEW */}
                   {printSide === 'back' && (
                     <div className="my-auto flex flex-col gap-2 py-2">
                       <div className="w-full max-w-[340px] aspect-[1000/630] mx-auto overflow-hidden relative select-none bg-contain bg-no-repeat bg-center rounded-2xl border border-slate-300 shadow-xl" style={{ backgroundImage: `url(/card-back.png)` }}>
@@ -807,7 +803,6 @@ export default function App() {
                     </div>
                   )}
 
-                  {/* RECENT ORDERS QUEUE */}
                   <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-200 mt-2">
                     <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-2">Recent Database Orders</h3>
                     <div className="flex flex-col gap-1.5 max-h-[110px] overflow-y-auto">
@@ -1010,7 +1005,7 @@ export default function App() {
                 </div>
               )}
 
-              {/* MODE 4: Character / Avatar Builder */}
+              {/* MODE 4: Avatar / Badge Builder */}
               {appMode === 'avatarBuilder' && (
                 <div className="flex-1 bg-slate-100 p-3 sm:p-4 flex flex-col justify-between overflow-y-auto h-full">
                   <div className="text-center mb-1">
@@ -1028,11 +1023,11 @@ export default function App() {
                   <div className="w-full max-w-[340px] aspect-[1000/630] mx-auto my-auto overflow-hidden relative flex-shrink-0 select-none bg-contain bg-no-repeat bg-center rounded-2xl border border-slate-300 shadow-xl" style={{ backgroundImage: `url(/badge-template.png)` }}>
                     
                     {/* Character Avatar or Live Photo */}
-                    <div className="absolute top-[28%] left-[4.3%] w-[32.2%] h-[58.5%] rounded-full overflow-hidden flex items-end justify-center">
+                    <div className="absolute top-[28%] left-[4.3%] w-[32.2%] h-[58.5%] rounded-full overflow-hidden flex items-center justify-center">
                       <img 
                         src={capturedPhoto || getDynamicArtwork()} 
                         alt="Official Turtle Character Avatar" 
-                        className="w-full h-full object-contain p-1 origin-bottom" 
+                        className="w-full h-full object-cover" 
                       />
                     </div>
 
@@ -1113,7 +1108,7 @@ export default function App() {
                   )}
 
                   <button onClick={submitBadgeOrder} disabled={submittingBadge} className="w-full min-h-[48px] bg-gradient-to-r from-emerald-600 to-teal-600 active:from-emerald-700 active:to-teal-700 text-white font-black py-3 rounded-xl shadow-lg text-xs uppercase tracking-wider cursor-pointer active:scale-95 transition-all touch-manipulation my-auto">
-                    {submittingBadge ? '🖨️ Transmitting to Smart-21 Spooler...' : '🔒 Authorize & Print CR-80 ID Card ➔'}
+                    {submittingBadge ? '🖨️ Transmitting to Printer...' : '🔒 Authorize & Print CR-80 ID Card ➔'}
                   </button>
                 </div>
               )}
@@ -1132,7 +1127,7 @@ export default function App() {
                 </div>
               )}
 
-              {/* MODE 6: Interactive Character Memory Mini-Game Arcade */}
+              {/* MODE 6: Memory Game Arcade */}
               {appMode === 'gamesHub' && (
                 <div className="flex-1 bg-gradient-to-b from-indigo-900 to-slate-900 p-4 flex flex-col justify-between h-full text-white overflow-y-auto">
                   <div className="text-center mt-1">
@@ -1184,7 +1179,7 @@ export default function App() {
                 </div>
               )}
 
-              {/* MODE 7: Look Up Existing Badge */}
+              {/* MODE 7: Look Up Badge */}
               {appMode === 'viewBadge' && (
                 <div className="flex-1 bg-slate-100 p-3 sm:p-4 flex flex-col justify-between overflow-y-auto h-full">
                   <div className="text-center mb-1">
@@ -1211,11 +1206,11 @@ export default function App() {
                     <div className="my-auto flex flex-col gap-3">
                       <div className="w-full max-w-[340px] aspect-[1000/630] mx-auto overflow-hidden relative select-none bg-contain bg-no-repeat bg-center rounded-2xl border border-slate-300 shadow-xl" style={{ backgroundImage: `url(/badge-template.png)` }}>
                         
-                        <div className="absolute top-[28%] left-[4.3%] w-[32.2%] h-[58.5%] rounded-full overflow-hidden flex items-end justify-center">
+                        <div className="absolute top-[28%] left-[4.3%] w-[32.2%] h-[58.5%] rounded-full overflow-hidden flex items-center justify-center">
                           <img 
                             src={getDynamicArtwork(foundBadge.career)} 
                             alt="Database Character Avatar" 
-                            className="w-full h-full object-contain p-1 origin-bottom" 
+                            className="w-full h-full object-cover" 
                           />
                         </div>
 
@@ -1264,7 +1259,7 @@ export default function App() {
 
         </div>
 
-        {/* STICKY BOTTOM NAVIGATION BAR WITH CAMERA TAB */}
+        {/* STICKY BOTTOM NAVIGATION BAR */}
         <div className="absolute bottom-0 left-0 right-0 h-[65px] bg-white border-t border-slate-200 grid grid-cols-6 items-center px-1 z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] pb-safe">
           <button 
             onClick={() => { if(!isNameConfirmed) return; setAppMode('tour'); const idx = tourStops.findIndex(s => s.type === 'map'); if (idx !== -1) setCurrentStepIndex(idx); }} 

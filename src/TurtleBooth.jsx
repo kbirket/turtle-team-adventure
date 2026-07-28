@@ -44,14 +44,20 @@ export default function TurtleBooth({ onPhotoCaptured, onClose }) {
     const startX = (video.videoWidth - minDim) / 2;
     const startY = (video.videoHeight - minDim) / 2;
 
-    // 1. Draw mirrored user photo
+    // 1. Create a Circular Clipping Path (Trims photo to stay strictly inside the ring)
     ctx.save();
+    ctx.beginPath();
+    ctx.arc(250, 240, 200, 0, Math.PI * 2, true);
+    ctx.closePath();
+    ctx.clip();
+
+    // 2. Draw mirrored user photo inside the circular mask
     ctx.translate(canvas.width, 0);
     ctx.scale(-1, 1);
     ctx.drawImage(video, startX, startY, minDim, minDim, 0, 0, canvas.width, canvas.height);
-    ctx.restore();
+    ctx.restore(); // Restore context to draw frame over the photo
 
-    // 2. Composite the Gold "Turtle Team" Frame directly on top
+    // 3. Composite Gold "Turtle Team" Frame over the trimmed photo
     const frameImg = new Image();
     frameImg.src = '/gold-frame.png';
     frameImg.onload = () => {
