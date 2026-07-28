@@ -7,7 +7,7 @@ const base = new Airtable({
 
 const MASTER_BADGE_BG = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=340&h=215&q=80"; 
 
-// Memory Game Character Avatars Set (Using local character images)
+// Memory Game Character Avatars Set
 const GAME_CARDS = [
   '/characters/doctor/avatar.png',
   '/characters/nurse/avatar.png',
@@ -138,7 +138,6 @@ export default function App() {
   const currentStep = tourStops[currentStepIndex];
   const totalRoundsCount = tourStops.filter(s => s.id >= 4.0 && s.id <= 17.0).length;
 
-  // DEDICATED DIRECT ASSET MAPPER WITH CLEAN MARKETING & HR SEPARATION
   const getDynamicArtwork = (careerTrack) => {
     const track = (careerTrack || finalCareer || '').toLowerCase();
 
@@ -153,7 +152,6 @@ export default function App() {
     if (track.includes('hr') || track.includes('human resources')) return '/characters/hr/avatar.png';
     if (track.includes('marketing') || track.includes('community')) return '/characters/marketing/avatar.png';
 
-    // Fallback default
     return '/characters/marketing/avatar.png';
   };
 
@@ -264,7 +262,7 @@ export default function App() {
       const careerMap = {
         clinical: 'Patterson Doctor',
         technical: 'Expert Hospital Tech Wizard',
-        creative: 'Marketing Director Turtle' // Explicit Marketing title!
+        creative: 'Marketing Director Turtle'
       };
 
       setFinalCareer(careerMap[highestType]);
@@ -417,12 +415,11 @@ export default function App() {
                 <div className="flex-1 bg-no-repeat relative flex flex-col justify-end p-4 h-full" style={{ backgroundImage: `url(${currentStep.background})`, backgroundPosition: currentStep.bgPosition, backgroundSize: currentStep.bgSize }}>
                   {!quizActive && (
                     <div className="absolute inset-0 flex justify-center items-end pointer-events-none pb-20 overflow-hidden">
-  <img 
-    src={currentStep.character} 
-    alt={currentStep.characterName} 
-    className="w-full max-h-[85%] object-contain scale-[1.35] origin-bottom transition-transform duration-300" 
-  />
-</div>
+                      <img 
+                        src={currentStep.character} 
+                        alt={currentStep.characterName} 
+                        className="w-full max-h-[85%] object-contain scale-[1.35] origin-bottom transition-transform duration-300" 
+                      />
                     </div>
                   )}
                   <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-xl border border-gray-200 z-10 text-center mb-2 min-h-[150px] flex flex-col justify-center">
