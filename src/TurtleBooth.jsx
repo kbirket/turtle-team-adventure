@@ -37,8 +37,8 @@ export default function TurtleBooth({ onPhotoCaptured, onClose }) {
     if (!video || !canvas) return;
 
     const ctx = canvas.getContext('2d');
-    canvas.width = 400;
-    canvas.height = 400;
+    canvas.width = 500;
+    canvas.height = 500;
 
     const minDim = Math.min(video.videoWidth, video.videoHeight);
     const startX = (video.videoWidth - minDim) / 2;
@@ -51,12 +51,11 @@ export default function TurtleBooth({ onPhotoCaptured, onClose }) {
     ctx.drawImage(video, startX, startY, minDim, minDim, 0, 0, canvas.width, canvas.height);
     ctx.restore();
 
-    // 2. Draw clean badge overlay onto saved canvas
-    const overlayImg = new Image();
-    overlayImg.src = '/characters/doctor/avatar.png'; // Uses your official high-res turtle asset
-    overlayImg.onload = () => {
-      // Draw cute turtle head floating at top-center of photo
-      ctx.drawImage(overlayImg, 260, 10, 130, 130);
+    // 2. Composite the Gold "Turtle Team" Frame directly on top
+    const frameImg = new Image();
+    frameImg.src = '/gold-frame.png';
+    frameImg.onload = () => {
+      ctx.drawImage(frameImg, 0, 0, canvas.width, canvas.height);
       
       const dataUrl = canvas.toDataURL('image/png');
       setCapturedImage(dataUrl);
@@ -70,7 +69,7 @@ export default function TurtleBooth({ onPhotoCaptured, onClose }) {
         
         {/* HEADER */}
         <div className="flex justify-between items-center w-full border-b border-slate-100 pb-2">
-          <h3 className="text-sm font-black text-indigo-900 uppercase tracking-wider">📸 Turtle Selfie Cam</h3>
+          <h3 className="text-sm font-black text-indigo-900 uppercase tracking-wider">📸 Turtle Team Selfie Cam</h3>
           {onClose && (
             <button onClick={onClose} className="text-xs bg-slate-200 text-slate-700 px-2.5 py-1 rounded-lg font-bold">
               ✕ Close
@@ -78,8 +77,8 @@ export default function TurtleBooth({ onPhotoCaptured, onClose }) {
           )}
         </div>
 
-        {/* LIVE CAMERA DISPLAY WITH POLISHED OVERLAY */}
-        <div className="relative w-[280px] h-[280px] rounded-2xl overflow-hidden bg-slate-900 border-4 border-emerald-500 shadow-inner flex items-center justify-center">
+        {/* LIVE CAMERA PREVIEW WITH GOLD FRAME OVERLAY */}
+        <div className="relative w-[280px] h-[280px] rounded-2xl overflow-hidden bg-slate-900 border-4 border-amber-400 shadow-inner flex items-center justify-center">
           {!capturedImage ? (
             <>
               <video 
@@ -89,18 +88,18 @@ export default function TurtleBooth({ onPhotoCaptured, onClose }) {
                 muted 
               />
               
-              {/* CUTE LIVE GRAPHIC OVERLAY */}
-              <div className="absolute inset-0 pointer-events-none flex flex-col justify-between p-2">
-                {/* Top Corner Mascot Sticker */}
-                <div className="self-end bg-white/90 backdrop-blur-sm p-1 rounded-2xl shadow-lg border border-emerald-300 flex items-center gap-1.5 pr-2.5">
-                  <img src="/characters/doctor/avatar.png" alt="Turtle Mascot" className="w-8 h-8 object-contain" />
-                  <span className="text-[9px] font-black text-emerald-800 uppercase tracking-wide">Patterson Turtle</span>
-                </div>
+              {/* LIVE GOLD FRAME OVERLAY */}
+              <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                <img 
+                  src="/gold-frame.png" 
+                  alt="Gold Frame Overlay" 
+                  className="w-full h-full object-contain"
+                />
+              </div>
 
-                {/* Alignment Helper */}
-                <div className="self-center bg-slate-900/75 backdrop-blur-sm text-emerald-300 text-[10px] font-bold px-3 py-1 rounded-full border border-emerald-500/30">
-                  Smile & Line Up Your Face! 😊
-                </div>
+              {/* Alignment Tip */}
+              <div className="absolute bottom-2 bg-slate-900/80 backdrop-blur-sm text-amber-300 text-[9px] font-bold px-3 py-1 rounded-full border border-amber-400/40 pointer-events-none">
+                Center your face inside the gold ring! ✨
               </div>
             </>
           ) : (
@@ -110,15 +109,15 @@ export default function TurtleBooth({ onPhotoCaptured, onClose }) {
 
         <canvas ref={canvasRef} className="hidden" />
 
-        {/* ACTION BUTTONS */}
+        {/* CONTROLS */}
         <div className="w-full flex gap-2 mt-1">
           {!capturedImage ? (
             <button 
               onClick={takeSnapshot} 
               disabled={!cameraReady}
-              className="w-full bg-emerald-600 active:bg-emerald-700 text-white font-black text-xs py-3 rounded-xl uppercase tracking-wider shadow-lg active:scale-95 transition-all cursor-pointer"
+              className="w-full bg-amber-500 active:bg-amber-600 text-slate-950 font-black text-xs py-3 rounded-xl uppercase tracking-wider shadow-lg active:scale-95 transition-all cursor-pointer"
             >
-              📸 Take Badge Photo!
+              📸 Snap Turtle Photo!
             </button>
           ) : (
             <>
