@@ -17,6 +17,19 @@ const GAME_CARDS = [
   '/characters/marketing/avatar.png'
 ];
 
+const AVAILABLE_CAREERS = [
+  'Patterson Doctor',
+  'Emergency Flight Nurse',
+  'Expert Hospital Tech Wizard',
+  'Marketing Director Turtle',
+  'Therapy & Rehab Specialist',
+  'Radiology Imaging Specialist',
+  'Clinical Laboratory Scientist',
+  'Dietary & Culinary Specialist',
+  'Human Resources Director',
+  'Maintenance Support Crew'
+];
+
 export default function App() {
   const [tourStops, setTourStops] = useState([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -56,6 +69,12 @@ export default function App() {
   const [flippedIndices, setFlippedIndices] = useState([]);
   const [matchedPairs, setMatchedPairs] = useState([]);
   const [gameWon, setGameWon] = useState(false);
+
+  // ADMIN PORTAL STATES
+  const [adminName, setAdminName] = useState('');
+  const [adminCareer, setAdminCareer] = useState(AVAILABLE_CAREERS[0]);
+  const [adminBadgeQueue, setAdminCareerQueue] = useState([]);
+  const [adminPreviewBadge, setAdminPreviewBadge] = useState(null);
 
   const matchmakerQuestions = [
     { q: "What sounds like the most fun thing to do?", options: [{ text: "Helping someone feel better when they are sick", type: "clinical" }, { text: "Fixing a broken machine or using a computer", type: "technical" }, { text: "Cooking a delicious meal or drawing a poster", type: "creative" }] },
@@ -151,6 +170,56 @@ export default function App() {
     return '/characters/marketing/avatar.png';
   };
 
+  const fetchRecentAdminQueue = () => {
+    base('Badge Orders').select({
+      maxRecords: 10,
+      sort: [{ field: 'Ordered Date', direction: 'desc' }]
+    }).firstPage((err, records) => {
+      if (err) return;
+      const formatted = records.map(r => ({
+        id: r.id,
+        name: r.fields["Child Name"] || "EXPLORER",
+        career: r.fields["Assigned Career"] || "Patterson Doctor",
+        pin: r.fields["Notes"] || "2026-0101"
+      }));
+      setAdminCareerQueue(formatted);
+    });
+  };
+
+  const handleAdminBadgeCreate = (e) => {
+    e.preventDefault();
+    if (!adminName.trim()) return alert("Please enter a recipient name!");
+
+    const randomThreeDigit = Math.floor(100 + Math.random() * 900);
+    const generatedPin = `2026-${randomThreeDigit}`;
+
+    const newBadgeObj = {
+      name: adminName.toUpperCase().trim(),
+      career: adminCareer,
+      pin: generatedPin
+    };
+
+    setAdminPreviewBadge(newBadgeObj);
+
+    // Sync to Airtable
+    base('Badge Orders').create([
+      {
+        fields: {
+          "Child Name": newBadgeObj.name,
+          "Assigned Career": newBadgeObj.career,
+          "Avatar Choice": "Admin Manual Generation",
+          "Notes": generatedPin 
+        }
+      }
+    ], (err) => {
+      if (!err) fetchRecentAdminQueue();
+    });
+  };
+
+  const triggerPrintBadge = () => {
+    window.print();
+  };
+
   const startNewMemoryGame = () => {
     const fullDeck = [...GAME_CARDS, ...GAME_CARDS]
       .sort(() => Math.random() - 0.5)
@@ -164,6 +233,9 @@ export default function App() {
   useEffect(() => {
     if (appMode === 'gamesHub') {
       startNewMemoryGame();
+    }
+    if (appMode === 'adminPortal') {
+      fetchRecentAdminQueue();
     }
   }, [appMode]);
 
@@ -367,23 +439,33 @@ export default function App() {
     <div className="flex justify-center items-center min-h-[100dvh] bg-gray-100 p-0 sm:p-4 select-none touch-manipulation">
       <div className="w-full max-w-sm h-[100dvh] sm:h-[820px] max-h-[850px] bg-white sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border-0 sm:border-8 border-gray-800 relative">
         
-        {/* HEADER BAR */}
-        <div className="bg-slate-800 text-white px-4 py-3 font-bold tracking-wide shadow-md flex justify-between items-center gap-2 flex-shrink-0 z-20">
-          <span className="truncate text-sm sm:text-base">
-            {!isNameConfirmed ? '👋 Welcome Arrival' : appMode === 'tour' ? currentStep.title : appMode === 'gamesHub' ? '🎮 Game Arcade' : appMode === 'viewBadge' ? '🪪 Badge File' : '🎓 Career Explorer'}
+        {/* HEADER BAR WITH SECRET ADMIN TOGGLE BUTTON */}
+        <div className="bg-slate-800 text-white px-4 py-3 font-bold tracking-wide shadow-md flex justify-between items-center gap-2 flex-shrink-0 z-20 print:hidden">
+          <span className="truncate text-sm sm:text-base flex items-center gap-1.5">
+            {!isNameConfirmed ? '👋 Welcome Arrival' : appMode === 'tour' ? currentStep.title : appMode === 'gamesHub' ? '🎮 Game Arcade' : appMode === 'viewBadge' ? '🪪 Badge File' : appMode === 'adminPortal' ? '⚙️ Staff Admin Portal' : '🎓 Career Explorer'}
           </span>
-          {isNameConfirmed && (
-            <span className="flex-shrink-0 text-xs bg-white/20 px-2 py-0.5 rounded-full whitespace-nowrap">
-              📖 {completedStops.length} / {totalRoundsCount} Stamps
-            </span>
-          )}
+          <div className="flex items-center gap-1">
+            {/* HIDDEN ADMIN PORTAL TOGGLE */}
+            <button 
+              onClick={() => setAppMode(appMode === 'adminPortal' ? 'tour' : 'adminPortal')} 
+              className="text-xs bg-slate-700 active:bg-slate-600 px-2 py-1 rounded-md text-slate-300 font-mono active:scale-95 transition-all"
+              title="Toggle Staff Admin Generator"
+            >
+              ⚙️
+            </button>
+            {isNameConfirmed && (
+              <span className="flex-shrink-0 text-xs bg-white/20 px-2 py-0.5 rounded-full whitespace-nowrap">
+                📖 {completedStops.length} / {totalRoundsCount}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* CONTAINER VIEW BODY LAYOUT */}
-        <div className="flex-1 overflow-hidden relative flex flex-col mb-[65px]">
+        <div className="flex-1 overflow-hidden relative flex flex-col mb-[65px] print:mb-0">
           
           {/* STEP 0: INITIAL NAME LOG-IN GATE */}
-          {!isNameConfirmed ? (
+          {!isNameConfirmed && appMode !== 'adminPortal' ? (
             <div className="flex-1 bg-gradient-to-b from-blue-900 to-indigo-950 p-6 flex flex-col justify-between h-full text-white text-center overflow-y-auto">
               <div className="my-auto flex flex-col items-center gap-4">
                 <h1 className="text-2xl font-black tracking-wide">Patterson Health Adventure</h1>
@@ -411,6 +493,118 @@ export default function App() {
             </div>
           ) : (
             <>
+              {/* MODE 0: STAFF / ADMIN PRINT & BADGE GENERATOR PORTAL */}
+              {appMode === 'adminPortal' && (
+                <div className="flex-1 bg-slate-100 p-4 flex flex-col justify-between overflow-y-auto h-full text-slate-800">
+                  <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-col gap-3">
+                    <div className="border-b border-slate-100 pb-2">
+                      <h2 className="text-sm font-black text-indigo-900 uppercase tracking-wider">🖨️ Direct Badge Generator</h2>
+                      <p className="text-[11px] text-slate-500">Bypass the quiz & print badges instantly</p>
+                    </div>
+
+                    <form onSubmit={handleAdminBadgeCreate} className="flex flex-col gap-2.5">
+                      <div>
+                        <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-1">Explorer / Recipient Name</label>
+                        <input 
+                          type="text" 
+                          placeholder="e.g. EMMA" 
+                          value={adminName} 
+                          onChange={(e) => setAdminName(e.target.value)} 
+                          className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-500 uppercase"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-1">Assigned Career Role</label>
+                        <select 
+                          value={adminCareer} 
+                          onChange={(e) => setAdminCareer(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-500"
+                        >
+                          {AVAILABLE_CAREERS.map(c => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <button 
+                        type="submit" 
+                        className="w-full bg-indigo-600 active:bg-indigo-700 text-white font-black text-xs py-3 rounded-xl uppercase tracking-wider shadow active:scale-95 transition-all cursor-pointer mt-1"
+                      >
+                        ⚡ Generate Badge Preview
+                      </button>
+                    </form>
+                  </div>
+
+                  {/* ADMIN PREVIEW BADGE DISPLAY */}
+                  {adminPreviewBadge && (
+                    <div className="my-auto flex flex-col gap-2 py-2">
+                      <div className="w-full max-w-[320px] aspect-[1000/630] rounded-2xl shadow-xl border border-slate-300 mx-auto overflow-hidden relative select-none bg-contain bg-no-repeat bg-center" style={{ backgroundImage: `url(/badge-template.png)` }}>
+                        <div className="absolute top-[27.5%] left-[4%] w-[33%] h-[60%] rounded-2xl overflow-hidden flex items-end justify-center">
+                          <img 
+                            src={getDynamicArtwork(adminPreviewBadge.career)} 
+                            alt="Admin Character Avatar" 
+                            className="w-full h-full object-contain scale-110 origin-bottom" 
+                          />
+                        </div>
+
+                        <div className="absolute top-[25%] left-[40%] right-[5%] text-center">
+                          <h2 className="text-xl sm:text-2xl font-black text-[#0c2340] tracking-tight uppercase truncate leading-none">
+                            {adminPreviewBadge.name}
+                          </h2>
+                        </div>
+
+                        <div className="absolute top-[48%] left-[40%] right-[5%] text-center">
+                          <div className="text-[#d93856] font-black text-[10px] sm:text-[11px] uppercase tracking-widest leading-none truncate">
+                            {adminPreviewBadge.career.toUpperCase().replace('PATTERSON ', '')}
+                          </div>
+                        </div>
+
+                        <div className="absolute bottom-[16%] left-[45%] leading-none text-left">
+                          <span className="text-[6px] font-bold text-slate-400 block tracking-wider uppercase mb-0.5">BADGE #</span>
+                          <span className="text-[9px] font-mono font-black text-[#d93856] tracking-wide block">
+                            {adminPreviewBadge.pin}
+                          </span>
+                        </div>
+
+                        <div className="absolute bottom-[13%] left-[59%] w-[12%] aspect-square bg-white rounded-md p-0.5 flex items-center justify-center border border-slate-300 shadow-sm">
+                          <img 
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(adminPreviewBadge.pin)}`} 
+                            alt="Badge QR Code" 
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                      </div>
+
+                      <button 
+                        onClick={triggerPrintBadge}
+                        className="w-full max-w-[320px] mx-auto bg-emerald-600 active:bg-emerald-700 text-white font-black text-xs py-3 rounded-xl uppercase tracking-wider shadow-lg active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        🖨️ Print Badge Now
+                      </button>
+                    </div>
+                  )}
+
+                  {/* RECENT ORDERS QUEUE */}
+                  <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-200 mt-2">
+                    <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-2">Recent Database Orders</h3>
+                    <div className="flex flex-col gap-1.5 max-h-[110px] overflow-y-auto">
+                      {adminBadgeQueue.map(item => (
+                        <div 
+                          key={item.id} 
+                          onClick={() => setAdminPreviewBadge(item)}
+                          className="flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-slate-200 cursor-pointer active:bg-indigo-50"
+                        >
+                          <span className="text-xs font-bold text-slate-800">{item.name}</span>
+                          <span className="text-[10px] text-slate-500 truncate max-w-[120px]">{item.career}</span>
+                          <span className="text-[9px] font-mono font-bold bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded">{item.pin}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* MODE 1: Standard Tour System */}
               {appMode === 'tour' && currentStep.type === 'tour' && (
                 <div className="flex-1 bg-no-repeat relative flex flex-col justify-end p-4 h-full" style={{ backgroundImage: `url(${currentStep.background})`, backgroundPosition: currentStep.bgPosition, backgroundSize: currentStep.bgSize }}>
@@ -594,7 +788,7 @@ export default function App() {
                 </div>
               )}
 
-              {/* MODE 4: Character / Avatar Builder (HIGH-FIDELITY BADGE TEMPLATE OVERLAY) */}
+              {/* MODE 4: Character / Avatar Builder */}
               {appMode === 'avatarBuilder' && (
                 <div className="flex-1 bg-slate-100 p-3 sm:p-4 flex flex-col justify-between overflow-y-auto h-full">
                   <div className="text-center mb-1">
@@ -602,10 +796,7 @@ export default function App() {
                     <h2 className="text-sm font-extrabold text-slate-800 mt-0.5">Finalize Official ID Badge</h2>
                   </div>
 
-                  {/* MASTER TEMPLATE OVERLAY DISPLAY */}
                   <div className="w-full max-w-[340px] aspect-[1000/630] rounded-2xl shadow-xl border border-slate-300 mx-auto my-auto overflow-hidden relative flex-shrink-0 select-none bg-contain bg-no-repeat bg-center" style={{ backgroundImage: `url(/badge-template.png)` }}>
-                    
-                    {/* 1. TURTLE CHARACTER AVATAR (Left framed box) */}
                     <div className="absolute top-[27.5%] left-[4%] w-[33%] h-[60%] rounded-2xl overflow-hidden flex items-end justify-center">
                       <img 
                         src={getDynamicArtwork()} 
@@ -614,21 +805,18 @@ export default function App() {
                       />
                     </div>
 
-                    {/* 2. CHILD'S NAME */}
                     <div className="absolute top-[25%] left-[40%] right-[5%] text-center">
                       <h2 className="text-2xl sm:text-3xl font-black text-[#0c2340] tracking-tight uppercase truncate leading-none">
                         {childName || "EXPLORER"}
                       </h2>
                     </div>
 
-                    {/* 3. ASSIGNED CAREER TITLE */}
                     <div className="absolute top-[48%] left-[40%] right-[5%] text-center">
                       <div className="text-[#d93856] font-black text-[11px] sm:text-[13px] uppercase tracking-widest leading-none truncate">
                         {finalCareer ? finalCareer.toUpperCase().replace('PATTERSON ', '') : "ADVENTURER"}
                       </div>
                     </div>
 
-                    {/* 4. BADGE NUMBER / PIN */}
                     <div className="absolute bottom-[16%] left-[45%] leading-none text-left">
                       <span className="text-[7px] font-bold text-slate-400 block tracking-wider uppercase mb-0.5">BADGE #</span>
                       <span className="text-[10px] sm:text-[11px] font-mono font-black text-[#d93856] tracking-wide block">
@@ -636,7 +824,6 @@ export default function App() {
                       </span>
                     </div>
 
-                    {/* 5. DYNAMIC QR CODE */}
                     <div className="absolute bottom-[13%] left-[59%] w-[12%] aspect-square bg-white rounded-md p-0.5 flex items-center justify-center border border-slate-300 shadow-sm">
                       <img 
                         src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(assignedPin || 'PattersonTurtle')}`} 
@@ -644,7 +831,6 @@ export default function App() {
                         className="w-full h-full object-contain"
                       />
                     </div>
-
                   </div>
 
                   <button onClick={submitBadgeOrder} disabled={submittingBadge} className="w-full min-h-[48px] bg-gradient-to-r from-emerald-600 to-teal-600 active:from-emerald-700 active:to-teal-700 text-white font-black py-3 rounded-xl shadow-lg text-xs uppercase tracking-wider cursor-pointer active:scale-95 transition-all touch-manipulation my-auto">
@@ -798,7 +984,7 @@ export default function App() {
         </div>
 
         {/* STICKY BOTTOM NAVIGATION BAR */}
-        <div className="absolute bottom-0 left-0 right-0 h-[65px] bg-white border-t border-slate-200 grid grid-cols-5 items-center px-1 z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] pb-safe">
+        <div className="absolute bottom-0 left-0 right-0 h-[65px] bg-white border-t border-slate-200 grid grid-cols-5 items-center px-1 z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] pb-safe print:hidden">
           <button 
             onClick={() => { if(!isNameConfirmed) return; setAppMode('tour'); const idx = tourStops.findIndex(s => s.type === 'map'); if (idx !== -1) setCurrentStepIndex(idx); }} 
             className={`flex flex-col items-center justify-center gap-0.5 h-full transition-all active:scale-90 touch-manipulation ${!isNameConfirmed ? 'opacity-20 cursor-not-allowed' : ''} ${appMode === 'tour' && currentStep?.type === 'map' ? 'text-indigo-600 font-black' : 'text-slate-400'}`}
