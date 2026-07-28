@@ -68,7 +68,8 @@ export default function App() {
   const [avatarProp, setAvatarProp] = useState('🩺 Stethoscope');
   const [submittingBadge, setSubmittingBadge] = useState(false);
   const [showPhotoBooth, setShowPhotoBooth] = useState(false);
-  const [capturedPhoto, setCapturedPhoto] = useState(null);
+  const [capturedPhoto, setCapturedPhoto] = useState(null); // Gold framed image for display/print
+  const [rawPhoto, setRawPhoto] = useState(null);           // Clean image for Airtable logging
   const [photoPermission, setPhotoPermission] = useState(null); // null (unselected), true (YES), false (NO)
 
   // MEMORY MINI-GAME STATES
@@ -246,6 +247,7 @@ export default function App() {
           "Assigned Career": newBadgeObj.career,
           "Avatar Choice": capturedPhoto ? "Live Camera Selfie" : "Admin Manual Generation",
           "Photo Permission": capturedPhoto ? (photoPermission ? "YES - Approved" : "NO - Declined") : "N/A (Avatar Used)",
+          "Photo Data": rawPhoto || capturedPhoto || "", // Clean raw photo sent to Airtable
           "Notes": generatedPin 
         }
       }
@@ -383,6 +385,7 @@ export default function App() {
   const submitBadgeOrder = () => {
     if (!childName.trim()) return alert("Please confirm your name first!");
     
+    // Mandate explicit permission choice if a selfie was taken
     if (capturedPhoto && photoPermission === null) {
       return alert("Please select YES or NO for photo media permission before printing!");
     }
@@ -396,6 +399,7 @@ export default function App() {
           "Assigned Career": finalCareer,
           "Avatar Choice": capturedPhoto ? "Live Camera Selfie" : `Illustrated Mascot`,
           "Photo Permission": capturedPhoto ? (photoPermission ? "YES - Approved" : "NO - Declined") : "N/A (Avatar Used)",
+          "Photo Data": rawPhoto || capturedPhoto || "", // Clean raw selfie logged to Airtable!
           "Notes": assignedPin 
         }
       }], (err) => {
@@ -463,6 +467,7 @@ export default function App() {
     setCareerScores({ clinical: 0, technical: 0, creative: 0 });
     setCurrentStepIndex(0);
     setCapturedPhoto(null);
+    setRawPhoto(null);
     setPhotoPermission(null);
     setAppMode('tour');
   };
@@ -1315,8 +1320,9 @@ export default function App() {
       {/* TURTLE PHOTO BOOTH CAMERA MODAL */}
       {showPhotoBooth && (
         <TurtleBooth 
-          onPhotoCaptured={(photoDataUrl) => {
-            setCapturedPhoto(photoDataUrl);
+          onPhotoCaptured={({ framed, raw }) => {
+            setCapturedPhoto(framed); // Framed gold version for live badge rendering & printing
+            setRawPhoto(raw);         // Clean raw version logged to Airtable
           }}
           onClose={() => setShowPhotoBooth(false)}
         />

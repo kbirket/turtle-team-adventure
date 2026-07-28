@@ -44,28 +44,44 @@ export default function TurtleBooth({ onPhotoCaptured, onClose }) {
     const startX = (video.videoWidth - minDim) / 2;
     const startY = (video.videoHeight - minDim) / 2;
 
-    // 1. Create a Circular Clipping Path for the inner photo area
+    // 1. CAPTURE CLEAN RAW PHOTO (For Airtable Logging)
+    ctx.save();
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, startX, startY, minDim, minDim, 0, 0, canvas.width, canvas.height);
+    ctx.restore();
+    
+    const rawPhotoUrl = canvas.toDataURL('image/png'); // Clean photo without frame
+
+    // 2. BUILD FRAMED PHOTO (For Printed ID Badge)
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
     ctx.save();
     ctx.beginPath();
     ctx.arc(250, 245, 185, 0, Math.PI * 2, true);
     ctx.closePath();
     ctx.clip();
 
-    // 2. Draw mirrored user photo inside the inner circle
     ctx.translate(canvas.width, 0);
     ctx.scale(-1, 1);
     ctx.drawImage(video, startX, startY, minDim, minDim, 0, 0, canvas.width, canvas.height);
     ctx.restore();
 
-    // 3. Draw Gold Frame with 15px margin padding so outer edges never get clipped
     const frameImg = new Image();
     frameImg.src = '/gold-frame.png';
     frameImg.onload = () => {
       ctx.drawImage(frameImg, 15, 15, 470, 470);
       
-      const dataUrl = canvas.toDataURL('image/png');
-      setCapturedImage(dataUrl);
-      if (onPhotoCaptured) onPhotoCaptured(dataUrl);
+      const framedPhotoUrl = canvas.toDataURL('image/png'); // Gold Badge version
+      setCapturedImage(framedPhotoUrl);
+
+      // Send BOTH versions back to App.jsx!
+      if (onPhotoCaptured) {
+        onPhotoCaptured({
+          framed: framedPhotoUrl,
+          raw: rawPhotoUrl
+        });
+      }
     };
   };
 
