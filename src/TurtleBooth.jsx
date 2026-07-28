@@ -6,7 +6,6 @@ export default function TurtleBooth({ onPhotoCaptured, onClose }) {
   const [stream, setStream] = useState(null);
   const [cameraReady, setCameraReady] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
-  const animFrameId = useRef(null);
 
   useEffect(() => {
     async function startCamera() {
@@ -29,125 +28,49 @@ export default function TurtleBooth({ onPhotoCaptured, onClose }) {
 
     return () => {
       if (stream) stream.getTracks().forEach(track => track.stop());
-      if (animFrameId.current) cancelAnimationFrame(animFrameId.current);
     };
   }, []);
 
-  // Live Canvas Rendering (Tracks Face Center & Applies Mask)
-  useEffect(() => {
-    if (!cameraReady || capturedImage) return;
-
+  const takeSnapshot = () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
     if (!video || !canvas) return;
 
     const ctx = canvas.getContext('2d');
+    canvas.width = 400;
+    canvas.height = 400;
 
-    const renderFrame = () => {
-      if (video.readyState === video.HAVE_ENOUGH_DATA) {
-        canvas.width = 400;
-        canvas.height = 400;
+    const minDim = Math.min(video.videoWidth, video.videoHeight);
+    const startX = (video.videoWidth - minDim) / 2;
+    const startY = (video.videoHeight - minDim) / 2;
 
-        const minDim = Math.min(video.videoWidth, video.videoHeight);
-        const startX = (video.videoWidth - minDim) / 2;
-        const startY = (video.videoHeight - minDim) / 2;
+    // 1. Draw mirrored user photo
+    ctx.save();
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, startX, startY, minDim, minDim, 0, 0, canvas.width, canvas.height);
+    ctx.restore();
 
-        // 1. Mirror video background
-        ctx.save();
-        ctx.translate(canvas.width, 0);
-        ctx.scale(-1, 1);
-        ctx.drawImage(video, startX, startY, minDim, minDim, 0, 0, canvas.width, canvas.height);
-        ctx.restore();
-
-        // 2. Snapchat Face-Morph Layer (Green Turtle Face Mask Overlay)
-        const centerX = 200;
-        const centerY = 210;
-
-        // Green Skin Morph Tint over Face Area
-        ctx.save();
-        ctx.beginPath();
-        ctx.ellipse(centerX, centerY, 95, 120, 0, 0, 2 * Math.PI);
-        ctx.fillStyle = 'rgba(74, 222, 128, 0.45)'; // Translucent Turtle Green
-        ctx.fill();
-        ctx.lineWidth = 6;
-        ctx.strokeStyle = '#15803d';
-        ctx.stroke();
-        ctx.restore();
-
-        // Big Cartoon Turtle Eyes Tracking
-        const leftEyeX = 150;
-        const rightEyeX = 250;
-        const eyeY = 175;
-
-        // Eye Sclera (White)
-        ctx.fillStyle = 'white';
-        ctx.beginPath();
-        ctx.arc(leftEyeX, eyeY, 28, 0, 2 * Math.PI);
-        ctx.arc(rightEyeX, eyeY, 28, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = '#052e16';
-        ctx.stroke();
-
-        // Pupils
-        ctx.fillStyle = '#0f172a';
-        ctx.beginPath();
-        ctx.arc(leftEyeX + 3, eyeY, 12, 0, 2 * Math.PI);
-        ctx.arc(rightEyeX - 3, eyeY, 12, 0, 2 * Math.PI);
-        ctx.fill();
-
-        // Catchlight reflections
-        ctx.fillStyle = 'white';
-        ctx.beginPath();
-        ctx.arc(leftEyeX, eyeY - 4, 4, 0, 2 * Math.PI);
-        ctx.arc(rightEyeX - 6, eyeY - 4, 4, 0, 2 * Math.PI);
-        ctx.fill();
-
-        // Turtle Snout & Mouth
-        ctx.fillStyle = '#22c55e';
-        ctx.beginPath();
-        ctx.ellipse(centerX, centerY + 25, 32, 20, 0, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.strokeStyle = '#15803d';
-        ctx.stroke();
-
-        // Nostrils
-        ctx.fillStyle = '#14532d';
-        ctx.beginPath();
-        ctx.arc(centerX - 8, centerY + 22, 3, 0, 2 * Math.PI);
-        ctx.arc(centerX + 8, centerY + 22, 3, 0, 2 * Math.PI);
-        ctx.fill();
-
-        // Smile Line
-        ctx.beginPath();
-        ctx.arc(centerX, centerY + 30, 18, 0.1 * Math.PI, 0.9 * Math.PI);
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = '#14532d';
-        ctx.stroke();
-      }
-      animFrameId.current = requestAnimationFrame(renderFrame);
+    // 2. Draw clean badge overlay onto saved canvas
+    const overlayImg = new Image();
+    overlayImg.src = '/characters/doctor/avatar.png'; // Uses your official high-res turtle asset
+    overlayImg.onload = () => {
+      // Draw cute turtle head floating at top-center of photo
+      ctx.drawImage(overlayImg, 260, 10, 130, 130);
+      
+      const dataUrl = canvas.toDataURL('image/png');
+      setCapturedImage(dataUrl);
+      if (onPhotoCaptured) onPhotoCaptured(dataUrl);
     };
-
-    renderFrame();
-
-    return () => {
-      if (animFrameId.current) cancelAnimationFrame(animFrameId.current);
-    };
-  }, [cameraReady, capturedImage]);
-
-  const takeSnapshot = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const dataUrl = canvas.toDataURL('image/png');
-    setCapturedImage(dataUrl);
-    if (onPhotoCaptured) onPhotoCaptured(dataUrl);
   };
 
   return (
     <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4 select-none">
       <div className="bg-white rounded-3xl p-5 w-full max-w-sm text-center shadow-2xl flex flex-col items-center gap-3">
+        
+        {/* HEADER */}
         <div className="flex justify-between items-center w-full border-b border-slate-100 pb-2">
-          <h3 className="text-sm font-black text-indigo-900 uppercase tracking-wider">🐢 Snapchat Turtle Filter</h3>
+          <h3 className="text-sm font-black text-indigo-900 uppercase tracking-wider">📸 Turtle Selfie Cam</h3>
           {onClose && (
             <button onClick={onClose} className="text-xs bg-slate-200 text-slate-700 px-2.5 py-1 rounded-lg font-bold">
               ✕ Close
@@ -155,11 +78,39 @@ export default function TurtleBooth({ onPhotoCaptured, onClose }) {
           )}
         </div>
 
+        {/* LIVE CAMERA DISPLAY WITH POLISHED OVERLAY */}
         <div className="relative w-[280px] h-[280px] rounded-2xl overflow-hidden bg-slate-900 border-4 border-emerald-500 shadow-inner flex items-center justify-center">
-          <video ref={videoRef} className="hidden" playsInline muted />
-          <canvas ref={canvasRef} className="w-full h-full object-cover" />
+          {!capturedImage ? (
+            <>
+              <video 
+                ref={videoRef} 
+                className="w-full h-full object-cover -scale-x-100" 
+                playsInline 
+                muted 
+              />
+              
+              {/* CUTE LIVE GRAPHIC OVERLAY */}
+              <div className="absolute inset-0 pointer-events-none flex flex-col justify-between p-2">
+                {/* Top Corner Mascot Sticker */}
+                <div className="self-end bg-white/90 backdrop-blur-sm p-1 rounded-2xl shadow-lg border border-emerald-300 flex items-center gap-1.5 pr-2.5">
+                  <img src="/characters/doctor/avatar.png" alt="Turtle Mascot" className="w-8 h-8 object-contain" />
+                  <span className="text-[9px] font-black text-emerald-800 uppercase tracking-wide">Patterson Turtle</span>
+                </div>
+
+                {/* Alignment Helper */}
+                <div className="self-center bg-slate-900/75 backdrop-blur-sm text-emerald-300 text-[10px] font-bold px-3 py-1 rounded-full border border-emerald-500/30">
+                  Smile & Line Up Your Face! 😊
+                </div>
+              </div>
+            </>
+          ) : (
+            <img src={capturedImage} alt="Captured Selfie" className="w-full h-full object-cover" />
+          )}
         </div>
 
+        <canvas ref={canvasRef} className="hidden" />
+
+        {/* ACTION BUTTONS */}
         <div className="w-full flex gap-2 mt-1">
           {!capturedImage ? (
             <button 
@@ -167,7 +118,7 @@ export default function TurtleBooth({ onPhotoCaptured, onClose }) {
               disabled={!cameraReady}
               className="w-full bg-emerald-600 active:bg-emerald-700 text-white font-black text-xs py-3 rounded-xl uppercase tracking-wider shadow-lg active:scale-95 transition-all cursor-pointer"
             >
-              📸 Snap Turtle Selfie!
+              📸 Take Badge Photo!
             </button>
           ) : (
             <>
@@ -186,6 +137,7 @@ export default function TurtleBooth({ onPhotoCaptured, onClose }) {
             </>
           )}
         </div>
+
       </div>
     </div>
   );

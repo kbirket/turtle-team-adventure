@@ -817,64 +817,64 @@ export default function App() {
                 </div>
               )}
 
-              {/* MODE 1: Standard Tour System */}
-              {appMode === 'tour' && currentStep.type === 'tour' && (
-                <div className="flex-1 bg-no-repeat relative flex flex-col justify-end p-4 h-full" style={{ backgroundImage: `url(${currentStep.background})`, backgroundPosition: currentStep.bgPosition, backgroundSize: currentStep.bgSize }}>
-                  {!quizActive && (
-                    <div className="absolute inset-0 flex justify-center items-end pointer-events-none pb-36 overflow-hidden">
-                      <img 
-                        src={currentStep.character} 
-                        alt={currentStep.characterName} 
-                        className="h-[60%] max-h-[420px] object-contain origin-bottom transition-transform duration-300" 
-                      />
-                    </div>
-                  )}
-                  <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-xl border border-gray-200 z-10 text-center mb-2 min-h-[150px] flex flex-col justify-center">
-                    {!quizActive ? (
-                      <>
-                        <h3 className="font-bold text-lg text-emerald-700 mb-1">{currentStep.characterName} {isTargetCompleted(currentStep.title) && '✅'}</h3>
-                        <p className="text-gray-700 text-sm leading-relaxed">
-                          <strong>{childName}</strong>, {currentStep.dialogue.charAt(0).toLowerCase() + currentStep.dialogue.slice(1)}
-                        </p>
-                      </>
-                    ) : (
-                      <div className="flex flex-col gap-2">
-                        <h3 className="font-extrabold text-indigo-700 text-base">✨ Stamp Challenge! ✨</h3>
-                        <p className="text-xs sm:text-sm font-medium text-gray-800 mb-1">{currentStep.question}</p>
-                        
-                        <div className="grid grid-cols-2 gap-2">
-                          {shuffledStopOptions.map((opt, i) => {
-                            let buttonStyle = "bg-slate-50 border border-slate-300 text-slate-700 active:bg-slate-200";
-                            if (quizFeedback !== null) {
-                              if (opt.correct) {
-                                buttonStyle = "bg-emerald-50 border border-emerald-400 text-emerald-700 pointer-events-none";
-                              } else {
-                                buttonStyle = "bg-rose-50 border border-rose-400 text-rose-700 pointer-events-none";
-                              }
-                            }
-                            return (
-                              <button key={i} onClick={() => handleAnswerSubmit(opt.correct)} className={`p-2.5 font-bold text-xs rounded-xl cursor-pointer transition-all min-h-[44px] active:scale-95 touch-manipulation ${buttonStyle}`}>
-                                {opt.text}
-                              </button>
-                            );
-                          })}
-                        </div>
+           {/* MODE 1: Standard Tour System */}
+{appMode === 'tour' && currentStep.type === 'tour' && (
+  <div className="flex-1 bg-no-repeat relative flex flex-col justify-end p-4 h-full" style={{ backgroundImage: `url(${currentStep.background})`, backgroundPosition: currentStep.bgPosition, backgroundSize: currentStep.bgSize }}>
+    {!quizActive && (
+      <div className="absolute inset-0 flex justify-center items-end pointer-events-none pb-24 overflow-hidden">
+        <img 
+          src={currentStep.character} 
+          alt={currentStep.characterName} 
+          className="h-[80%] max-h-[520px] object-contain origin-bottom transition-transform duration-300" 
+        />
+      </div>
+    )}
+    <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-xl border border-gray-200 z-10 text-center mb-2 min-h-[150px] flex flex-col justify-center">
+      {!quizActive ? (
+        <>
+          <h3 className="font-bold text-lg text-emerald-700 mb-1">{currentStep.characterName} {isTargetCompleted(currentStep.title) && '✅'}</h3>
+          <p className="text-gray-700 text-sm leading-relaxed">
+            <strong>{childName}</strong>, {currentStep.dialogue.charAt(0).toLowerCase() + currentStep.dialogue.slice(1)}
+          </p>
+        </>
+      ) : (
+        <div className="flex flex-col gap-2">
+          <h3 className="font-extrabold text-indigo-700 text-base">✨ Stamp Challenge! ✨</h3>
+          <p className="text-xs sm:text-sm font-medium text-gray-800 mb-1">{currentStep.question}</p>
+          
+          <div className="grid grid-cols-2 gap-2">
+            {shuffledStopOptions.map((opt, i) => {
+              let buttonStyle = "bg-slate-50 border border-slate-300 text-slate-700 active:bg-slate-200";
+              if (quizFeedback !== null) {
+                if (opt.correct) {
+                  buttonStyle = "bg-emerald-50 border border-emerald-400 text-emerald-700 pointer-events-none";
+                } else {
+                  buttonStyle = "bg-rose-50 border border-rose-400 text-rose-700 pointer-events-none";
+                }
+              }
+              return (
+                <button key={i} onClick={() => handleAnswerSubmit(opt.correct)} className={`p-2.5 font-bold text-xs rounded-xl cursor-pointer transition-all min-h-[44px] active:scale-95 touch-manipulation ${buttonStyle}`}>
+                  {opt.text}
+                </button>
+              );
+            })}
+          </div>
 
-                        {quizFeedback === 'wrong' && (
-                          <div className="text-center mt-1">
-                            <button onClick={() => setQuizFeedback(null)} className="text-[10px] bg-slate-700 active:bg-slate-800 text-white px-3 py-1.5 rounded-lg active:scale-95 touch-manipulation">Retry Choice 🔄</button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  {(!quizActive || quizFeedback === 'correct') && (
-                    <button onClick={handleNextAction} className="w-full min-h-[48px] bg-emerald-600 active:bg-emerald-700 text-white font-bold py-3 rounded-xl z-10 uppercase tracking-wider cursor-pointer shadow-md active:scale-95 transition-all touch-manipulation">
-                      {quizFeedback === 'correct' ? 'Collect Stamp & Map Hub ➔' : currentStep.buttonText}
-                    </button>
-                  )}
-                </div>
-              )}
+          {quizFeedback === 'wrong' && (
+            <div className="text-center mt-1">
+              <button onClick={() => setQuizFeedback(null)} className="text-[10px] bg-slate-700 active:bg-slate-800 text-white px-3 py-1.5 rounded-lg active:scale-95 touch-manipulation">Retry Choice 🔄</button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+    {(!quizActive || quizFeedback === 'correct') && (
+      <button onClick={handleNextAction} className="w-full min-h-[48px] bg-emerald-600 active:bg-emerald-700 text-white font-bold py-3 rounded-xl z-10 uppercase tracking-wider cursor-pointer shadow-md active:scale-95 transition-all touch-manipulation">
+        {quizFeedback === 'correct' ? 'Collect Stamp & Map Hub ➔' : currentStep.buttonText}
+      </button>
+    )}
+  </div>
+)}
 
               {/* MODE 2: Map System */}
               {appMode === 'tour' && currentStep.type === 'map' && (
