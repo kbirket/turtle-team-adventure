@@ -821,11 +821,11 @@ export default function App() {
               {appMode === 'tour' && currentStep.type === 'tour' && (
                 <div className="flex-1 bg-no-repeat relative flex flex-col justify-end p-4 h-full" style={{ backgroundImage: `url(${currentStep.background})`, backgroundPosition: currentStep.bgPosition, backgroundSize: currentStep.bgSize }}>
                   {!quizActive && (
-                    <div className="absolute inset-0 flex justify-center items-end pointer-events-none pb-20 overflow-hidden">
+                    <div className="absolute inset-0 flex justify-center items-end pointer-events-none pb-36 overflow-hidden">
                       <img 
                         src={currentStep.character} 
                         alt={currentStep.characterName} 
-                        className="w-full max-h-[85%] object-contain scale-[1.35] origin-bottom transition-transform duration-300" 
+                        className="h-[60%] max-h-[420px] object-contain origin-bottom transition-transform duration-300" 
                       />
                     </div>
                   )}
