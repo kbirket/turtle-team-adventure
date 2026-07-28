@@ -78,6 +78,7 @@ export default function App() {
   const [showAdminPinModal, setShowAdminPinModal] = useState(false);
   const [adminInputPin, setAdminInputPin] = useState('');
   const [pinError, setPinError] = useState('');
+  const [printSide, setPrintSide] = useState('front'); // 'front' or 'back'
 
   const matchmakerQuestions = [
     { q: "What sounds like the most fun thing to do?", options: [{ text: "Helping someone feel better when they are sick", type: "clinical" }, { text: "Fixing a broken machine or using a computer", type: "technical" }, { text: "Cooking a delicious meal or drawing a poster", type: "creative" }] },
@@ -565,49 +566,79 @@ export default function App() {
               {appMode === 'adminPortal' && (
                 <div className="flex-1 bg-slate-100 p-4 flex flex-col justify-between overflow-y-auto h-full text-slate-800">
                   <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-col gap-3">
-                    <div className="border-b border-slate-100 pb-2">
-                      <h2 className="text-sm font-black text-indigo-900 uppercase tracking-wider">🖨️ Direct Badge Generator</h2>
-                      <p className="text-[11px] text-slate-500">Bypass the quiz & print badges instantly</p>
+                    <div className="border-b border-slate-100 pb-2 flex justify-between items-center">
+                      <div>
+                        <h2 className="text-sm font-black text-indigo-900 uppercase tracking-wider">🖨️ Direct Badge Generator</h2>
+                        <p className="text-[11px] text-slate-500">Smart-21 Single-Sided Printer Station</p>
+                      </div>
                     </div>
 
-                    <form onSubmit={handleAdminBadgeCreate} className="flex flex-col gap-2.5">
-                      <div>
-                        <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-1">Explorer / Recipient Name</label>
-                        <input 
-                          type="text" 
-                          placeholder="e.g. KRISTEN" 
-                          value={adminName} 
-                          onChange={(e) => setAdminName(e.target.value)} 
-                          className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-500 uppercase"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-1">Assigned Career Role</label>
-                        <select 
-                          value={adminCareer} 
-                          onChange={(e) => setAdminCareer(e.target.value)}
-                          className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-500"
-                        >
-                          {AVAILABLE_CAREERS.map(c => (
-                            <option key={c} value={c}>{c}</option>
-                          ))}
-                        </select>
-                      </div>
-
+                    {/* PRINT SIDE TOGGLE SWITCH */}
+                    <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl border border-slate-200">
                       <button 
-                        type="submit" 
-                        className="w-full bg-indigo-600 active:bg-indigo-700 text-white font-black text-xs py-3 rounded-xl uppercase tracking-wider shadow active:scale-95 transition-all cursor-pointer mt-1"
+                        onClick={() => setPrintSide('front')} 
+                        className={`py-1.5 text-xs font-black rounded-lg transition-all ${printSide === 'front' ? 'bg-indigo-600 text-white shadow' : 'text-slate-500'}`}
                       >
-                        ⚡ Generate Badge Preview
+                        🪪 Print Front Side
                       </button>
-                    </form>
+                      <button 
+                        onClick={() => setPrintSide('back')} 
+                        className={`py-1.5 text-xs font-black rounded-lg transition-all ${printSide === 'back' ? 'bg-indigo-600 text-white shadow' : 'text-slate-500'}`}
+                      >
+                        🔄 Batch Print Backs
+                      </button>
+                    </div>
+
+                    {printSide === 'front' ? (
+                      <form onSubmit={handleAdminBadgeCreate} className="flex flex-col gap-2.5">
+                        <div>
+                          <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-1">Explorer / Recipient Name</label>
+                          <input 
+                            type="text" 
+                            placeholder="e.g. KRISTEN" 
+                            value={adminName} 
+                            onChange={(e) => setAdminName(e.target.value)} 
+                            className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-500 uppercase"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-1">Assigned Career Role</label>
+                          <select 
+                            value={adminCareer} 
+                            onChange={(e) => setAdminCareer(e.target.value)}
+                            className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-500"
+                          >
+                            {AVAILABLE_CAREERS.map(c => (
+                              <option key={c} value={c}>{c}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <button 
+                          type="submit" 
+                          className="w-full bg-indigo-600 active:bg-indigo-700 text-white font-black text-xs py-3 rounded-xl uppercase tracking-wider shadow active:scale-95 transition-all cursor-pointer mt-1"
+                        >
+                          ⚡ Generate Badge Preview
+                        </button>
+                      </form>
+                    ) : (
+                      <div className="text-center py-2">
+                        <p className="text-xs text-slate-600 font-medium">Ready to print a batch of card backs onto blank cards!</p>
+                        <button 
+                          onClick={triggerPrintBadge}
+                          className="w-full bg-emerald-600 active:bg-emerald-700 text-white font-black text-xs py-3 rounded-xl uppercase tracking-wider shadow-lg active:scale-95 transition-all cursor-pointer mt-3"
+                        >
+                          🖨️ Print Card Back Now
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {/* ADMIN PREVIEW BADGE DISPLAY */}
-                  {adminPreviewBadge && (
+                  {printSide === 'front' && adminPreviewBadge && (
                     <div className="my-auto flex flex-col gap-2 py-2">
-                      <div className="w-full max-w-[340px] aspect-[1000/630] rounded-2xl shadow-xl border border-slate-300 mx-auto overflow-hidden relative select-none bg-contain bg-no-repeat bg-center" style={{ backgroundImage: `url(/badge-template.png)` }}>
+                      <div className="printable-card-container w-full max-w-[340px] aspect-[1000/630] rounded-2xl shadow-xl border border-slate-300 mx-auto overflow-hidden relative select-none bg-contain bg-no-repeat bg-center" style={{ backgroundImage: `url(/badge-template.png)` }}>
                         
                         {/* Avatar Frame */}
                         <div className="absolute top-[27%] left-[4.2%] w-[32.5%] h-[59%] rounded-full overflow-hidden flex items-end justify-center">
@@ -655,8 +686,16 @@ export default function App() {
                         onClick={triggerPrintBadge}
                         className="w-full max-w-[340px] mx-auto bg-emerald-600 active:bg-emerald-700 text-white font-black text-xs py-3 rounded-xl uppercase tracking-wider shadow-lg active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
                       >
-                        🖨️ Print Badge Now
+                        🖨️ Print Badge Front
                       </button>
+                    </div>
+                  )}
+
+                  {/* BATCH BACK PRINT PREVIEW */}
+                  {printSide === 'back' && (
+                    <div className="my-auto flex flex-col gap-2 py-2">
+                      <div className="printable-card-container w-full max-w-[340px] aspect-[1000/630] rounded-2xl shadow-xl border border-slate-300 mx-auto overflow-hidden relative select-none bg-contain bg-no-repeat bg-center" style={{ backgroundImage: `url(/card-back.png)` }}>
+                      </div>
                     </div>
                   )}
 
@@ -667,7 +706,7 @@ export default function App() {
                       {adminBadgeQueue.map(item => (
                         <div 
                           key={item.id} 
-                          onClick={() => setAdminPreviewBadge(item)}
+                          onClick={() => { setAdminPreviewBadge(item); setPrintSide('front'); }}
                           className="flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-slate-200 cursor-pointer active:bg-indigo-50"
                         >
                           <span className="text-xs font-bold text-slate-800">{item.name}</span>
