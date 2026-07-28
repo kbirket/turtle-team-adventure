@@ -182,3 +182,43 @@
     border-right-color: var(--border);
   }
 }
+
+/* ==========================================
+   SMART-21 ID CARD PRINTER - PRINT MEDIA STYLES
+   ========================================== */
+@media print {
+  /* Set exact physical card specs (CR-80 standard card format) */
+  @page {
+    size: 3.375in 2.125in landscape;
+    margin: 0 !important;
+  }
+
+  /* Hide the rest of the web page during print preview */
+  html, body, body * {
+    visibility: hidden !important;
+    background: none !important;
+  }
+
+  /* Show ONLY elements marked with .printable-card-container */
+  .printable-card-container,
+  .printable-card-container * {
+    visibility: visible !important;
+  }
+
+  /* Lock card artwork to top-left edge of the plastic card */
+  .printable-card-container {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 3.375in !important;
+    height: 2.125in !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    overflow: hidden !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
