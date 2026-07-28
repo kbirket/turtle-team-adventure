@@ -63,12 +63,13 @@ export default function App() {
   const [finalCareer, setFinalCareer] = useState('');
   const [shuffledCareerOptions, setShuffledCareerOptions] = useState([]);
   
-  // Avatar & Photo state
+  // Avatar, Photo, & Permission state
   const [avatarHat, setAvatarHat] = useState('🎓 Graduate Cap');
   const [avatarProp, setAvatarProp] = useState('🩺 Stethoscope');
   const [submittingBadge, setSubmittingBadge] = useState(false);
   const [showPhotoBooth, setShowPhotoBooth] = useState(false);
   const [capturedPhoto, setCapturedPhoto] = useState(null);
+  const [photoPermission, setPhotoPermission] = useState(null); // null (unselected), true (YES), false (NO)
 
   // MEMORY MINI-GAME STATES
   const [memoryDeck, setMemoryDeck] = useState([]);
@@ -244,6 +245,7 @@ export default function App() {
           "Child Name": newBadgeObj.name,
           "Assigned Career": newBadgeObj.career,
           "Avatar Choice": capturedPhoto ? "Live Camera Selfie" : "Admin Manual Generation",
+          "Photo Permission": capturedPhoto ? (photoPermission ? "YES - Approved" : "NO - Declined") : "N/A (Avatar Used)",
           "Notes": generatedPin 
         }
       }
@@ -380,6 +382,12 @@ export default function App() {
 
   const submitBadgeOrder = () => {
     if (!childName.trim()) return alert("Please confirm your name first!");
+    
+    // Require explicit permission choice if a selfie was taken
+    if (capturedPhoto && photoPermission === null) {
+      return alert("Please select YES or NO for photo media permission before printing!");
+    }
+
     setSubmittingBadge(true);
 
     base('Badge Orders').create([
@@ -387,7 +395,8 @@ export default function App() {
         fields: {
           "Child Name": childName,
           "Assigned Career": finalCareer,
-          "Avatar Choice": capturedPhoto ? "Live Camera Selfie" : `Hat: ${avatarHat} | Item: ${avatarProp}`,
+          "Avatar Choice": capturedPhoto ? "Live Camera Selfie" : `Illustrated Mascot`,
+          "Photo Permission": capturedPhoto ? (photoPermission ? "YES - Approved" : "NO - Declined") : "N/A (Avatar Used)",
           "Notes": assignedPin 
         }
       }], (err) => {
@@ -455,6 +464,7 @@ export default function App() {
     setCareerScores({ clinical: 0, technical: 0, creative: 0 });
     setCurrentStepIndex(0);
     setCapturedPhoto(null);
+    setPhotoPermission(null);
     setAppMode('tour');
   };
 
@@ -817,64 +827,64 @@ export default function App() {
                 </div>
               )}
 
-           {/* MODE 1: Standard Tour System */}
-{appMode === 'tour' && currentStep.type === 'tour' && (
-  <div className="flex-1 bg-no-repeat relative flex flex-col justify-end p-4 h-full" style={{ backgroundImage: `url(${currentStep.background})`, backgroundPosition: currentStep.bgPosition, backgroundSize: currentStep.bgSize }}>
-    {!quizActive && (
-      <div className="absolute inset-0 flex justify-center items-end pointer-events-none pb-24 overflow-hidden">
-        <img 
-          src={currentStep.character} 
-          alt={currentStep.characterName} 
-          className="h-[80%] max-h-[520px] object-contain origin-bottom transition-transform duration-300" 
-        />
-      </div>
-    )}
-    <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-xl border border-gray-200 z-10 text-center mb-2 min-h-[150px] flex flex-col justify-center">
-      {!quizActive ? (
-        <>
-          <h3 className="font-bold text-lg text-emerald-700 mb-1">{currentStep.characterName} {isTargetCompleted(currentStep.title) && '✅'}</h3>
-          <p className="text-gray-700 text-sm leading-relaxed">
-            <strong>{childName}</strong>, {currentStep.dialogue.charAt(0).toLowerCase() + currentStep.dialogue.slice(1)}
-          </p>
-        </>
-      ) : (
-        <div className="flex flex-col gap-2">
-          <h3 className="font-extrabold text-indigo-700 text-base">✨ Stamp Challenge! ✨</h3>
-          <p className="text-xs sm:text-sm font-medium text-gray-800 mb-1">{currentStep.question}</p>
-          
-          <div className="grid grid-cols-2 gap-2">
-            {shuffledStopOptions.map((opt, i) => {
-              let buttonStyle = "bg-slate-50 border border-slate-300 text-slate-700 active:bg-slate-200";
-              if (quizFeedback !== null) {
-                if (opt.correct) {
-                  buttonStyle = "bg-emerald-50 border border-emerald-400 text-emerald-700 pointer-events-none";
-                } else {
-                  buttonStyle = "bg-rose-50 border border-rose-400 text-rose-700 pointer-events-none";
-                }
-              }
-              return (
-                <button key={i} onClick={() => handleAnswerSubmit(opt.correct)} className={`p-2.5 font-bold text-xs rounded-xl cursor-pointer transition-all min-h-[44px] active:scale-95 touch-manipulation ${buttonStyle}`}>
-                  {opt.text}
-                </button>
-              );
-            })}
-          </div>
+              {/* MODE 1: Standard Tour System */}
+              {appMode === 'tour' && currentStep.type === 'tour' && (
+                <div className="flex-1 bg-no-repeat relative flex flex-col justify-end p-4 h-full" style={{ backgroundImage: `url(${currentStep.background})`, backgroundPosition: currentStep.bgPosition, backgroundSize: currentStep.bgSize }}>
+                  {!quizActive && (
+                    <div className="absolute inset-0 flex justify-center items-end pointer-events-none pb-24 overflow-hidden">
+                      <img 
+                        src={currentStep.character} 
+                        alt={currentStep.characterName} 
+                        className="h-[80%] max-h-[520px] object-contain origin-bottom transition-transform duration-300" 
+                      />
+                    </div>
+                  )}
+                  <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-xl border border-gray-200 z-10 text-center mb-2 min-h-[150px] flex flex-col justify-center">
+                    {!quizActive ? (
+                      <>
+                        <h3 className="font-bold text-lg text-emerald-700 mb-1">{currentStep.characterName} {isTargetCompleted(currentStep.title) && '✅'}</h3>
+                        <p className="text-gray-700 text-sm leading-relaxed">
+                          <strong>{childName}</strong>, {currentStep.dialogue.charAt(0).toLowerCase() + currentStep.dialogue.slice(1)}
+                        </p>
+                      </>
+                    ) : (
+                      <div className="flex flex-col gap-2">
+                        <h3 className="font-extrabold text-indigo-700 text-base">✨ Stamp Challenge! ✨</h3>
+                        <p className="text-xs sm:text-sm font-medium text-gray-800 mb-1">{currentStep.question}</p>
+                        
+                        <div className="grid grid-cols-2 gap-2">
+                          {shuffledStopOptions.map((opt, i) => {
+                            let buttonStyle = "bg-slate-50 border border-slate-300 text-slate-700 active:bg-slate-200";
+                            if (quizFeedback !== null) {
+                              if (opt.correct) {
+                                buttonStyle = "bg-emerald-50 border border-emerald-400 text-emerald-700 pointer-events-none";
+                              } else {
+                                buttonStyle = "bg-rose-50 border border-rose-400 text-rose-700 pointer-events-none";
+                              }
+                            }
+                            return (
+                              <button key={i} onClick={() => handleAnswerSubmit(opt.correct)} className={`p-2.5 font-bold text-xs rounded-xl cursor-pointer transition-all min-h-[44px] active:scale-95 touch-manipulation ${buttonStyle}`}>
+                                {opt.text}
+                              </button>
+                            );
+                          })}
+                        </div>
 
-          {quizFeedback === 'wrong' && (
-            <div className="text-center mt-1">
-              <button onClick={() => setQuizFeedback(null)} className="text-[10px] bg-slate-700 active:bg-slate-800 text-white px-3 py-1.5 rounded-lg active:scale-95 touch-manipulation">Retry Choice 🔄</button>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-    {(!quizActive || quizFeedback === 'correct') && (
-      <button onClick={handleNextAction} className="w-full min-h-[48px] bg-emerald-600 active:bg-emerald-700 text-white font-bold py-3 rounded-xl z-10 uppercase tracking-wider cursor-pointer shadow-md active:scale-95 transition-all touch-manipulation">
-        {quizFeedback === 'correct' ? 'Collect Stamp & Map Hub ➔' : currentStep.buttonText}
-      </button>
-    )}
-  </div>
-)}
+                        {quizFeedback === 'wrong' && (
+                          <div className="text-center mt-1">
+                            <button onClick={() => setQuizFeedback(null)} className="text-[10px] bg-slate-700 active:bg-slate-800 text-white px-3 py-1.5 rounded-lg active:scale-95 touch-manipulation">Retry Choice 🔄</button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {(!quizActive || quizFeedback === 'correct') && (
+                    <button onClick={handleNextAction} className="w-full min-h-[48px] bg-emerald-600 active:bg-emerald-700 text-white font-bold py-3 rounded-xl z-10 uppercase tracking-wider cursor-pointer shadow-md active:scale-95 transition-all touch-manipulation">
+                      {quizFeedback === 'correct' ? 'Collect Stamp & Map Hub ➔' : currentStep.buttonText}
+                    </button>
+                  )}
+                </div>
+              )}
 
               {/* MODE 2: Map System */}
               {appMode === 'tour' && currentStep.type === 'map' && (
@@ -1058,6 +1068,49 @@ export default function App() {
                     </div>
 
                   </div>
+
+                  {/* MANDATORY PHOTO CONSENT BUTTONS */}
+                  {capturedPhoto && (
+                    <div className="w-full max-w-[340px] mx-auto bg-white p-3 rounded-2xl border border-slate-200 shadow-sm my-2 text-center">
+                      <p className="text-[11px] font-black text-slate-800 mb-2 leading-snug">
+                        Permission for Patterson Health Center to share this photo on social media or event flyers?
+                      </p>
+                      
+                      <div className="grid grid-cols-2 gap-2">
+                        {/* YES BUTTON */}
+                        <button
+                          type="button"
+                          onClick={() => setPhotoPermission(true)}
+                          className={`py-2 px-3 rounded-xl font-black text-xs uppercase tracking-wider transition-all cursor-pointer ${
+                            photoPermission === true
+                              ? 'bg-emerald-600 text-white shadow-md ring-2 ring-emerald-400'
+                              : 'bg-slate-100 text-slate-600 active:bg-slate-200 border border-slate-300'
+                          }`}
+                        >
+                          {photoPermission === true ? '✅ YES - Approved' : 'YES'}
+                        </button>
+
+                        {/* NO BUTTON */}
+                        <button
+                          type="button"
+                          onClick={() => setPhotoPermission(false)}
+                          className={`py-2 px-3 rounded-xl font-black text-xs uppercase tracking-wider transition-all cursor-pointer ${
+                            photoPermission === false
+                              ? 'bg-rose-600 text-white shadow-md ring-2 ring-rose-400'
+                              : 'bg-slate-100 text-slate-600 active:bg-slate-200 border border-slate-300'
+                          }`}
+                        >
+                          {photoPermission === false ? '🛑 NO - Private' : 'NO'}
+                        </button>
+                      </div>
+
+                      {photoPermission === null && (
+                        <span className="text-[9px] font-bold text-amber-600 block mt-1.5 animate-pulse">
+                          ⚠️ Please tap YES or NO to unlock print button
+                        </span>
+                      )}
+                    </div>
+                  )}
 
                   <button onClick={submitBadgeOrder} disabled={submittingBadge} className="w-full min-h-[48px] bg-gradient-to-r from-emerald-600 to-teal-600 active:from-emerald-700 active:to-teal-700 text-white font-black py-3 rounded-xl shadow-lg text-xs uppercase tracking-wider cursor-pointer active:scale-95 transition-all touch-manipulation my-auto">
                     {submittingBadge ? '🖨️ Transmitting to Smart-21 Spooler...' : '🔒 Authorize & Print CR-80 ID Card ➔'}
