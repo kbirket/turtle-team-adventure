@@ -243,7 +243,7 @@ export default function App() {
         fields: {
           "Child Name": newBadgeObj.name,
           "Assigned Career": newBadgeObj.career,
-          "Avatar Choice": capturedPhoto ? "Live Camera Photo" : "Admin Manual Generation",
+          "Avatar Choice": capturedPhoto ? "Live Camera Selfie" : "Admin Manual Generation",
           "Notes": generatedPin 
         }
       }
@@ -528,7 +528,7 @@ export default function App() {
               <img 
                 src={capturedPhoto || getDynamicArtwork(activePrintCareer)} 
                 alt="Print Avatar" 
-                className="w-full h-full object-cover scale-110 origin-bottom" 
+                className="w-full h-full object-contain p-1 origin-bottom" 
               />
             </div>
 
@@ -747,7 +747,7 @@ export default function App() {
                           <img 
                             src={capturedPhoto || getDynamicArtwork(adminPreviewBadge.career)} 
                             alt="Admin Character Avatar" 
-                            className="w-full h-full object-cover scale-110 origin-bottom" 
+                            className="w-full h-full object-contain p-1 origin-bottom" 
                           />
                         </div>
 
@@ -1022,7 +1022,7 @@ export default function App() {
                       <img 
                         src={capturedPhoto || getDynamicArtwork()} 
                         alt="Official Turtle Character Avatar" 
-                        className="w-full h-full object-cover scale-110 origin-bottom" 
+                        className="w-full h-full object-contain p-1 origin-bottom" 
                       />
                     </div>
 
@@ -1162,7 +1162,7 @@ export default function App() {
                           <img 
                             src={getDynamicArtwork(foundBadge.career)} 
                             alt="Database Character Avatar" 
-                            className="w-full h-full object-contain scale-110 origin-bottom" 
+                            className="w-full h-full object-contain p-1 origin-bottom" 
                           />
                         </div>
 
@@ -1211,46 +1211,54 @@ export default function App() {
 
         </div>
 
-        {/* STICKY BOTTOM NAVIGATION BAR */}
-        <div className="absolute bottom-0 left-0 right-0 h-[65px] bg-white border-t border-slate-200 grid grid-cols-5 items-center px-1 z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] pb-safe">
+        {/* STICKY BOTTOM NAVIGATION BAR WITH CAMERA TAB */}
+        <div className="absolute bottom-0 left-0 right-0 h-[65px] bg-white border-t border-slate-200 grid grid-cols-6 items-center px-1 z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] pb-safe">
           <button 
             onClick={() => { if(!isNameConfirmed) return; setAppMode('tour'); const idx = tourStops.findIndex(s => s.type === 'map'); if (idx !== -1) setCurrentStepIndex(idx); }} 
             className={`flex flex-col items-center justify-center gap-0.5 h-full transition-all active:scale-90 touch-manipulation ${!isNameConfirmed ? 'opacity-20 cursor-not-allowed' : ''} ${appMode === 'tour' && currentStep?.type === 'map' ? 'text-indigo-600 font-black' : 'text-slate-400'}`}
           >
-            <span className="text-base">🗺️</span>
-            <span className="text-[9px] font-bold tracking-tighter">Map</span>
+            <span className="text-sm">🗺️</span>
+            <span className="text-[8px] font-bold tracking-tighter">Map</span>
+          </button>
+
+          <button 
+            onClick={() => { if(!isNameConfirmed) return; setShowPhotoBooth(true); }} 
+            className={`flex flex-col items-center justify-center gap-0.5 h-full transition-all active:scale-90 touch-manipulation ${!isNameConfirmed ? 'opacity-20 cursor-not-allowed' : ''} text-emerald-600 font-black`}
+          >
+            <span className="text-sm">📸</span>
+            <span className="text-[8px] font-bold tracking-tighter">Camera</span>
           </button>
           
           <button 
             onClick={() => { if(!isNameConfirmed) return; startCareerQuizDirect(); }} 
             className={`flex flex-col items-center justify-center gap-0.5 h-full transition-all active:scale-90 touch-manipulation ${!isNameConfirmed ? 'opacity-20 cursor-not-allowed' : ''} ${appMode === 'careerQuiz' || appMode === 'careerResultsView' || appMode === 'avatarBuilder' || appMode === 'badgeSuccess' ? 'text-indigo-600 font-black' : 'text-slate-400'}`}
           >
-            <span className="text-base">🎓</span>
-            <span className="text-[9px] font-bold tracking-tighter">Careers</span>
+            <span className="text-sm">🎓</span>
+            <span className="text-[8px] font-bold tracking-tighter">Careers</span>
           </button>
 
           <button 
             onClick={() => { if(!isNameConfirmed) return; setAppMode('gamesHub'); }} 
             className={`flex flex-col items-center justify-center gap-0.5 h-full transition-all active:scale-90 touch-manipulation ${!isNameConfirmed ? 'opacity-20 cursor-not-allowed' : ''} ${appMode === 'gamesHub' ? 'text-indigo-600 font-black' : 'text-slate-400'}`}
           >
-            <span className="text-base">🎮</span>
-            <span className="text-[9px] font-bold tracking-tighter">Arcade</span>
+            <span className="text-sm">🎮</span>
+            <span className="text-[8px] font-bold tracking-tighter">Arcade</span>
           </button>
 
           <button 
             onClick={() => { if(!isNameConfirmed) return; setAppMode('viewBadge'); setFoundBadge(null); setLookupValue(''); setSearchError(''); }} 
             className={`flex flex-col items-center justify-center gap-0.5 h-full transition-all active:scale-90 touch-manipulation ${!isNameConfirmed ? 'opacity-20 cursor-not-allowed' : ''} ${appMode === 'viewBadge' ? 'text-indigo-600 font-black' : 'text-slate-400'}`}
           >
-            <span className="text-base">🪪</span>
-            <span className="text-[9px] font-bold tracking-tighter">My Badge</span>
+            <span className="text-sm">🪪</span>
+            <span className="text-[8px] font-bold tracking-tighter">My Badge</span>
           </button>
 
           <button 
             onClick={forceGlobalReset} 
             className="flex flex-col items-center justify-center gap-0.5 h-full text-slate-400 active:text-rose-600 transition-all active:scale-90 touch-manipulation"
           >
-            <span className="text-base">🔄</span>
-            <span className="text-[9px] font-bold tracking-tighter">Reset</span>
+            <span className="text-sm">🔄</span>
+            <span className="text-[8px] font-bold tracking-tighter">Reset</span>
           </button>
         </div>
 
