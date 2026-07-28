@@ -465,12 +465,101 @@ export default function App() {
     );
   }
 
+  // Active print card details
+  const activePrintName = appMode === 'adminPortal' ? (adminPreviewBadge?.name || adminName || 'EXPLORER') : (childName || 'EXPLORER');
+  const activePrintCareer = appMode === 'adminPortal' ? (adminPreviewBadge?.career || adminCareer || 'Doctor') : (finalCareer || 'Doctor');
+  const activePrintPin = appMode === 'adminPortal' ? (adminPreviewBadge?.pin || '2026-0101') : (assignedPin || '2026-0101');
+
   return (
     <div className="flex justify-center items-center min-h-[100dvh] bg-gray-100 p-0 sm:p-4 select-none touch-manipulation">
-      <div className="w-full max-w-sm h-[100dvh] sm:h-[820px] max-h-[850px] bg-white sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border-0 sm:border-8 border-gray-800 relative">
+      
+      {/* DIRECT PRINT OVERRIDE CSS STYLES */}
+      <style>{`
+        @media print {
+          @page {
+            size: 3.375in 2.125in landscape;
+            margin: 0 !important;
+          }
+          html, body {
+            background: white !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 3.375in !important;
+            height: 2.125in !important;
+            overflow: hidden !important;
+          }
+          .app-main-layout {
+            display: none !important;
+          }
+          .smart21-print-area {
+            display: block !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 3.375in !important;
+            height: 2.125in !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+        }
+        @media screen {
+          .smart21-print-area {
+            display: none !important;
+          }
+        }
+      `}</style>
+
+      {/* DEDICATED PRINT CONTAINER (EXCLUSIVELY FOR SMART-21 PRINTER) */}
+      <div className="smart21-print-area select-none bg-contain bg-no-repeat bg-center" style={{ backgroundImage: `url(${printSide === 'front' ? '/badge-template.png' : '/card-back.png'})` }}>
+        {printSide === 'front' && (
+          <>
+            <div className="absolute top-[28%] left-[4.3%] w-[32.2%] h-[58.5%] rounded-full overflow-hidden flex items-end justify-center">
+              <img 
+                src={getDynamicArtwork(activePrintCareer)} 
+                alt="Print Avatar" 
+                className="w-full h-full object-contain scale-110 origin-bottom" 
+              />
+            </div>
+
+            <div className="absolute top-[26.5%] left-[39.5%] right-[19.5%] text-center">
+              <h2 className="text-2xl font-black text-[#0c2340] tracking-tight uppercase truncate leading-none">
+                {activePrintName}
+              </h2>
+            </div>
+
+            <div className="absolute top-[48.5%] left-[39.5%] right-[19.5%] text-center">
+              <div className="text-[#d93856] font-black text-xs uppercase tracking-wider leading-none truncate">
+                {formatBadgeTitle(activePrintCareer)}
+              </div>
+            </div>
+
+            <div className="absolute bottom-[14%] left-[44.5%] leading-none text-left">
+              <span className="text-[6px] font-bold text-slate-400 block tracking-wider uppercase mb-0.5">BADGE #</span>
+              <span className="text-[9px] font-mono font-black text-[#d93856] tracking-wide block">
+                {activePrintPin}
+              </span>
+            </div>
+
+            <div className="absolute bottom-[10%] left-[58.5%] w-[11%] aspect-square bg-white rounded-md p-0.5 flex items-center justify-center border border-slate-300 shadow-sm">
+              <img 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(activePrintPin)}`} 
+                alt="Badge QR Code" 
+                className="w-full h-full object-contain"
+              />
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* MAIN SCREEN APPLICATION FRAME */}
+      <div className="app-main-layout w-full max-w-sm h-[100dvh] sm:h-[820px] max-h-[850px] bg-white sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border-0 sm:border-8 border-gray-800 relative">
         
         {/* HEADER BAR WITH SECRET ADMIN TOGGLE BUTTON */}
-        <div className="bg-slate-800 text-white px-4 py-3 font-bold tracking-wide shadow-md flex justify-between items-center gap-2 flex-shrink-0 z-20 print:hidden">
+        <div className="bg-slate-800 text-white px-4 py-3 font-bold tracking-wide shadow-md flex justify-between items-center gap-2 flex-shrink-0 z-20">
           <span className="truncate text-sm sm:text-base flex items-center gap-1.5">
             {!isNameConfirmed ? '👋 Welcome Arrival' : appMode === 'tour' ? currentStep.title : appMode === 'gamesHub' ? '🎮 Game Arcade' : appMode === 'viewBadge' ? '🪪 Badge File' : appMode === 'adminPortal' ? '🔒 Staff Admin Portal' : '🎓 Career Explorer'}
           </span>
@@ -491,7 +580,7 @@ export default function App() {
         </div>
 
         {/* CONTAINER VIEW BODY LAYOUT */}
-        <div className="flex-1 overflow-hidden relative flex flex-col mb-[65px] print:mb-0">
+        <div className="flex-1 overflow-hidden relative flex flex-col mb-[65px]">
           
           {/* ADMIN PIN SECURITY MODAL */}
           {showAdminPinModal && (
@@ -638,9 +727,8 @@ export default function App() {
                   {/* ADMIN PREVIEW BADGE DISPLAY */}
                   {printSide === 'front' && adminPreviewBadge && (
                     <div className="my-auto flex flex-col gap-2 py-2">
-                      <div className="printable-card-container w-full max-w-[340px] aspect-[1000/630] mx-auto overflow-hidden relative select-none bg-contain bg-no-repeat bg-center" style={{ backgroundImage: `url(/badge-template.png)` }}>
+                      <div className="w-full max-w-[340px] aspect-[1000/630] mx-auto overflow-hidden relative select-none bg-contain bg-no-repeat bg-center rounded-2xl border border-slate-300 shadow-xl" style={{ backgroundImage: `url(/badge-template.png)` }}>
                         
-                        {/* Avatar Frame */}
                         <div className="absolute top-[28%] left-[4.3%] w-[32.2%] h-[58.5%] rounded-full overflow-hidden flex items-end justify-center">
                           <img 
                             src={getDynamicArtwork(adminPreviewBadge.career)} 
@@ -649,21 +737,18 @@ export default function App() {
                           />
                         </div>
 
-                        {/* Centered Name */}
                         <div className="absolute top-[26.5%] left-[39.5%] right-[19.5%] text-center">
                           <h2 className="text-2xl sm:text-3xl font-black text-[#0c2340] tracking-tight uppercase truncate leading-none">
                             {adminPreviewBadge.name}
                           </h2>
                         </div>
 
-                        {/* Centered Short Title */}
                         <div className="absolute top-[48.5%] left-[39.5%] right-[19.5%] text-center">
                           <div className="text-[#d93856] font-black text-xs sm:text-sm uppercase tracking-wider leading-none truncate">
                             {formatBadgeTitle(adminPreviewBadge.career)}
                           </div>
                         </div>
 
-                        {/* Badge # */}
                         <div className="absolute bottom-[14%] left-[44.5%] leading-none text-left">
                           <span className="text-[6px] font-bold text-slate-400 block tracking-wider uppercase mb-0.5">BADGE #</span>
                           <span className="text-[9px] font-mono font-black text-[#d93856] tracking-wide block">
@@ -671,7 +756,6 @@ export default function App() {
                           </span>
                         </div>
 
-                        {/* QR Code */}
                         <div className="absolute bottom-[10%] left-[58.5%] w-[11%] aspect-square bg-white rounded-md p-0.5 flex items-center justify-center border border-slate-300 shadow-sm">
                           <img 
                             src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(adminPreviewBadge.pin)}`} 
@@ -694,7 +778,7 @@ export default function App() {
                   {/* BATCH BACK PRINT PREVIEW */}
                   {printSide === 'back' && (
                     <div className="my-auto flex flex-col gap-2 py-2">
-                      <div className="printable-card-container w-full max-w-[340px] aspect-[1000/630] mx-auto overflow-hidden relative select-none bg-contain bg-no-repeat bg-center" style={{ backgroundImage: `url(/card-back.png)` }}>
+                      <div className="w-full max-w-[340px] aspect-[1000/630] mx-auto overflow-hidden relative select-none bg-contain bg-no-repeat bg-center rounded-2xl border border-slate-300 shadow-xl" style={{ backgroundImage: `url(/card-back.png)` }}>
                       </div>
                     </div>
                   )}
@@ -910,7 +994,7 @@ export default function App() {
                     <h2 className="text-sm font-extrabold text-slate-800 mt-0.5">Finalize Official ID Badge</h2>
                   </div>
 
-                  <div className="printable-card-container w-full max-w-[340px] aspect-[1000/630] mx-auto my-auto overflow-hidden relative flex-shrink-0 select-none bg-contain bg-no-repeat bg-center" style={{ backgroundImage: `url(/badge-template.png)` }}>
+                  <div className="w-full max-w-[340px] aspect-[1000/630] mx-auto my-auto overflow-hidden relative flex-shrink-0 select-none bg-contain bg-no-repeat bg-center rounded-2xl border border-slate-300 shadow-xl" style={{ backgroundImage: `url(/badge-template.png)` }}>
                     
                     {/* Character Avatar */}
                     <div className="absolute top-[28%] left-[4.3%] w-[32.2%] h-[58.5%] rounded-full overflow-hidden flex items-end justify-center">
@@ -1051,7 +1135,7 @@ export default function App() {
                     </div>
                   ) : (
                     <div className="my-auto flex flex-col gap-3">
-                      <div className="printable-card-container w-full max-w-[340px] aspect-[1000/630] mx-auto overflow-hidden relative select-none bg-contain bg-no-repeat bg-center" style={{ backgroundImage: `url(/badge-template.png)` }}>
+                      <div className="w-full max-w-[340px] aspect-[1000/630] mx-auto overflow-hidden relative select-none bg-contain bg-no-repeat bg-center rounded-2xl border border-slate-300 shadow-xl" style={{ backgroundImage: `url(/badge-template.png)` }}>
                         
                         <div className="absolute top-[28%] left-[4.3%] w-[32.2%] h-[58.5%] rounded-full overflow-hidden flex items-end justify-center">
                           <img 
@@ -1107,7 +1191,7 @@ export default function App() {
         </div>
 
         {/* STICKY BOTTOM NAVIGATION BAR */}
-        <div className="absolute bottom-0 left-0 right-0 h-[65px] bg-white border-t border-slate-200 grid grid-cols-5 items-center px-1 z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] pb-safe print:hidden">
+        <div className="absolute bottom-0 left-0 right-0 h-[65px] bg-white border-t border-slate-200 grid grid-cols-5 items-center px-1 z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] pb-safe">
           <button 
             onClick={() => { if(!isNameConfirmed) return; setAppMode('tour'); const idx = tourStops.findIndex(s => s.type === 'map'); if (idx !== -1) setCurrentStepIndex(idx); }} 
             className={`flex flex-col items-center justify-center gap-0.5 h-full transition-all active:scale-90 touch-manipulation ${!isNameConfirmed ? 'opacity-20 cursor-not-allowed' : ''} ${appMode === 'tour' && currentStep?.type === 'map' ? 'text-indigo-600 font-black' : 'text-slate-400'}`}
