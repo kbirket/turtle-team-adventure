@@ -416,12 +416,13 @@ export default function App() {
               {appMode === 'tour' && currentStep.type === 'tour' && (
                 <div className="flex-1 bg-no-repeat relative flex flex-col justify-end p-4 h-full" style={{ backgroundImage: `url(${currentStep.background})`, backgroundPosition: currentStep.bgPosition, backgroundSize: currentStep.bgSize }}>
                   {!quizActive && (
-                    <div className="absolute inset-0 flex justify-center items-end pointer-events-none pb-28">
-                      <img 
-                        src={currentStep.character} 
-                        alt={currentStep.characterName} 
-                        className="w-[95%] max-h-[75%] object-contain scale-110 transition-transform duration-300" 
-                      />
+                    <div className="absolute inset-0 flex justify-center items-end pointer-events-none pb-20 overflow-hidden">
+  <img 
+    src={currentStep.character} 
+    alt={currentStep.characterName} 
+    className="w-full max-h-[85%] object-contain scale-[1.35] origin-bottom transition-transform duration-300" 
+  />
+</div>
                     </div>
                   )}
                   <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-xl border border-gray-200 z-10 text-center mb-2 min-h-[150px] flex flex-col justify-center">
