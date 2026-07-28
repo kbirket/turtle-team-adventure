@@ -78,7 +78,7 @@ export default function App() {
   const [showAdminPinModal, setShowAdminPinModal] = useState(false);
   const [adminInputPin, setAdminInputPin] = useState('');
   const [pinError, setPinError] = useState('');
-  const [printSide, setPrintSide] = useState('front'); // 'front' or 'back'
+  const [printSide, setPrintSide] = useState('front');
 
   const matchmakerQuestions = [
     { q: "What sounds like the most fun thing to do?", options: [{ text: "Helping someone feel better when they are sick", type: "clinical" }, { text: "Fixing a broken machine or using a computer", type: "technical" }, { text: "Cooking a delicious meal or drawing a poster", type: "creative" }] },
@@ -638,10 +638,10 @@ export default function App() {
                   {/* ADMIN PREVIEW BADGE DISPLAY */}
                   {printSide === 'front' && adminPreviewBadge && (
                     <div className="my-auto flex flex-col gap-2 py-2">
-                      <div className="printable-card-container w-full max-w-[340px] aspect-[1000/630] rounded-2xl shadow-xl border border-slate-300 mx-auto overflow-hidden relative select-none bg-contain bg-no-repeat bg-center" style={{ backgroundImage: `url(/badge-template.png)` }}>
+                      <div className="printable-card-container w-full max-w-[340px] aspect-[1000/630] mx-auto overflow-hidden relative select-none bg-contain bg-no-repeat bg-center" style={{ backgroundImage: `url(/badge-template.png)` }}>
                         
                         {/* Avatar Frame */}
-                        <div className="absolute top-[27%] left-[4.2%] w-[32.5%] h-[59%] rounded-full overflow-hidden flex items-end justify-center">
+                        <div className="absolute top-[28%] left-[4.3%] w-[32.2%] h-[58.5%] rounded-full overflow-hidden flex items-end justify-center">
                           <img 
                             src={getDynamicArtwork(adminPreviewBadge.career)} 
                             alt="Admin Character Avatar" 
@@ -650,21 +650,21 @@ export default function App() {
                         </div>
 
                         {/* Centered Name */}
-                        <div className="absolute top-[24%] left-[36%] right-[4%] text-center">
+                        <div className="absolute top-[26.5%] left-[39.5%] right-[19.5%] text-center">
                           <h2 className="text-2xl sm:text-3xl font-black text-[#0c2340] tracking-tight uppercase truncate leading-none">
                             {adminPreviewBadge.name}
                           </h2>
                         </div>
 
                         {/* Centered Short Title */}
-                        <div className="absolute top-[47%] left-[36%] right-[4%] text-center">
-                          <div className="text-[#d93856] font-black text-xs sm:text-sm uppercase tracking-wide leading-none truncate">
+                        <div className="absolute top-[48.5%] left-[39.5%] right-[19.5%] text-center">
+                          <div className="text-[#d93856] font-black text-xs sm:text-sm uppercase tracking-wider leading-none truncate">
                             {formatBadgeTitle(adminPreviewBadge.career)}
                           </div>
                         </div>
 
                         {/* Badge # */}
-                        <div className="absolute bottom-[16%] left-[44%] leading-none text-left">
+                        <div className="absolute bottom-[14%] left-[44.5%] leading-none text-left">
                           <span className="text-[6px] font-bold text-slate-400 block tracking-wider uppercase mb-0.5">BADGE #</span>
                           <span className="text-[9px] font-mono font-black text-[#d93856] tracking-wide block">
                             {adminPreviewBadge.pin}
@@ -672,7 +672,7 @@ export default function App() {
                         </div>
 
                         {/* QR Code */}
-                        <div className="absolute bottom-[12%] left-[58%] w-[11.5%] aspect-square bg-white rounded-md p-0.5 flex items-center justify-center border border-slate-300 shadow-sm">
+                        <div className="absolute bottom-[10%] left-[58.5%] w-[11%] aspect-square bg-white rounded-md p-0.5 flex items-center justify-center border border-slate-300 shadow-sm">
                           <img 
                             src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(adminPreviewBadge.pin)}`} 
                             alt="Badge QR Code" 
@@ -694,7 +694,7 @@ export default function App() {
                   {/* BATCH BACK PRINT PREVIEW */}
                   {printSide === 'back' && (
                     <div className="my-auto flex flex-col gap-2 py-2">
-                      <div className="printable-card-container w-full max-w-[340px] aspect-[1000/630] rounded-2xl shadow-xl border border-slate-300 mx-auto overflow-hidden relative select-none bg-contain bg-no-repeat bg-center" style={{ backgroundImage: `url(/card-back.png)` }}>
+                      <div className="printable-card-container w-full max-w-[340px] aspect-[1000/630] mx-auto overflow-hidden relative select-none bg-contain bg-no-repeat bg-center" style={{ backgroundImage: `url(/card-back.png)` }}>
                       </div>
                     </div>
                   )}
@@ -910,10 +910,10 @@ export default function App() {
                     <h2 className="text-sm font-extrabold text-slate-800 mt-0.5">Finalize Official ID Badge</h2>
                   </div>
 
-                  <div className="w-full max-w-[340px] aspect-[1000/630] rounded-2xl shadow-xl border border-slate-300 mx-auto my-auto overflow-hidden relative flex-shrink-0 select-none bg-contain bg-no-repeat bg-center" style={{ backgroundImage: `url(/badge-template.png)` }}>
+                  <div className="printable-card-container w-full max-w-[340px] aspect-[1000/630] mx-auto my-auto overflow-hidden relative flex-shrink-0 select-none bg-contain bg-no-repeat bg-center" style={{ backgroundImage: `url(/badge-template.png)` }}>
                     
                     {/* Character Avatar */}
-                    <div className="absolute top-[27%] left-[4.2%] w-[32.5%] h-[59%] rounded-full overflow-hidden flex items-end justify-center">
+                    <div className="absolute top-[28%] left-[4.3%] w-[32.2%] h-[58.5%] rounded-full overflow-hidden flex items-end justify-center">
                       <img 
                         src={getDynamicArtwork()} 
                         alt="Official Turtle Character Avatar" 
@@ -922,21 +922,21 @@ export default function App() {
                     </div>
 
                     {/* Centered Name */}
-                    <div className="absolute top-[24%] left-[36%] right-[4%] text-center">
+                    <div className="absolute top-[26.5%] left-[39.5%] right-[19.5%] text-center">
                       <h2 className="text-2xl sm:text-3xl font-black text-[#0c2340] tracking-tight uppercase truncate leading-none">
                         {childName || "EXPLORER"}
                       </h2>
                     </div>
 
                     {/* Centered Short Title */}
-                    <div className="absolute top-[47%] left-[36%] right-[4%] text-center">
-                      <div className="text-[#d93856] font-black text-xs sm:text-sm uppercase tracking-wide leading-none truncate">
+                    <div className="absolute top-[48.5%] left-[39.5%] right-[19.5%] text-center">
+                      <div className="text-[#d93856] font-black text-xs sm:text-sm uppercase tracking-wider leading-none truncate">
                         {formatBadgeTitle(finalCareer)}
                       </div>
                     </div>
 
                     {/* Badge # */}
-                    <div className="absolute bottom-[16%] left-[44%] leading-none text-left">
+                    <div className="absolute bottom-[14%] left-[44.5%] leading-none text-left">
                       <span className="text-[6px] font-bold text-slate-400 block tracking-wider uppercase mb-0.5">BADGE #</span>
                       <span className="text-[9px] font-mono font-black text-[#d93856] tracking-wide block">
                         {assignedPin || "2026-0101"}
@@ -944,7 +944,7 @@ export default function App() {
                     </div>
 
                     {/* QR Code */}
-                    <div className="absolute bottom-[12%] left-[58%] w-[11.5%] aspect-square bg-white rounded-md p-0.5 flex items-center justify-center border border-slate-300 shadow-sm">
+                    <div className="absolute bottom-[10%] left-[58.5%] w-[11%] aspect-square bg-white rounded-md p-0.5 flex items-center justify-center border border-slate-300 shadow-sm">
                       <img 
                         src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(assignedPin || 'PattersonTurtle')}`} 
                         alt="Badge QR Code" 
@@ -1051,9 +1051,9 @@ export default function App() {
                     </div>
                   ) : (
                     <div className="my-auto flex flex-col gap-3">
-                      <div className="w-full max-w-[340px] aspect-[1000/630] rounded-2xl shadow-xl border border-slate-300 mx-auto overflow-hidden relative select-none bg-contain bg-no-repeat bg-center" style={{ backgroundImage: `url(/badge-template.png)` }}>
+                      <div className="printable-card-container w-full max-w-[340px] aspect-[1000/630] mx-auto overflow-hidden relative select-none bg-contain bg-no-repeat bg-center" style={{ backgroundImage: `url(/badge-template.png)` }}>
                         
-                        <div className="absolute top-[27%] left-[4.2%] w-[32.5%] h-[59%] rounded-full overflow-hidden flex items-end justify-center">
+                        <div className="absolute top-[28%] left-[4.3%] w-[32.2%] h-[58.5%] rounded-full overflow-hidden flex items-end justify-center">
                           <img 
                             src={getDynamicArtwork(foundBadge.career)} 
                             alt="Database Character Avatar" 
@@ -1061,26 +1061,26 @@ export default function App() {
                           />
                         </div>
 
-                        <div className="absolute top-[24%] left-[36%] right-[4%] text-center">
+                        <div className="absolute top-[26.5%] left-[39.5%] right-[19.5%] text-center">
                           <h2 className="text-2xl sm:text-3xl font-black text-[#0c2340] tracking-tight uppercase truncate leading-none">
                             {foundBadge.name}
                           </h2>
                         </div>
 
-                        <div className="absolute top-[47%] left-[36%] right-[4%] text-center">
-                          <div className="text-[#d93856] font-black text-xs sm:text-sm uppercase tracking-wide leading-none truncate">
+                        <div className="absolute top-[48.5%] left-[39.5%] right-[19.5%] text-center">
+                          <div className="text-[#d93856] font-black text-xs sm:text-sm uppercase tracking-wider leading-none truncate">
                             {formatBadgeTitle(foundBadge.career)}
                           </div>
                         </div>
 
-                        <div className="absolute bottom-[16%] left-[44%] leading-none text-left">
+                        <div className="absolute bottom-[14%] left-[44.5%] leading-none text-left">
                           <span className="text-[6px] font-bold text-slate-400 block tracking-wider uppercase mb-0.5">BADGE #</span>
                           <span className="text-[9px] font-mono font-black text-[#d93856] tracking-wide block">
                             {foundBadge.pin}
                           </span>
                         </div>
 
-                        <div className="absolute bottom-[12%] left-[58%] w-[11.5%] aspect-square bg-white rounded-md p-0.5 flex items-center justify-center border border-slate-300 shadow-sm">
+                        <div className="absolute bottom-[10%] left-[58.5%] w-[11%] aspect-square bg-white rounded-md p-0.5 flex items-center justify-center border border-slate-300 shadow-sm">
                           <img 
                             src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(foundBadge.pin || 'PattersonTurtle')}`} 
                             alt="Badge QR Code" 
