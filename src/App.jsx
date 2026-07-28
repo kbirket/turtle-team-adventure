@@ -5,8 +5,6 @@ const base = new Airtable({
   apiKey: import.meta.env.VITE_AIRTABLE_PAT 
 }).base(import.meta.env.VITE_AIRTABLE_BASE_ID);
 
-const MASTER_BADGE_BG = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=340&h=215&q=80"; 
-
 // Memory Game Character Avatars Set
 const GAME_CARDS = [
   '/characters/doctor/avatar.png',
@@ -44,6 +42,7 @@ export default function App() {
   // Matchmaker tracking scoring weights
   const [careerScores, setCareerScores] = useState({ clinical: 0, technical: 0, creative: 0 });
   const [currentQuizQuestion, setCurrentQuizQuestion] = useState(0);
+  const [careerResults, setCareerResults] = useState([]);
   const [finalCareer, setFinalCareer] = useState('');
   const [shuffledCareerOptions, setShuffledCareerOptions] = useState([]);
   
@@ -127,9 +126,6 @@ export default function App() {
           }
         });
 
-        const bgImg = new Image();
-        bgImg.src = MASTER_BADGE_BG;
-
         setTourStops(formattedStops);
         setLoading(false);
       });
@@ -195,7 +191,7 @@ export default function App() {
   const handleNameActivation = () => {
     if (!childName.trim()) return alert("Please drop in your name!");
     const randomThreeDigit = Math.floor(100 + Math.random() * 900);
-    setAssignedPin(`TUR-${randomThreeDigit}`);
+    setAssignedPin(`2026-${randomThreeDigit}`);
     setIsNameConfirmed(true);
   };
 
@@ -250,24 +246,28 @@ export default function App() {
     if (currentQuizQuestion + 1 < matchmakerQuestions.length) {
       setCurrentQuizQuestion(currentQuizQuestion + 1);
     } else {
-      let highestType = 'clinical';
-      let maxScore = -1;
-      Object.keys(updatedScores).forEach(key => {
-        if (updatedScores[key] > maxScore) {
-          maxScore = updatedScores[key];
-          highestType = key;
-        }
-      });
+      const sortedCategories = Object.keys(updatedScores).sort((a, b) => updatedScores[b] - updatedScores[a]);
 
-      const careerMap = {
-        clinical: 'Patterson Doctor',
-        technical: 'Expert Hospital Tech Wizard',
-        creative: 'Marketing Director Turtle'
+      const categoryTitles = {
+        clinical: ['Patterson Doctor', 'Emergency Flight Nurse', 'Therapy & Rehab Specialist'],
+        technical: ['Expert Hospital Tech Wizard', 'Radiology Imaging Specialist', 'Clinical Laboratory Scientist'],
+        creative: ['Marketing Director Turtle', 'Dietary & Culinary Specialist', 'Human Resources Director']
       };
 
-      setFinalCareer(careerMap[highestType]);
-      setAppMode('avatarBuilder');
+      const top3Options = [
+        categoryTitles[sortedCategories[0]][0],
+        categoryTitles[sortedCategories[1]][0],
+        categoryTitles[sortedCategories[2]][0]
+      ];
+
+      setCareerResults(top3Options);
+      setAppMode('careerResultsView');
     }
+  };
+
+  const selectCareerOption = (selectedCareer) => {
+    setFinalCareer(selectedCareer);
+    setAppMode('avatarBuilder');
   };
 
   const submitBadgeOrder = () => {
@@ -328,15 +328,10 @@ export default function App() {
         career: data["Assigned Career"],
         avatarHat: hat,
         avatarProp: prop,
-        pin: data["Notes"] || "TUR-AUTH",
+        pin: data["Notes"] || "2026-0101",
         date: formattedDate
       });
     });
-  };
-
-  const getTodayFormatted = () => {
-    const today = new Date();
-    return `${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}/${today.getFullYear()}`;
   };
 
   const isTargetCompleted = (keyword) => {
@@ -354,6 +349,12 @@ export default function App() {
     setAppMode('tour');
   };
 
+  const startCareerQuizDirect = () => {
+    setCurrentQuizQuestion(0);
+    setCareerScores({ clinical: 0, technical: 0, creative: 0 });
+    setAppMode('careerQuiz');
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-100 p-4 select-none">
@@ -369,7 +370,7 @@ export default function App() {
         {/* HEADER BAR */}
         <div className="bg-slate-800 text-white px-4 py-3 font-bold tracking-wide shadow-md flex justify-between items-center gap-2 flex-shrink-0 z-20">
           <span className="truncate text-sm sm:text-base">
-            {!isNameConfirmed ? '👋 Welcome Arrival' : appMode === 'tour' ? currentStep.title : appMode === 'gamesHub' ? '🎮 Game Arcade' : appMode === 'viewBadge' ? '🪪 Badge File' : '🎓 Graduation Center'}
+            {!isNameConfirmed ? '👋 Welcome Arrival' : appMode === 'tour' ? currentStep.title : appMode === 'gamesHub' ? '🎮 Game Arcade' : appMode === 'viewBadge' ? '🪪 Badge File' : '🎓 Career Explorer'}
           </span>
           {isNameConfirmed && (
             <span className="flex-shrink-0 text-xs bg-white/20 px-2 py-0.5 rounded-full whitespace-nowrap">
@@ -522,11 +523,10 @@ export default function App() {
 
                   <div className="mt-2 pt-2 border-t border-gray-200">
                     <button 
-                      onClick={() => setAppMode('careerQuiz')} 
-                      disabled={completedStops.length < totalRoundsCount} 
-                      className={`w-full min-h-[48px] py-3 rounded-xl font-bold text-xs sm:text-sm text-center uppercase transition-all duration-300 active:scale-95 touch-manipulation ${completedStops.length >= totalRoundsCount ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white animate-pulse cursor-pointer' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
+                      onClick={startCareerQuizDirect}
+                      className="w-full min-h-[48px] py-3 rounded-xl font-bold text-xs sm:text-sm text-center uppercase transition-all duration-300 bg-gradient-to-r from-indigo-600 to-purple-600 text-white cursor-pointer active:scale-95 touch-manipulation shadow-md"
                     >
-                      {completedStops.length >= totalRoundsCount ? '🎓 Claim Graduation Badge!' : `🔒 Complete All ${completedStops.length}/${totalRoundsCount} Rounds to Graduate`}
+                      🎓 Take Career Matchmaker Quiz ➔
                     </button>
                   </div>
                 </div>
@@ -550,7 +550,51 @@ export default function App() {
                 </div>
               )}
 
-              {/* MODE 4: Character / Avatar Builder */}
+              {/* MODE 3B: Career Options Selection View */}
+              {appMode === 'careerResultsView' && (
+                <div className="flex-1 bg-slate-50 p-4 sm:p-5 flex flex-col justify-between overflow-y-auto h-full">
+                  <div className="text-center my-2">
+                    <span className="text-xs font-black uppercase text-indigo-600 bg-indigo-100 px-3 py-1 rounded-full tracking-wider">Quiz Completed!</span>
+                    <h2 className="text-base font-extrabold text-slate-800 mt-2">Your Top Hospital Matches</h2>
+                    <p className="text-xs text-slate-500 mt-0.5">Select a career to generate your official ID badge!</p>
+                  </div>
+
+                  <div className="flex flex-col gap-3 my-auto">
+                    {careerResults.map((career, idx) => (
+                      <div key={idx} className="bg-white border-2 border-indigo-200 rounded-2xl p-3.5 shadow-sm flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 overflow-hidden">
+                          <img 
+                            src={getDynamicArtwork(career)} 
+                            alt={career} 
+                            className="w-12 h-12 object-contain bg-slate-100 rounded-xl p-1 flex-shrink-0 border border-slate-200" 
+                          />
+                          <div className="overflow-hidden text-left">
+                            <span className="text-[9px] font-black uppercase tracking-wider text-indigo-500 block">
+                              {idx === 0 ? '🥇 #1 Top Match' : idx === 1 ? '🥈 Runner-Up' : '🥉 High Match'}
+                            </span>
+                            <h3 className="font-extrabold text-xs sm:text-sm text-slate-800 truncate">{career}</h3>
+                          </div>
+                        </div>
+                        <button 
+                          onClick={() => selectCareerOption(career)} 
+                          className="flex-shrink-0 bg-emerald-600 active:bg-emerald-700 text-white font-bold text-xs py-2 px-3 rounded-xl uppercase tracking-wider shadow active:scale-95 touch-manipulation cursor-pointer"
+                        >
+                          Select ➔
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button 
+                    onClick={startCareerQuizDirect} 
+                    className="w-full min-h-[44px] bg-slate-200 active:bg-slate-300 text-slate-700 font-bold py-2.5 rounded-xl text-xs uppercase shadow-sm cursor-pointer active:scale-95 touch-manipulation mt-2"
+                  >
+                    Retake Career Quiz 🔄
+                  </button>
+                </div>
+              )}
+
+              {/* MODE 4: Character / Avatar Builder (HIGH-FIDELITY BADGE TEMPLATE OVERLAY) */}
               {appMode === 'avatarBuilder' && (
                 <div className="flex-1 bg-slate-100 p-3 sm:p-4 flex flex-col justify-between overflow-y-auto h-full">
                   <div className="text-center mb-1">
@@ -558,38 +602,49 @@ export default function App() {
                     <h2 className="text-sm font-extrabold text-slate-800 mt-0.5">Finalize Official ID Badge</h2>
                   </div>
 
-                  <div className="w-full max-w-[340px] aspect-[340/215] rounded-2xl shadow-xl border border-slate-300 mx-auto my-auto overflow-hidden relative flex-shrink-0 bg-cover bg-center select-none" style={{ backgroundImage: `url(${MASTER_BADGE_BG})` }}>
-                    <div className="absolute top-[24%] left-[4.4%] w-[26.4%] h-[50.2%] rounded-lg overflow-hidden flex items-center justify-center">
+                  {/* MASTER TEMPLATE OVERLAY DISPLAY */}
+                  <div className="w-full max-w-[340px] aspect-[1000/630] rounded-2xl shadow-xl border border-slate-300 mx-auto my-auto overflow-hidden relative flex-shrink-0 select-none bg-contain bg-no-repeat bg-center" style={{ backgroundImage: `url(/badge-template.png)` }}>
+                    
+                    {/* 1. TURTLE CHARACTER AVATAR (Left framed box) */}
+                    <div className="absolute top-[27.5%] left-[4%] w-[33%] h-[60%] rounded-2xl overflow-hidden flex items-end justify-center">
                       <img 
                         src={getDynamicArtwork()} 
                         alt="Official Turtle Character Avatar" 
-                        className="w-full h-full object-contain" 
+                        className="w-full h-full object-contain scale-110 origin-bottom" 
                       />
                     </div>
 
-                    <div className="absolute top-[22%] left-[35%] right-[4.4%] text-center">
-                      <h2 className="text-xl sm:text-3xl font-black text-[#0f2d59] tracking-tighter uppercase truncate leading-none">
+                    {/* 2. CHILD'S NAME */}
+                    <div className="absolute top-[25%] left-[40%] right-[5%] text-center">
+                      <h2 className="text-2xl sm:text-3xl font-black text-[#0c2340] tracking-tight uppercase truncate leading-none">
                         {childName || "EXPLORER"}
                       </h2>
                     </div>
 
-                    <div className="absolute top-[44%] left-[35%] right-[4.4%] text-center">
-                      <div className="text-[#d93856] font-black text-[11px] sm:text-[13px] uppercase tracking-wider leading-none truncate">
+                    {/* 3. ASSIGNED CAREER TITLE */}
+                    <div className="absolute top-[48%] left-[40%] right-[5%] text-center">
+                      <div className="text-[#d93856] font-black text-[11px] sm:text-[13px] uppercase tracking-widest leading-none truncate">
                         {finalCareer ? finalCareer.toUpperCase().replace('PATTERSON ', '') : "ADVENTURER"}
                       </div>
                     </div>
 
-                    <div className="absolute bottom-[13%] left-[44.7%] leading-none text-left">
-                      <span className="text-[8px] sm:text-[9px] font-mono font-black text-[#d93856] tracking-wide block">
-                        {assignedPin}
+                    {/* 4. BADGE NUMBER / PIN */}
+                    <div className="absolute bottom-[16%] left-[45%] leading-none text-left">
+                      <span className="text-[7px] font-bold text-slate-400 block tracking-wider uppercase mb-0.5">BADGE #</span>
+                      <span className="text-[10px] sm:text-[11px] font-mono font-black text-[#d93856] tracking-wide block">
+                        {assignedPin || "2026-0101"}
                       </span>
                     </div>
 
-                    <div className="absolute bottom-[13%] left-[66%] leading-none text-left">
-                      <span className="text-[7px] sm:text-[8px] font-mono font-bold text-slate-500 tracking-tight block">
-                        {getTodayFormatted()}
-                      </span>
+                    {/* 5. DYNAMIC QR CODE */}
+                    <div className="absolute bottom-[13%] left-[59%] w-[12%] aspect-square bg-white rounded-md p-0.5 flex items-center justify-center border border-slate-300 shadow-sm">
+                      <img 
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(assignedPin || 'PattersonTurtle')}`} 
+                        alt="Badge QR Code" 
+                        className="w-full h-full object-contain"
+                      />
                     </div>
+
                   </div>
 
                   <button onClick={submitBadgeOrder} disabled={submittingBadge} className="w-full min-h-[48px] bg-gradient-to-r from-emerald-600 to-teal-600 active:from-emerald-700 active:to-teal-700 text-white font-black py-3 rounded-xl shadow-lg text-xs uppercase tracking-wider cursor-pointer active:scale-95 transition-all touch-manipulation my-auto">
@@ -670,14 +725,14 @@ export default function App() {
                   <div className="text-center mb-1">
                     <span className="text-xl">🪪</span>
                     <h2 className="text-sm sm:text-md font-extrabold text-slate-800 mt-0.5">Staff Credential Retrieval</h2>
-                    <p className="text-[11px] text-slate-500">Type your unique TUR code or your name</p>
+                    <p className="text-[11px] text-slate-500">Type your unique 2026 code or your name</p>
                   </div>
 
                   {!foundBadge ? (
                     <div className="bg-white rounded-2xl p-4 shadow-md border border-slate-200 my-auto flex flex-col gap-3">
                       <input 
                         type="text" 
-                        placeholder="ENTER NAME OR CODE (e.g. TUR-123)" 
+                        placeholder="ENTER NAME OR CODE (e.g. 2026-123)" 
                         value={lookupValue} 
                         onChange={(e) => setLookupValue(e.target.value.toUpperCase())} 
                         className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl p-3 font-black text-slate-900 text-center text-xs sm:text-sm focus:border-indigo-500 focus:outline-none tracking-wide placeholder:text-slate-300"
@@ -689,37 +744,40 @@ export default function App() {
                     </div>
                   ) : (
                     <div className="my-auto flex flex-col gap-3">
-                      <div className="w-full max-w-[340px] aspect-[340/215] rounded-2xl shadow-xl border border-slate-300 mx-auto overflow-hidden relative bg-cover bg-center select-none" style={{ backgroundImage: `url(${MASTER_BADGE_BG})` }}>
-                        <div className="absolute top-[24%] left-[4.4%] w-[26.4%] h-[50.2%] rounded-lg overflow-hidden flex items-center justify-center">
+                      <div className="w-full max-w-[340px] aspect-[1000/630] rounded-2xl shadow-xl border border-slate-300 mx-auto overflow-hidden relative select-none bg-contain bg-no-repeat bg-center" style={{ backgroundImage: `url(/badge-template.png)` }}>
+                        <div className="absolute top-[27.5%] left-[4%] w-[33%] h-[60%] rounded-2xl overflow-hidden flex items-end justify-center">
                           <img 
                             src={getDynamicArtwork(foundBadge.career)} 
                             alt="Database Character Avatar" 
-                            className="w-full h-full object-contain" 
+                            className="w-full h-full object-contain scale-110 origin-bottom" 
                           />
                         </div>
 
-                        <div className="absolute top-[22%] left-[35%] right-[4.4%] text-center">
-                          <h2 className="text-xl sm:text-3xl font-black text-[#0f2d59] tracking-tighter uppercase truncate leading-none">
+                        <div className="absolute top-[25%] left-[40%] right-[5%] text-center">
+                          <h2 className="text-2xl sm:text-3xl font-black text-[#0c2340] tracking-tight uppercase truncate leading-none">
                             {foundBadge.name}
                           </h2>
                         </div>
 
-                        <div className="absolute top-[44%] left-[35%] right-[4.4%] text-center">
-                          <div className="text-[#d93856] font-black text-[11px] sm:text-[13px] uppercase tracking-wider leading-none truncate">
+                        <div className="absolute top-[48%] left-[40%] right-[5%] text-center">
+                          <div className="text-[#d93856] font-black text-[11px] sm:text-[13px] uppercase tracking-widest leading-none truncate">
                             {foundBadge.career ? foundBadge.career.toUpperCase().replace('PATTERSON ', '') : "STAFF EXPLORER"}
                           </div>
                         </div>
 
-                        <div className="absolute bottom-[13%] left-[44.7%] leading-none text-left">
-                          <span className="text-[8px] sm:text-[9px] font-mono font-black text-[#d93856] tracking-wide block">
+                        <div className="absolute bottom-[16%] left-[45%] leading-none text-left">
+                          <span className="text-[7px] font-bold text-slate-400 block tracking-wider uppercase mb-0.5">BADGE #</span>
+                          <span className="text-[10px] sm:text-[11px] font-mono font-black text-[#d93856] tracking-wide block">
                             {foundBadge.pin}
                           </span>
                         </div>
 
-                        <div className="absolute bottom-[13%] left-[66%] leading-none text-left">
-                          <span className="text-[7px] sm:text-[8px] font-mono font-bold text-slate-500 tracking-tight block">
-                            {foundBadge.date}
-                          </span>
+                        <div className="absolute bottom-[13%] left-[59%] w-[12%] aspect-square bg-white rounded-md p-0.5 flex items-center justify-center border border-slate-300 shadow-sm">
+                          <img 
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(foundBadge.pin || 'PattersonTurtle')}`} 
+                            alt="Badge QR Code" 
+                            className="w-full h-full object-contain"
+                          />
                         </div>
                       </div>
 
@@ -750,18 +808,11 @@ export default function App() {
           </button>
           
           <button 
-            onClick={() => {
-              if(!isNameConfirmed) return;
-              if (completedStops.length < totalRoundsCount) {
-                alert(`🔒 Locked! Unlock all ${totalRoundsCount} maps first! (${completedStops.length}/${totalRoundsCount} completed)`);
-                return;
-              }
-              setAppMode('careerQuiz');
-            }} 
-            className={`flex flex-col items-center justify-center gap-0.5 h-full transition-all active:scale-90 touch-manipulation ${(!isNameConfirmed || completedStops.length < totalRoundsCount) ? 'opacity-30' : ''} ${appMode === 'careerQuiz' || appMode === 'avatarBuilder' || appMode === 'badgeSuccess' ? 'text-indigo-600 font-black' : 'text-slate-400'}`}
+            onClick={() => { if(!isNameConfirmed) return; startCareerQuizDirect(); }} 
+            className={`flex flex-col items-center justify-center gap-0.5 h-full transition-all active:scale-90 touch-manipulation ${!isNameConfirmed ? 'opacity-20 cursor-not-allowed' : ''} ${appMode === 'careerQuiz' || appMode === 'careerResultsView' || appMode === 'avatarBuilder' || appMode === 'badgeSuccess' ? 'text-indigo-600 font-black' : 'text-slate-400'}`}
           >
             <span className="text-base">🎓</span>
-            <span className="text-[9px] font-bold tracking-tighter">Grad Quiz</span>
+            <span className="text-[9px] font-bold tracking-tighter">Careers</span>
           </button>
 
           <button 
