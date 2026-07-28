@@ -138,27 +138,23 @@ export default function App() {
   const currentStep = tourStops[currentStepIndex];
   const totalRoundsCount = tourStops.filter(s => s.id >= 4.0 && s.id <= 17.0).length;
 
+  // DEDICATED DIRECT ASSET MAPPER WITH CLEAN MARKETING & HR SEPARATION
   const getDynamicArtwork = (careerTrack) => {
     const track = (careerTrack || finalCareer || '').toLowerCase();
 
-    let folder = 'marketing';
+    if (track.includes('doctor')) return '/characters/doctor/avatar.png';
+    if (track.includes('nurse')) return '/characters/nurse/avatar.png';
+    if (track.includes('tech') || track.includes('lab')) return '/characters/lab-tech/avatar.png';
+    if (track.includes('chef') || track.includes('dietary')) return '/characters/dietary/avatar.png';
+    if (track.includes('pt')) return '/characters/pt/avatar.png';
+    if (track.includes('radiology')) return '/characters/radiology/avatar.png';
+    if (track.includes('behavioral')) return '/characters/behavioral-health/avatar.png';
+    if (track.includes('maintenance')) return '/characters/maintenance/avatar.png';
+    if (track.includes('hr') || track.includes('human resources')) return '/characters/hr/avatar.png';
+    if (track.includes('marketing') || track.includes('community')) return '/characters/marketing/avatar.png';
 
-    if (track.includes('doctor')) folder = 'doctor';
-    else if (track.includes('nurse')) folder = 'nurse';
-    else if (track.includes('tech') || track.includes('lab')) folder = 'lab-tech';
-    else if (track.includes('chef') || track.includes('dietary')) folder = 'dietary';
-    else if (track.includes('pt')) folder = 'pt';
-    else if (track.includes('radiology')) folder = 'radiology';
-    else if (track.includes('behavioral')) folder = 'behavioral-health';
-    else if (track.includes('maintenance')) folder = 'maintenance';
-    else if (track.includes('marketing')) folder = 'marketing';
-    else if (track.includes('it')) folder = 'it';
-    else if (track.includes('cna')) folder = 'cna';
-    else if (track.includes('hr')) folder = 'hr';
-    else if (track.includes('receptionist')) folder = 'receptionist';
-    else if (track.includes('evs')) folder = 'evs';
-
-    return `/characters/${folder}/avatar.png`;
+    // Fallback default
+    return '/characters/marketing/avatar.png';
   };
 
   const startNewMemoryGame = () => {
@@ -268,7 +264,7 @@ export default function App() {
       const careerMap = {
         clinical: 'Patterson Doctor',
         technical: 'Expert Hospital Tech Wizard',
-        creative: 'Marketing Turtle'
+        creative: 'Marketing Director Turtle' // Explicit Marketing title!
       };
 
       setFinalCareer(careerMap[highestType]);
