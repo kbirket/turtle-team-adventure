@@ -44,24 +44,24 @@ export default function TurtleBooth({ onPhotoCaptured, onClose }) {
     const startX = (video.videoWidth - minDim) / 2;
     const startY = (video.videoHeight - minDim) / 2;
 
-    // 1. Create a Circular Clipping Path (Trims photo to stay strictly inside the ring)
+    // 1. Create a Circular Clipping Path for the inner photo area
     ctx.save();
     ctx.beginPath();
-    ctx.arc(250, 240, 200, 0, Math.PI * 2, true);
+    ctx.arc(250, 245, 185, 0, Math.PI * 2, true);
     ctx.closePath();
     ctx.clip();
 
-    // 2. Draw mirrored user photo inside the circular mask
+    // 2. Draw mirrored user photo inside the inner circle
     ctx.translate(canvas.width, 0);
     ctx.scale(-1, 1);
     ctx.drawImage(video, startX, startY, minDim, minDim, 0, 0, canvas.width, canvas.height);
-    ctx.restore(); // Restore context to draw frame over the photo
+    ctx.restore();
 
-    // 3. Composite Gold "Turtle Team" Frame over the trimmed photo
+    // 3. Draw Gold Frame with 15px margin padding so outer edges never get clipped
     const frameImg = new Image();
     frameImg.src = '/gold-frame.png';
     frameImg.onload = () => {
-      ctx.drawImage(frameImg, 0, 0, canvas.width, canvas.height);
+      ctx.drawImage(frameImg, 15, 15, 470, 470);
       
       const dataUrl = canvas.toDataURL('image/png');
       setCapturedImage(dataUrl);
@@ -95,7 +95,7 @@ export default function TurtleBooth({ onPhotoCaptured, onClose }) {
               />
               
               {/* LIVE GOLD FRAME OVERLAY */}
-              <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+              <div className="absolute inset-0 pointer-events-none flex items-center justify-center p-2">
                 <img 
                   src="/gold-frame.png" 
                   alt="Gold Frame Overlay" 
@@ -109,7 +109,7 @@ export default function TurtleBooth({ onPhotoCaptured, onClose }) {
               </div>
             </>
           ) : (
-            <img src={capturedImage} alt="Captured Selfie" className="w-full h-full object-cover" />
+            <img src={capturedImage} alt="Captured Selfie" className="w-full h-full object-contain" />
           )}
         </div>
 

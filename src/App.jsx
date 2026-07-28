@@ -533,11 +533,11 @@ export default function App() {
       <div className="smart21-print-area select-none bg-contain bg-no-repeat bg-center" style={{ backgroundImage: `url(${printSide === 'front' ? '/badge-template.png' : '/card-back.png'})` }}>
         {printSide === 'front' && (
           <>
-            <div className="absolute top-[28%] left-[4.3%] w-[32.2%] h-[58.5%] rounded-full overflow-hidden flex items-center justify-center">
+            <div className="absolute top-[26%] left-[4%] w-[32.5%] h-[60%] flex items-center justify-center">
               <img 
                 src={capturedPhoto || getDynamicArtwork(activePrintCareer)} 
                 alt="Print Avatar" 
-                className="w-full h-full object-cover" 
+                className="w-full h-full object-contain" 
               />
             </div>
 
@@ -750,11 +750,11 @@ export default function App() {
 
                       <div className="w-full max-w-[340px] aspect-[1000/630] mx-auto overflow-hidden relative select-none bg-contain bg-no-repeat bg-center rounded-2xl border border-slate-300 shadow-xl" style={{ backgroundImage: `url(/badge-template.png)` }}>
                         
-                        <div className="absolute top-[28%] left-[4.3%] w-[32.2%] h-[58.5%] rounded-full overflow-hidden flex items-center justify-center">
+                        <div className="absolute top-[26%] left-[4%] w-[32.5%] h-[60%] flex items-center justify-center">
                           <img 
                             src={capturedPhoto || getDynamicArtwork(adminPreviewBadge.career)} 
                             alt="Admin Character Avatar" 
-                            className="w-full h-full object-cover" 
+                            className="w-full h-full object-contain" 
                           />
                         </div>
 
@@ -1022,12 +1022,12 @@ export default function App() {
 
                   <div className="w-full max-w-[340px] aspect-[1000/630] mx-auto my-auto overflow-hidden relative flex-shrink-0 select-none bg-contain bg-no-repeat bg-center rounded-2xl border border-slate-300 shadow-xl" style={{ backgroundImage: `url(/badge-template.png)` }}>
                     
-                    {/* Character Avatar or Live Photo */}
-                    <div className="absolute top-[28%] left-[4.3%] w-[32.2%] h-[58.5%] rounded-full overflow-hidden flex items-center justify-center">
+                    {/* Avatar / Live Photo Frame Container */}
+                    <div className="absolute top-[26%] left-[4%] w-[32.5%] h-[60%] flex items-center justify-center">
                       <img 
                         src={capturedPhoto || getDynamicArtwork()} 
                         alt="Official Turtle Character Avatar" 
-                        className="w-full h-full object-cover" 
+                        className="w-full h-full object-contain" 
                       />
                     </div>
 
@@ -1206,11 +1206,11 @@ export default function App() {
                     <div className="my-auto flex flex-col gap-3">
                       <div className="w-full max-w-[340px] aspect-[1000/630] mx-auto overflow-hidden relative select-none bg-contain bg-no-repeat bg-center rounded-2xl border border-slate-300 shadow-xl" style={{ backgroundImage: `url(/badge-template.png)` }}>
                         
-                        <div className="absolute top-[28%] left-[4.3%] w-[32.2%] h-[58.5%] rounded-full overflow-hidden flex items-center justify-center">
+                        <div className="absolute top-[26%] left-[4%] w-[32.5%] h-[60%] flex items-center justify-center">
                           <img 
                             src={getDynamicArtwork(foundBadge.career)} 
                             alt="Database Character Avatar" 
-                            className="w-full h-full object-cover" 
+                            className="w-full h-full object-contain" 
                           />
                         </div>
 
