@@ -30,6 +30,9 @@ const AVAILABLE_CAREERS = [
   'Maintenance'
 ];
 
+// Clinic QR Target URL
+const CLINIC_PEDIATRICS_URL = "https://pattersonhc.org/pediatrics";
+
 export default function App() {
   const [tourStops, setTourStops] = useState([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -546,7 +549,7 @@ export default function App() {
 
             <div className="absolute bottom-[10%] left-[58.5%] w-[11%] aspect-square bg-white rounded-md p-0.5 flex items-center justify-center border border-slate-300 shadow-sm">
               <img 
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(activePrintPin)}`} 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(CLINIC_PEDIATRICS_URL)}`} 
                 alt="Badge QR Code" 
                 className="w-full h-full object-contain"
               />
@@ -758,7 +761,7 @@ export default function App() {
 
                         <div className="absolute bottom-[10%] left-[58.5%] w-[11%] aspect-square bg-white rounded-md p-0.5 flex items-center justify-center border border-slate-300 shadow-sm">
                           <img 
-                            src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(adminPreviewBadge.pin)}`} 
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(CLINIC_PEDIATRICS_URL)}`} 
                             alt="Badge QR Code" 
                             className="w-full h-full object-contain"
                           />
@@ -1030,7 +1033,7 @@ export default function App() {
                     {/* QR Code */}
                     <div className="absolute bottom-[10%] left-[58.5%] w-[11%] aspect-square bg-white rounded-md p-0.5 flex items-center justify-center border border-slate-300 shadow-sm">
                       <img 
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(assignedPin || 'PattersonTurtle')}`} 
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(CLINIC_PEDIATRICS_URL)}`} 
                         alt="Badge QR Code" 
                         className="w-full h-full object-contain"
                       />
@@ -1166,7 +1169,7 @@ export default function App() {
 
                         <div className="absolute bottom-[10%] left-[58.5%] w-[11%] aspect-square bg-white rounded-md p-0.5 flex items-center justify-center border border-slate-300 shadow-sm">
                           <img 
-                            src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(foundBadge.pin || 'PattersonTurtle')}`} 
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(CLINIC_PEDIATRICS_URL)}`} 
                             alt="Badge QR Code" 
                             className="w-full h-full object-contain"
                           />
