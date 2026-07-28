@@ -63,10 +63,12 @@ export default function App() {
   const [finalCareer, setFinalCareer] = useState('');
   const [shuffledCareerOptions, setShuffledCareerOptions] = useState([]);
   
-  // Avatar choices
+  // Avatar & Photo state
   const [avatarHat, setAvatarHat] = useState('🎓 Graduate Cap');
   const [avatarProp, setAvatarProp] = useState('🩺 Stethoscope');
   const [submittingBadge, setSubmittingBadge] = useState(false);
+  const [showPhotoBooth, setShowPhotoBooth] = useState(false);
+  const [capturedPhoto, setCapturedPhoto] = useState(null);
 
   // MEMORY MINI-GAME STATES
   const [memoryDeck, setMemoryDeck] = useState([]);
@@ -241,7 +243,7 @@ export default function App() {
         fields: {
           "Child Name": newBadgeObj.name,
           "Assigned Career": newBadgeObj.career,
-          "Avatar Choice": "Admin Manual Generation",
+          "Avatar Choice": capturedPhoto ? "Live Camera Photo" : "Admin Manual Generation",
           "Notes": generatedPin 
         }
       }
@@ -385,7 +387,7 @@ export default function App() {
         fields: {
           "Child Name": childName,
           "Assigned Career": finalCareer,
-          "Avatar Choice": `Hat: ${avatarHat} | Item: ${avatarProp}`,
+          "Avatar Choice": capturedPhoto ? "Live Camera Selfie" : `Hat: ${avatarHat} | Item: ${avatarProp}`,
           "Notes": assignedPin 
         }
       }], (err) => {
@@ -452,6 +454,7 @@ export default function App() {
     setCurrentQuizQuestion(0);
     setCareerScores({ clinical: 0, technical: 0, creative: 0 });
     setCurrentStepIndex(0);
+    setCapturedPhoto(null);
     setAppMode('tour');
   };
 
@@ -523,9 +526,9 @@ export default function App() {
           <>
             <div className="absolute top-[28%] left-[4.3%] w-[32.2%] h-[58.5%] rounded-full overflow-hidden flex items-end justify-center">
               <img 
-                src={getDynamicArtwork(activePrintCareer)} 
+                src={capturedPhoto || getDynamicArtwork(activePrintCareer)} 
                 alt="Print Avatar" 
-                className="w-full h-full object-contain scale-110 origin-bottom" 
+                className="w-full h-full object-cover scale-110 origin-bottom" 
               />
             </div>
 
@@ -731,13 +734,20 @@ export default function App() {
                   {/* ADMIN PREVIEW BADGE DISPLAY */}
                   {printSide === 'front' && adminPreviewBadge && (
                     <div className="my-auto flex flex-col gap-2 py-2">
+                      <button 
+                        onClick={() => setShowPhotoBooth(true)}
+                        className="w-full max-w-[340px] mx-auto bg-indigo-600 active:bg-indigo-700 text-white font-black text-xs py-2.5 rounded-xl uppercase tracking-wider shadow active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        📸 Take Live Turtle Selfie!
+                      </button>
+
                       <div className="w-full max-w-[340px] aspect-[1000/630] mx-auto overflow-hidden relative select-none bg-contain bg-no-repeat bg-center rounded-2xl border border-slate-300 shadow-xl" style={{ backgroundImage: `url(/badge-template.png)` }}>
                         
                         <div className="absolute top-[28%] left-[4.3%] w-[32.2%] h-[58.5%] rounded-full overflow-hidden flex items-end justify-center">
                           <img 
-                            src={getDynamicArtwork(adminPreviewBadge.career)} 
+                            src={capturedPhoto || getDynamicArtwork(adminPreviewBadge.career)} 
                             alt="Admin Character Avatar" 
-                            className="w-full h-full object-contain scale-110 origin-bottom" 
+                            className="w-full h-full object-cover scale-110 origin-bottom" 
                           />
                         </div>
 
@@ -998,14 +1008,21 @@ export default function App() {
                     <h2 className="text-sm font-extrabold text-slate-800 mt-0.5">Finalize Official ID Badge</h2>
                   </div>
 
+                  <button 
+                    onClick={() => setShowPhotoBooth(true)}
+                    className="w-full max-w-[340px] mx-auto bg-indigo-600 active:bg-indigo-700 text-white font-black text-xs py-2.5 rounded-xl uppercase tracking-wider shadow active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2 mb-1"
+                  >
+                    📸 Take Live Turtle Selfie!
+                  </button>
+
                   <div className="w-full max-w-[340px] aspect-[1000/630] mx-auto my-auto overflow-hidden relative flex-shrink-0 select-none bg-contain bg-no-repeat bg-center rounded-2xl border border-slate-300 shadow-xl" style={{ backgroundImage: `url(/badge-template.png)` }}>
                     
-                    {/* Character Avatar */}
+                    {/* Character Avatar or Live Photo */}
                     <div className="absolute top-[28%] left-[4.3%] w-[32.2%] h-[58.5%] rounded-full overflow-hidden flex items-end justify-center">
                       <img 
-                        src={getDynamicArtwork()} 
+                        src={capturedPhoto || getDynamicArtwork()} 
                         alt="Official Turtle Character Avatar" 
-                        className="w-full h-full object-contain scale-110 origin-bottom" 
+                        className="w-full h-full object-cover scale-110 origin-bottom" 
                       />
                     </div>
 
@@ -1238,6 +1255,17 @@ export default function App() {
         </div>
 
       </div>
+
+      {/* TURTLE PHOTO BOOTH CAMERA MODAL */}
+      {showPhotoBooth && (
+        <TurtleBooth 
+          onPhotoCaptured={(photoDataUrl) => {
+            setCapturedPhoto(photoDataUrl);
+          }}
+          onClose={() => setShowPhotoBooth(false)}
+        />
+      )}
+
     </div>
   );
 }
