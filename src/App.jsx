@@ -18,16 +18,16 @@ const GAME_CARDS = [
 ];
 
 const AVAILABLE_CAREERS = [
-  'Patterson Doctor',
-  'Emergency Flight Nurse',
-  'Expert Hospital Tech Wizard',
-  'Marketing Director Turtle',
-  'Therapy & Rehab Specialist',
-  'Radiology Imaging Specialist',
-  'Clinical Laboratory Scientist',
-  'Dietary & Culinary Specialist',
-  'Human Resources Director',
-  'Maintenance Support Crew'
+  'Doctor',
+  'Nurse',
+  'Hospital Tech',
+  'Marketing',
+  'Therapy & Rehab',
+  'Radiology',
+  'Lab Tech',
+  'Dietary',
+  'Human Resources',
+  'Maintenance'
 ];
 
 export default function App() {
@@ -70,11 +70,14 @@ export default function App() {
   const [matchedPairs, setMatchedPairs] = useState([]);
   const [gameWon, setGameWon] = useState(false);
 
-  // ADMIN PORTAL STATES
+  // ADMIN PORTAL & SECURITY STATES
   const [adminName, setAdminName] = useState('');
   const [adminCareer, setAdminCareer] = useState(AVAILABLE_CAREERS[0]);
   const [adminBadgeQueue, setAdminCareerQueue] = useState([]);
   const [adminPreviewBadge, setAdminPreviewBadge] = useState(null);
+  const [showAdminPinModal, setShowAdminPinModal] = useState(false);
+  const [adminInputPin, setAdminInputPin] = useState('');
+  const [pinError, setPinError] = useState('');
 
   const matchmakerQuestions = [
     { q: "What sounds like the most fun thing to do?", options: [{ text: "Helping someone feel better when they are sick", type: "clinical" }, { text: "Fixing a broken machine or using a computer", type: "technical" }, { text: "Cooking a delicious meal or drawing a poster", type: "creative" }] },
@@ -160,7 +163,7 @@ export default function App() {
     if (track.includes('nurse')) return '/characters/nurse/avatar.png';
     if (track.includes('tech') || track.includes('lab')) return '/characters/lab-tech/avatar.png';
     if (track.includes('chef') || track.includes('dietary')) return '/characters/dietary/avatar.png';
-    if (track.includes('pt')) return '/characters/pt/avatar.png';
+    if (track.includes('pt') || track.includes('therapy')) return '/characters/pt/avatar.png';
     if (track.includes('radiology')) return '/characters/radiology/avatar.png';
     if (track.includes('behavioral')) return '/characters/behavioral-health/avatar.png';
     if (track.includes('maintenance')) return '/characters/maintenance/avatar.png';
@@ -168,6 +171,13 @@ export default function App() {
     if (track.includes('marketing') || track.includes('community')) return '/characters/marketing/avatar.png';
 
     return '/characters/marketing/avatar.png';
+  };
+
+  const formatBadgeTitle = (rawCareer) => {
+    if (!rawCareer) return "EXPLORER";
+    let title = rawCareer.toUpperCase();
+    title = title.replace('PATTERSON ', '').replace(' TURTLE', '').replace(' DIRECTOR', '').replace(' SPECIALIST', '');
+    return title;
   };
 
   const fetchRecentAdminQueue = () => {
@@ -179,11 +189,31 @@ export default function App() {
       const formatted = records.map(r => ({
         id: r.id,
         name: r.fields["Child Name"] || "EXPLORER",
-        career: r.fields["Assigned Career"] || "Patterson Doctor",
+        career: r.fields["Assigned Career"] || "Doctor",
         pin: r.fields["Notes"] || "2026-0101"
       }));
       setAdminCareerQueue(formatted);
     });
+  };
+
+  const handleAdminToggle = () => {
+    if (appMode === 'adminPortal') {
+      setAppMode('tour');
+    } else {
+      setShowAdminPinModal(true);
+      setAdminInputPin('');
+      setPinError('');
+    }
+  };
+
+  const verifyAdminPin = (e) => {
+    e.preventDefault();
+    if (adminInputPin === '8568') {
+      setShowAdminPinModal(false);
+      setAppMode('adminPortal');
+    } else {
+      setPinError('❌ Access Denied: Incorrect PIN');
+    }
   };
 
   const handleAdminBadgeCreate = (e) => {
@@ -201,7 +231,6 @@ export default function App() {
 
     setAdminPreviewBadge(newBadgeObj);
 
-    // Sync to Airtable
     base('Badge Orders').create([
       {
         fields: {
@@ -321,9 +350,9 @@ export default function App() {
       const sortedCategories = Object.keys(updatedScores).sort((a, b) => updatedScores[b] - updatedScores[a]);
 
       const categoryTitles = {
-        clinical: ['Patterson Doctor', 'Emergency Flight Nurse', 'Therapy & Rehab Specialist'],
-        technical: ['Expert Hospital Tech Wizard', 'Radiology Imaging Specialist', 'Clinical Laboratory Scientist'],
-        creative: ['Marketing Director Turtle', 'Dietary & Culinary Specialist', 'Human Resources Director']
+        clinical: ['Doctor', 'Nurse', 'Therapy & Rehab'],
+        technical: ['Hospital Tech', 'Radiology', 'Lab Tech'],
+        creative: ['Marketing', 'Dietary', 'Human Resources']
       };
 
       const top3Options = [
@@ -442,14 +471,13 @@ export default function App() {
         {/* HEADER BAR WITH SECRET ADMIN TOGGLE BUTTON */}
         <div className="bg-slate-800 text-white px-4 py-3 font-bold tracking-wide shadow-md flex justify-between items-center gap-2 flex-shrink-0 z-20 print:hidden">
           <span className="truncate text-sm sm:text-base flex items-center gap-1.5">
-            {!isNameConfirmed ? '👋 Welcome Arrival' : appMode === 'tour' ? currentStep.title : appMode === 'gamesHub' ? '🎮 Game Arcade' : appMode === 'viewBadge' ? '🪪 Badge File' : appMode === 'adminPortal' ? '⚙️ Staff Admin Portal' : '🎓 Career Explorer'}
+            {!isNameConfirmed ? '👋 Welcome Arrival' : appMode === 'tour' ? currentStep.title : appMode === 'gamesHub' ? '🎮 Game Arcade' : appMode === 'viewBadge' ? '🪪 Badge File' : appMode === 'adminPortal' ? '🔒 Staff Admin Portal' : '🎓 Career Explorer'}
           </span>
           <div className="flex items-center gap-1">
-            {/* HIDDEN ADMIN PORTAL TOGGLE */}
             <button 
-              onClick={() => setAppMode(appMode === 'adminPortal' ? 'tour' : 'adminPortal')} 
-              className="text-xs bg-slate-700 active:bg-slate-600 px-2 py-1 rounded-md text-slate-300 font-mono active:scale-95 transition-all"
-              title="Toggle Staff Admin Generator"
+              onClick={handleAdminToggle} 
+              className="text-xs bg-slate-700 active:bg-slate-600 px-2 py-1 rounded-md text-slate-300 font-mono active:scale-95 transition-all cursor-pointer"
+              title="Protected Staff Admin Portal"
             >
               ⚙️
             </button>
@@ -464,6 +492,46 @@ export default function App() {
         {/* CONTAINER VIEW BODY LAYOUT */}
         <div className="flex-1 overflow-hidden relative flex flex-col mb-[65px] print:mb-0">
           
+          {/* ADMIN PIN SECURITY MODAL */}
+          {showAdminPinModal && (
+            <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-3xl p-6 w-full max-w-[280px] text-center shadow-2xl border border-slate-200">
+                <div className="text-3xl mb-1">🔐</div>
+                <h3 className="text-base font-black text-slate-800 uppercase tracking-wide">Staff Access</h3>
+                <p className="text-xs text-slate-500 mt-1 mb-4">Enter 4-digit staff PIN to unlock Admin Printer Portal</p>
+
+                <form onSubmit={verifyAdminPin} className="flex flex-col gap-3">
+                  <input 
+                    type="password" 
+                    maxLength="4" 
+                    placeholder="••••" 
+                    value={adminInputPin} 
+                    onChange={(e) => setAdminInputPin(e.target.value)} 
+                    className="w-full bg-slate-100 border-2 border-indigo-300 rounded-2xl p-3 text-center text-xl font-black tracking-widest text-slate-900 focus:outline-none focus:border-indigo-600"
+                    autoFocus
+                  />
+                  {pinError && <p className="text-rose-600 text-[11px] font-bold">{pinError}</p>}
+                  
+                  <div className="grid grid-cols-2 gap-2 mt-1">
+                    <button 
+                      type="button" 
+                      onClick={() => setShowAdminPinModal(false)} 
+                      className="bg-slate-200 active:bg-slate-300 text-slate-700 font-bold text-xs py-2.5 rounded-xl uppercase active:scale-95 transition-all cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      type="submit" 
+                      className="bg-indigo-600 active:bg-indigo-700 text-white font-black text-xs py-2.5 rounded-xl uppercase shadow active:scale-95 transition-all cursor-pointer"
+                    >
+                      Unlock 🔓
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
           {/* STEP 0: INITIAL NAME LOG-IN GATE */}
           {!isNameConfirmed && appMode !== 'adminPortal' ? (
             <div className="flex-1 bg-gradient-to-b from-blue-900 to-indigo-950 p-6 flex flex-col justify-between h-full text-white text-center overflow-y-auto">
@@ -507,7 +575,7 @@ export default function App() {
                         <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-1">Explorer / Recipient Name</label>
                         <input 
                           type="text" 
-                          placeholder="e.g. EMMA" 
+                          placeholder="e.g. KRISTEN" 
                           value={adminName} 
                           onChange={(e) => setAdminName(e.target.value)} 
                           className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-500 uppercase"
@@ -539,8 +607,10 @@ export default function App() {
                   {/* ADMIN PREVIEW BADGE DISPLAY */}
                   {adminPreviewBadge && (
                     <div className="my-auto flex flex-col gap-2 py-2">
-                      <div className="w-full max-w-[320px] aspect-[1000/630] rounded-2xl shadow-xl border border-slate-300 mx-auto overflow-hidden relative select-none bg-contain bg-no-repeat bg-center" style={{ backgroundImage: `url(/badge-template.png)` }}>
-                        <div className="absolute top-[27.5%] left-[4%] w-[33%] h-[60%] rounded-2xl overflow-hidden flex items-end justify-center">
+                      <div className="w-full max-w-[340px] aspect-[1000/630] rounded-2xl shadow-xl border border-slate-300 mx-auto overflow-hidden relative select-none bg-contain bg-no-repeat bg-center" style={{ backgroundImage: `url(/badge-template.png)` }}>
+                        
+                        {/* Avatar Frame */}
+                        <div className="absolute top-[27%] left-[4.2%] w-[32.5%] h-[59%] rounded-full overflow-hidden flex items-end justify-center">
                           <img 
                             src={getDynamicArtwork(adminPreviewBadge.career)} 
                             alt="Admin Character Avatar" 
@@ -548,37 +618,42 @@ export default function App() {
                           />
                         </div>
 
-                        <div className="absolute top-[25%] left-[40%] right-[5%] text-center">
-                          <h2 className="text-xl sm:text-2xl font-black text-[#0c2340] tracking-tight uppercase truncate leading-none">
+                        {/* Centered Name */}
+                        <div className="absolute top-[24%] left-[36%] right-[4%] text-center">
+                          <h2 className="text-2xl sm:text-3xl font-black text-[#0c2340] tracking-tight uppercase truncate leading-none">
                             {adminPreviewBadge.name}
                           </h2>
                         </div>
 
-                        <div className="absolute top-[48%] left-[40%] right-[5%] text-center">
-                          <div className="text-[#d93856] font-black text-[10px] sm:text-[11px] uppercase tracking-widest leading-none truncate">
-                            {adminPreviewBadge.career.toUpperCase().replace('PATTERSON ', '')}
+                        {/* Centered Short Title */}
+                        <div className="absolute top-[47%] left-[36%] right-[4%] text-center">
+                          <div className="text-[#d93856] font-black text-xs sm:text-sm uppercase tracking-wide leading-none truncate">
+                            {formatBadgeTitle(adminPreviewBadge.career)}
                           </div>
                         </div>
 
-                        <div className="absolute bottom-[16%] left-[45%] leading-none text-left">
+                        {/* Badge # */}
+                        <div className="absolute bottom-[16%] left-[44%] leading-none text-left">
                           <span className="text-[6px] font-bold text-slate-400 block tracking-wider uppercase mb-0.5">BADGE #</span>
                           <span className="text-[9px] font-mono font-black text-[#d93856] tracking-wide block">
                             {adminPreviewBadge.pin}
                           </span>
                         </div>
 
-                        <div className="absolute bottom-[13%] left-[59%] w-[12%] aspect-square bg-white rounded-md p-0.5 flex items-center justify-center border border-slate-300 shadow-sm">
+                        {/* QR Code */}
+                        <div className="absolute bottom-[12%] left-[58%] w-[11.5%] aspect-square bg-white rounded-md p-0.5 flex items-center justify-center border border-slate-300 shadow-sm">
                           <img 
                             src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(adminPreviewBadge.pin)}`} 
                             alt="Badge QR Code" 
                             className="w-full h-full object-contain"
                           />
                         </div>
+
                       </div>
 
                       <button 
                         onClick={triggerPrintBadge}
-                        className="w-full max-w-[320px] mx-auto bg-emerald-600 active:bg-emerald-700 text-white font-black text-xs py-3 rounded-xl uppercase tracking-wider shadow-lg active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
+                        className="w-full max-w-[340px] mx-auto bg-emerald-600 active:bg-emerald-700 text-white font-black text-xs py-3 rounded-xl uppercase tracking-wider shadow-lg active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
                       >
                         🖨️ Print Badge Now
                       </button>
@@ -596,7 +671,7 @@ export default function App() {
                           className="flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-slate-200 cursor-pointer active:bg-indigo-50"
                         >
                           <span className="text-xs font-bold text-slate-800">{item.name}</span>
-                          <span className="text-[10px] text-slate-500 truncate max-w-[120px]">{item.career}</span>
+                          <span className="text-[10px] text-slate-500 truncate max-w-[120px]">{formatBadgeTitle(item.career)}</span>
                           <span className="text-[9px] font-mono font-bold bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded">{item.pin}</span>
                         </div>
                       ))}
@@ -797,7 +872,9 @@ export default function App() {
                   </div>
 
                   <div className="w-full max-w-[340px] aspect-[1000/630] rounded-2xl shadow-xl border border-slate-300 mx-auto my-auto overflow-hidden relative flex-shrink-0 select-none bg-contain bg-no-repeat bg-center" style={{ backgroundImage: `url(/badge-template.png)` }}>
-                    <div className="absolute top-[27.5%] left-[4%] w-[33%] h-[60%] rounded-2xl overflow-hidden flex items-end justify-center">
+                    
+                    {/* Character Avatar */}
+                    <div className="absolute top-[27%] left-[4.2%] w-[32.5%] h-[59%] rounded-full overflow-hidden flex items-end justify-center">
                       <img 
                         src={getDynamicArtwork()} 
                         alt="Official Turtle Character Avatar" 
@@ -805,32 +882,37 @@ export default function App() {
                       />
                     </div>
 
-                    <div className="absolute top-[25%] left-[40%] right-[5%] text-center">
+                    {/* Centered Name */}
+                    <div className="absolute top-[24%] left-[36%] right-[4%] text-center">
                       <h2 className="text-2xl sm:text-3xl font-black text-[#0c2340] tracking-tight uppercase truncate leading-none">
                         {childName || "EXPLORER"}
                       </h2>
                     </div>
 
-                    <div className="absolute top-[48%] left-[40%] right-[5%] text-center">
-                      <div className="text-[#d93856] font-black text-[11px] sm:text-[13px] uppercase tracking-widest leading-none truncate">
-                        {finalCareer ? finalCareer.toUpperCase().replace('PATTERSON ', '') : "ADVENTURER"}
+                    {/* Centered Short Title */}
+                    <div className="absolute top-[47%] left-[36%] right-[4%] text-center">
+                      <div className="text-[#d93856] font-black text-xs sm:text-sm uppercase tracking-wide leading-none truncate">
+                        {formatBadgeTitle(finalCareer)}
                       </div>
                     </div>
 
-                    <div className="absolute bottom-[16%] left-[45%] leading-none text-left">
-                      <span className="text-[7px] font-bold text-slate-400 block tracking-wider uppercase mb-0.5">BADGE #</span>
-                      <span className="text-[10px] sm:text-[11px] font-mono font-black text-[#d93856] tracking-wide block">
+                    {/* Badge # */}
+                    <div className="absolute bottom-[16%] left-[44%] leading-none text-left">
+                      <span className="text-[6px] font-bold text-slate-400 block tracking-wider uppercase mb-0.5">BADGE #</span>
+                      <span className="text-[9px] font-mono font-black text-[#d93856] tracking-wide block">
                         {assignedPin || "2026-0101"}
                       </span>
                     </div>
 
-                    <div className="absolute bottom-[13%] left-[59%] w-[12%] aspect-square bg-white rounded-md p-0.5 flex items-center justify-center border border-slate-300 shadow-sm">
+                    {/* QR Code */}
+                    <div className="absolute bottom-[12%] left-[58%] w-[11.5%] aspect-square bg-white rounded-md p-0.5 flex items-center justify-center border border-slate-300 shadow-sm">
                       <img 
                         src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(assignedPin || 'PattersonTurtle')}`} 
                         alt="Badge QR Code" 
                         className="w-full h-full object-contain"
                       />
                     </div>
+
                   </div>
 
                   <button onClick={submitBadgeOrder} disabled={submittingBadge} className="w-full min-h-[48px] bg-gradient-to-r from-emerald-600 to-teal-600 active:from-emerald-700 active:to-teal-700 text-white font-black py-3 rounded-xl shadow-lg text-xs uppercase tracking-wider cursor-pointer active:scale-95 transition-all touch-manipulation my-auto">
@@ -931,7 +1013,8 @@ export default function App() {
                   ) : (
                     <div className="my-auto flex flex-col gap-3">
                       <div className="w-full max-w-[340px] aspect-[1000/630] rounded-2xl shadow-xl border border-slate-300 mx-auto overflow-hidden relative select-none bg-contain bg-no-repeat bg-center" style={{ backgroundImage: `url(/badge-template.png)` }}>
-                        <div className="absolute top-[27.5%] left-[4%] w-[33%] h-[60%] rounded-2xl overflow-hidden flex items-end justify-center">
+                        
+                        <div className="absolute top-[27%] left-[4.2%] w-[32.5%] h-[59%] rounded-full overflow-hidden flex items-end justify-center">
                           <img 
                             src={getDynamicArtwork(foundBadge.career)} 
                             alt="Database Character Avatar" 
@@ -939,32 +1022,33 @@ export default function App() {
                           />
                         </div>
 
-                        <div className="absolute top-[25%] left-[40%] right-[5%] text-center">
+                        <div className="absolute top-[24%] left-[36%] right-[4%] text-center">
                           <h2 className="text-2xl sm:text-3xl font-black text-[#0c2340] tracking-tight uppercase truncate leading-none">
                             {foundBadge.name}
                           </h2>
                         </div>
 
-                        <div className="absolute top-[48%] left-[40%] right-[5%] text-center">
-                          <div className="text-[#d93856] font-black text-[11px] sm:text-[13px] uppercase tracking-widest leading-none truncate">
-                            {foundBadge.career ? foundBadge.career.toUpperCase().replace('PATTERSON ', '') : "STAFF EXPLORER"}
+                        <div className="absolute top-[47%] left-[36%] right-[4%] text-center">
+                          <div className="text-[#d93856] font-black text-xs sm:text-sm uppercase tracking-wide leading-none truncate">
+                            {formatBadgeTitle(foundBadge.career)}
                           </div>
                         </div>
 
-                        <div className="absolute bottom-[16%] left-[45%] leading-none text-left">
-                          <span className="text-[7px] font-bold text-slate-400 block tracking-wider uppercase mb-0.5">BADGE #</span>
-                          <span className="text-[10px] sm:text-[11px] font-mono font-black text-[#d93856] tracking-wide block">
+                        <div className="absolute bottom-[16%] left-[44%] leading-none text-left">
+                          <span className="text-[6px] font-bold text-slate-400 block tracking-wider uppercase mb-0.5">BADGE #</span>
+                          <span className="text-[9px] font-mono font-black text-[#d93856] tracking-wide block">
                             {foundBadge.pin}
                           </span>
                         </div>
 
-                        <div className="absolute bottom-[13%] left-[59%] w-[12%] aspect-square bg-white rounded-md p-0.5 flex items-center justify-center border border-slate-300 shadow-sm">
+                        <div className="absolute bottom-[12%] left-[58%] w-[11.5%] aspect-square bg-white rounded-md p-0.5 flex items-center justify-center border border-slate-300 shadow-sm">
                           <img 
                             src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(foundBadge.pin || 'PattersonTurtle')}`} 
                             alt="Badge QR Code" 
                             className="w-full h-full object-contain"
                           />
                         </div>
+
                       </div>
 
                       <button onClick={() => { setFoundBadge(null); setLookupValue(''); }} className="mx-auto text-xs font-bold text-slate-500 underline cursor-pointer active:opacity-75 touch-manipulation">
