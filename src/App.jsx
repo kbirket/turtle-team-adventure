@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Airtable from 'airtable';
+import TurtleBooth from './TurtleBooth';
 
 const base = new Airtable({ 
   apiKey: import.meta.env.VITE_AIRTABLE_PAT 
