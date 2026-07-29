@@ -1729,11 +1729,11 @@ export default function App() {
                             key={idx}
                             onClick={() => handleCardClick(idx)}
                             aria-label={isFlipped ? 'Revealed card' : 'Hidden card'}
-                            className={`aspect-square rounded-xl font-bold text-2xl flex items-center justify-center shadow-md transition-all active:scale-95 overflow-hidden ${focusRing} ${
-                              isFlipped
-                                ? 'bg-white'
-                                : 'bg-indigo-600 border-2 border-indigo-400 text-white'
-                            }`}
+                            className={`aspect-square rounded-2xl font-black text-2xl flex items-center justify-center shadow-lg transition-all active:scale-95 overflow-hidden border-2 ${focusRing} ${
+  isFlipped
+    ? 'bg-white border-amber-400'
+    : 'bg-slate-800 hover:bg-slate-700 border-slate-600 text-amber-400'
+}`}
                           >
                             {isFlipped ? (
                               <img src={card.icon} alt="" className="w-full h-full object-contain p-1" />
