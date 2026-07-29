@@ -31,8 +31,14 @@ const IDLE_GRACE_MS = 20000;    // then 20s to say "still here"
    green   #4ade80   correct / success
    Written as literal hex so nothing depends on tailwind.config.js.
 ------------------------------------------------------------------- */
+// Focus rings sit OUTSIDE the element (outline-offset), so the ring is drawn
+// on the PARENT background. FOCUS = cyan, for controls on the grape/plum page
+// (8.3:1). FOCUS_CARD = grape, for controls inside white cards (15:1). Cyan on
+// white is only 1.8:1 and fails WCAG 1.4.11's 3:1 minimum for focus indicators.
 const FOCUS =
   'focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-[#22d3ee]';
+const FOCUS_CARD =
+  'focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-[#3b0764]';
 const BTN_CORAL =
   'bg-[#e11d48] active:bg-[#be123c] text-white font-black border-4 border-white/25 shadow-xl active:scale-95 transition-all';
 const BTN_YELLOW =
@@ -1006,13 +1012,13 @@ export default function App() {
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => setShowResetConfirm(false)}
-                    className={`text-xs py-3 rounded-2xl uppercase ${BTN_PLAIN} ${FOCUS}`}
+                    className={`text-xs py-3 rounded-2xl uppercase ${BTN_PLAIN} ${FOCUS_CARD}`}
                   >
                     Keep Going
                   </button>
                   <button
                     onClick={() => forceGlobalReset()}
-                    className={`text-xs py-3 rounded-2xl uppercase ${BTN_CORAL} ${FOCUS}`}
+                    className={`text-xs py-3 rounded-2xl uppercase ${BTN_CORAL} ${FOCUS_CARD}`}
                   >
                     Start Over
                   </button>
@@ -1054,13 +1060,13 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => setShowAdminPinModal(false)}
-                      className={`text-xs py-3 rounded-2xl uppercase ${BTN_PLAIN} ${FOCUS}`}
+                      className={`text-xs py-3 rounded-2xl uppercase ${BTN_PLAIN} ${FOCUS_CARD}`}
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className={`text-xs py-3 rounded-2xl uppercase ${BTN_CORAL} ${FOCUS}`}
+                      className={`text-xs py-3 rounded-2xl uppercase ${BTN_CORAL} ${FOCUS_CARD}`}
                     >
                       Unlock
                     </button>
@@ -1091,7 +1097,7 @@ export default function App() {
                     value={childName}
                     onChange={(e) => setChildName(e.target.value.toUpperCase())}
                     maxLength={14}
-                    className="w-full bg-white border-4 border-[#22d3ee] rounded-2xl p-4 font-black text-[#3b0764] text-center text-base focus:border-[#fbbf24] focus:outline-none tracking-widest uppercase placeholder:text-slate-400 shadow-inner"
+                    className="w-full bg-white border-4 border-[#22d3ee] rounded-2xl p-4 font-black text-[#3b0764] text-center text-base focus:border-[#fbbf24] focus:outline-none tracking-widest uppercase placeholder:text-slate-500 shadow-inner"
                   />
                   <button
                     onClick={handleNameActivation}
@@ -1136,7 +1142,7 @@ export default function App() {
                         <button
                           key={t.key}
                           onClick={() => setAdminTab(t.key)}
-                          className={`py-2 text-xs font-black rounded-lg transition-all ${FOCUS} ${
+                          className={`py-2 text-xs font-black rounded-lg transition-all ${FOCUS_CARD} ${
                             adminTab === t.key
                               ? 'bg-[#5b21b6] text-white shadow'
                               : 'text-slate-700'
@@ -1164,7 +1170,7 @@ export default function App() {
                           <button
                             key={item.id}
                             onClick={() => { setAdminPreviewBadge(item); setAdminTab('manual'); }}
-                            className={`flex justify-between items-center bg-slate-50 p-2.5 rounded-lg border border-slate-300 text-left ${FOCUS}`}
+                            className={`flex justify-between items-center bg-slate-50 p-2.5 rounded-lg border border-slate-300 text-left ${FOCUS_CARD}`}
                           >
                             <span className="text-xs font-bold text-slate-800 truncate flex-1">
                               {item.name}
@@ -1349,18 +1355,21 @@ export default function App() {
                           {shuffledStopOptions.map((opt, i) => {
                             let style =
                               'bg-[#ede9fe] border-4 border-[#7c3aed] text-[#3b0764] active:bg-[#ddd6fe]';
+                            // Non-color cue as well as color — WCAG 1.4.1.
+                            let mark = '';
                             if (quizFeedback !== null) {
                               style = opt.correct
                                 ? 'bg-[#4ade80] border-4 border-[#16a34a] text-[#14532d] pointer-events-none'
                                 : 'bg-[#fbbf24] border-4 border-[#d97706] text-[#78350f] pointer-events-none';
+                              mark = opt.correct ? '\u2713 ' : '\u2715 ';
                             }
                             return (
                               <button
                                 key={i}
                                 onClick={() => handleAnswerSubmit(opt.correct)}
-                                className={`p-3 font-black text-xs rounded-2xl transition-all min-h-[52px] active:scale-95 ${FOCUS} ${style}`}
+                                className={`p-3 font-black text-xs rounded-2xl transition-all min-h-[52px] active:scale-95 ${FOCUS_CARD} ${style}`}
                               >
-                                {opt.text}
+                                {mark}{opt.text}
                               </button>
                             );
                           })}
@@ -1582,7 +1591,7 @@ export default function App() {
                         </div>
                         <button
                           onClick={() => selectCareerOption(career)}
-                          className={`flex-shrink-0 text-xs py-2.5 px-4 rounded-2xl uppercase tracking-wider ${BTN_CORAL} ${FOCUS}`}
+                          className={`flex-shrink-0 text-xs py-2.5 px-4 rounded-2xl uppercase tracking-wider ${BTN_CORAL} ${FOCUS_CARD}`}
                         >
                           Pick ➔
                         </button>
@@ -1698,7 +1707,7 @@ export default function App() {
                           type="button"
                           onClick={() => setPhotoPermission(true)}
                           aria-pressed={photoPermission === true}
-                          className={`py-3 px-3 rounded-2xl font-black text-sm uppercase tracking-wider transition-all ${FOCUS} ${
+                          className={`py-3 px-3 rounded-2xl font-black text-sm uppercase tracking-wider transition-all ${FOCUS_CARD} ${
                             photoPermission === true
                               ? 'bg-[#4ade80] text-[#14532d] shadow-md ring-4 ring-[#16a34a]'
                               : 'bg-slate-100 text-slate-800 border-4 border-slate-400'
@@ -1710,7 +1719,7 @@ export default function App() {
                           type="button"
                           onClick={() => setPhotoPermission(false)}
                           aria-pressed={photoPermission === false}
-                          className={`py-3 px-3 rounded-2xl font-black text-sm uppercase tracking-wider transition-all ${FOCUS} ${
+                          className={`py-3 px-3 rounded-2xl font-black text-sm uppercase tracking-wider transition-all ${FOCUS_CARD} ${
                             photoPermission === false
                               ? 'bg-[#e11d48] text-white shadow-md ring-4 ring-[#9f1239]'
                               : 'bg-slate-100 text-slate-800 border-4 border-slate-400'
@@ -1880,7 +1889,7 @@ export default function App() {
                       <p className="text-xs text-slate-700 mt-1 font-bold">You found every pair.</p>
                       <button
                         onClick={startNewMemoryGame}
-                        className={`mt-4 text-sm py-3 px-6 rounded-2xl uppercase tracking-wider ${BTN_CORAL} ${FOCUS}`}
+                        className={`mt-4 text-sm py-3 px-6 rounded-2xl uppercase tracking-wider ${BTN_CORAL} ${FOCUS_CARD}`}
                       >
                         Play Again 🔄
                       </button>
@@ -1916,7 +1925,7 @@ export default function App() {
                         placeholder="2026-K4TX"
                         value={lookupValue}
                         onChange={(e) => setLookupValue(e.target.value.toUpperCase())}
-                        className="w-full bg-slate-50 border-4 border-[#7c3aed] rounded-2xl p-3.5 font-black text-[#3b0764] text-center text-base focus:border-[#22d3ee] focus:outline-none tracking-wide placeholder:text-slate-400"
+                        className="w-full bg-slate-50 border-4 border-[#7c3aed] rounded-2xl p-3.5 font-black text-[#3b0764] text-center text-base focus:border-[#22d3ee] focus:outline-none tracking-wide placeholder:text-slate-500"
                       />
                       {searchError && (
                         <p role="alert" className="bg-[#fbbf24] text-[#3b0764] rounded-xl py-2 text-xs font-black text-center">
@@ -1925,7 +1934,7 @@ export default function App() {
                       )}
                       <button
                         onClick={handleLookupBadge}
-                        className={`w-full min-h-[52px] py-3 rounded-2xl text-sm uppercase tracking-wider ${BTN_CORAL} ${FOCUS}`}
+                        className={`w-full min-h-[52px] py-3 rounded-2xl text-sm uppercase tracking-wider ${BTN_CORAL} ${FOCUS_CARD}`}
                       >
                         Find My Badge ➔
                       </button>
