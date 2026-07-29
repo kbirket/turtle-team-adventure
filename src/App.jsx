@@ -29,7 +29,6 @@ const GAME_CARDS = [
   '/characters/marketing/avatar.png'
 ];
 
-// Replaced 'Hospital Tech' with 'CNA'
 const AVAILABLE_CAREERS = [
   'Doctor',
   'Nurse',
@@ -43,7 +42,6 @@ const AVAILABLE_CAREERS = [
   'Maintenance'
 ];
 
-// Replaced 'Hospital Tech' with 'CNA'
 const CATEGORY_CAREERS = {
   clinical:  ['Doctor', 'Nurse', 'Therapy & Rehab'],
   technical: ['CNA', 'Radiology', 'Lab Tech'],
@@ -69,12 +67,9 @@ const writeCache = (key, value) => {
   }
 };
 
-// Airtable formulas are single-quoted strings; an unescaped apostrophe
-// (O'Brien) breaks the query and is an injection vector.
 const escapeFormulaValue = (v) =>
   String(v).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 
-// ~1M combinations, no 0/O/1/I so it's readable off a printed card.
 const generateBadgeCode = () => {
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   const code = Array.from(
@@ -84,7 +79,6 @@ const generateBadgeCode = () => {
   return `2026-${code}`;
 };
 
-// Fire-and-forget. Analytics must never break the booth.
 const logEvent = (eventName, detail = {}) => {
   try {
     base('Events').create(
@@ -102,8 +96,6 @@ const logEvent = (eventName, detail = {}) => {
   }
 };
 
-// Drains queued badge orders one at a time; stops on first failure
-// and keeps the rest for the next attempt.
 const flushOrderQueue = (onDone) => {
   const queue = readCache(ORDER_QUEUE_KEY, []);
   if (!queue.length) {
@@ -225,7 +217,7 @@ export default function App() {
   const [gameWon, setGameWon] = useState(false);
 
   /* ---------- admin ---------- */
-  const [adminTab, setAdminTab] = useState('queue'); // queue | manual | backs
+  const [adminTab, setAdminTab] = useState('queue'); 
   const [adminName, setAdminName] = useState('');
   const [adminCareer, setAdminCareer] = useState(AVAILABLE_CAREERS[0]);
   const [printQueue, setPrintQueue] = useState([]);
@@ -267,14 +259,13 @@ export default function App() {
     };
   }, []);
 
-  /* ---------- initial load (cache first, then network) ---------- */
+  /* ---------- initial load ---------- */
   useEffect(() => {
     base('Tour Stops')
       .select({ view: 'Grid view', sort: [{ field: 'id', direction: 'asc' }] })
       .firstPage((err, records) => {
         if (err) {
           console.error('Error fetching Tour Stops:', err);
-          // Only a hard failure if we have no cached copy to fall back on.
           setLoadError(readCache(TOUR_CACHE_KEY, []).length === 0);
           setLoading(false);
           return;
@@ -284,7 +275,7 @@ export default function App() {
           id: record.fields.id || 0,
           type: record.fields.type || 'tour',
           title: record.fields.title || 'Untitled Screen',
-          headerColor: record.fields.headerColor || 'bg-phc-navy',
+          headerColor: record.fields.headerColor || 'bg-slate-900',
           background: record.fields.background || '',
           bgPosition: record.fields.bgPosition || 'center',
           bgSize: record.fields.bgSize || '150%',
@@ -309,7 +300,6 @@ export default function App() {
         setLoading(false);
       });
 
-    // Career info is optional — a missing table or row just skips the screen.
     base('Career Info')
       .select({ view: 'Grid view' })
       .firstPage((err, records) => {
@@ -469,8 +459,6 @@ export default function App() {
     }
   };
 
-  // Clears any photo left over from the previous badge so one child's
-  // selfie can never end up on another child's record.
   const clearPhotoState = () => {
     setCapturedPhoto(null);
     setRawPhoto(null);
@@ -663,8 +651,6 @@ export default function App() {
     );
     const [first, second, third] = sorted;
 
-    // Pick *within* the winning category by how decisive the win was, so
-    // all nine careers are reachable instead of only the first of each.
     const spread = updatedScores[first] - updatedScores[second];
     const pickIndex = spread >= 4 ? 0 : spread >= 2 ? 1 : 2;
 
@@ -713,8 +699,6 @@ export default function App() {
         capturedPhoto
           ? (photoPermission ? 'YES - Approved' : 'NO - Declined')
           : 'N/A (Avatar Used)',
-      // A declined photo is never transmitted. It stays in local state
-      // long enough to print, and goes away on reset.
       'Photo Data': photoPermission === true ? (rawPhoto || '') : '',
       'Print Status': 'Pending',
       'Station': STATION_ID,
@@ -751,8 +735,6 @@ export default function App() {
     if (!raw) return;
     setSearchError('');
 
-    // Code-only lookup — searching by name would let anyone pull up
-    // another child's record.
     if (!/^2026-[A-Z0-9]{4}$/.test(raw)) {
       setSearchError('Enter your badge code exactly as printed (like 2026-K4TX).');
       return;
@@ -784,7 +766,7 @@ export default function App() {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-slate-100 p-4 select-none">
-        <div className="text-center font-bold text-phc-navy animate-pulse">
+        <div className="text-center font-bold text-slate-800 animate-pulse">
           Waking up the hospital turtles...
         </div>
       </div>
@@ -796,13 +778,13 @@ export default function App() {
       <div className="flex justify-center items-center min-h-screen bg-slate-100 p-6 select-none">
         <div className="text-center max-w-xs">
           <div className="text-4xl mb-3">🐢</div>
-          <h1 className="font-black text-phc-navy text-lg">The turtles are offline</h1>
+          <h1 className="font-black text-slate-900 text-lg">The turtles are offline</h1>
           <p className="text-sm text-slate-600 mt-2 leading-relaxed">
             We couldn't reach the tour. Check the wifi and try again.
           </p>
           <button
             onClick={() => window.location.reload()}
-            className="mt-5 min-h-[48px] bg-phc-blue text-white font-black py-3 px-6 rounded-xl uppercase text-xs tracking-wider shadow focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-phc-navy"
+            className="mt-5 min-h-[48px] bg-blue-700 text-white font-black py-3 px-6 rounded-xl uppercase text-xs tracking-wider shadow"
           >
             Try Again
           </button>
@@ -827,8 +809,7 @@ export default function App() {
     : capturedPhoto;
   const printingBacks = isAdmin && adminTab === 'backs';
 
-  const focusRing =
-    'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-phc-navy';
+  const focusRing = 'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900';
 
   return (
     <div
@@ -879,10 +860,10 @@ export default function App() {
       </div>
 
       {/* MAIN APP FRAME */}
-      <div className="app-main-layout w-full max-w-sm h-[100dvh] sm:h-[820px] max-h-[850px] bg-white sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border-0 sm:border-8 border-phc-navy relative">
+      <div className="app-main-layout w-full max-w-sm h-[100dvh] sm:h-[820px] max-h-[850px] bg-white sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border-0 sm:border-8 border-slate-900 relative">
 
         {/* HEADER */}
-        <div className="bg-phc-navy text-white px-4 py-3 font-bold tracking-wide shadow-md flex justify-between items-center gap-2 flex-shrink-0 z-20">
+        <div className="bg-slate-900 text-white px-4 py-3 font-bold tracking-wide shadow-md flex justify-between items-center gap-2 flex-shrink-0 z-20">
           <span className="truncate text-sm sm:text-base flex items-center gap-1.5">
             {!isNameConfirmed
               ? '👋 Welcome'
@@ -898,14 +879,14 @@ export default function App() {
           </span>
           <div className="flex items-center gap-1">
             {isOffline && (
-              <span className="text-[10px] bg-phc-orange px-2 py-0.5 rounded-full font-bold">
+              <span className="text-[10px] bg-orange-600 text-white px-2 py-0.5 rounded-full font-bold">
                 Offline
               </span>
             )}
             <button
               onClick={handleAdminToggle}
               aria-label="Staff admin portal"
-              className={`text-xs bg-white/15 active:bg-white/25 px-2 py-1 rounded-md font-mono active:scale-95 transition-all cursor-pointer ${focusRing}`}
+              className={`text-xs bg-slate-800 active:bg-slate-700 px-2 py-1 rounded-md text-slate-200 font-mono active:scale-95 transition-all cursor-pointer ${focusRing}`}
             >
               ⚙️
             </button>
@@ -924,10 +905,10 @@ export default function App() {
             aria-live="polite"
             className={`absolute top-14 left-3 right-3 z-40 rounded-xl px-3 py-2 text-xs font-bold shadow-lg animate-fade-in ${
               toast.tone === 'warn'
-                ? 'bg-phc-orange text-white'
+                ? 'bg-orange-600 text-white'
                 : toast.tone === 'success'
                   ? 'bg-emerald-600 text-white'
-                  : 'bg-phc-navy text-white'
+                  : 'bg-slate-900 text-white'
             }`}
           >
             {toast.message}
@@ -938,7 +919,7 @@ export default function App() {
 
           {/* IDLE WARNING */}
           {idleWarning && (
-            <div className="absolute inset-0 bg-phc-navy/95 backdrop-blur-md z-50 flex items-center justify-center p-6 text-center text-white">
+            <div className="absolute inset-0 bg-slate-900/95 backdrop-blur-md z-50 flex items-center justify-center p-6 text-center text-white">
               <div>
                 <div className="text-4xl mb-2">🐢</div>
                 <h3 className="text-lg font-black">Still exploring?</h3>
@@ -947,7 +928,7 @@ export default function App() {
                 </p>
                 <button
                   onClick={() => { setIdleWarning(false); startIdleWatch(); }}
-                  className={`min-h-[48px] bg-phc-gold text-phc-navy font-black py-3 px-8 rounded-xl uppercase text-xs tracking-wider shadow-lg ${focusRing}`}
+                  className={`min-h-[48px] bg-amber-400 text-slate-950 font-black py-3 px-8 rounded-xl uppercase text-xs tracking-wider shadow-lg ${focusRing}`}
                 >
                   I'm still here!
                 </button>
@@ -960,7 +941,7 @@ export default function App() {
             <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
               <div className="bg-white rounded-3xl p-6 w-full max-w-[280px] text-center shadow-2xl">
                 <div className="text-3xl mb-1">🔄</div>
-                <h3 className="text-base font-black text-phc-navy uppercase">Start Over?</h3>
+                <h3 className="text-base font-black text-slate-900 uppercase">Start Over?</h3>
                 <p className="text-xs text-slate-600 mt-1 mb-4">
                   This clears your name, stamps, and badge.
                 </p>
@@ -973,7 +954,7 @@ export default function App() {
                   </button>
                   <button
                     onClick={() => forceGlobalReset()}
-                    className={`bg-phc-orange text-white font-black text-xs py-2.5 rounded-xl uppercase ${focusRing}`}
+                    className={`bg-orange-600 text-white font-black text-xs py-2.5 rounded-xl uppercase ${focusRing}`}
                   >
                     Start Over
                   </button>
@@ -987,7 +968,7 @@ export default function App() {
             <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
               <div className="bg-white rounded-3xl p-6 w-full max-w-[280px] text-center shadow-2xl">
                 <div className="text-3xl mb-1">🔐</div>
-                <h3 className="text-base font-black text-phc-navy uppercase tracking-wide">
+                <h3 className="text-base font-black text-slate-900 uppercase tracking-wide">
                   Staff Access
                 </h3>
                 <p className="text-xs text-slate-600 mt-1 mb-4">
@@ -1003,11 +984,11 @@ export default function App() {
                     placeholder="••••"
                     value={adminInputPin}
                     onChange={(e) => setAdminInputPin(e.target.value)}
-                    className="w-full bg-slate-100 border-2 border-phc-blue rounded-2xl p-3 text-center text-xl font-black tracking-widest text-slate-900 focus:outline-none focus:border-phc-navy"
+                    className="w-full bg-slate-100 border-2 border-blue-400 rounded-2xl p-3 text-center text-xl font-black tracking-widest text-slate-900 focus:outline-none focus:border-blue-700"
                     autoFocus
                   />
                   {pinError && (
-                    <p role="alert" className="text-phc-orange text-xs font-bold">{pinError}</p>
+                    <p role="alert" className="text-orange-600 text-xs font-bold">{pinError}</p>
                   )}
                   <div className="grid grid-cols-2 gap-2 mt-1">
                     <button
@@ -1019,7 +1000,7 @@ export default function App() {
                     </button>
                     <button
                       type="submit"
-                      className={`bg-phc-blue text-white font-black text-xs py-2.5 rounded-xl uppercase shadow ${focusRing}`}
+                      className={`bg-blue-700 text-white font-black text-xs py-2.5 rounded-xl uppercase shadow ${focusRing}`}
                     >
                       Unlock
                     </button>
@@ -1031,12 +1012,12 @@ export default function App() {
 
           {/* NAME GATE */}
           {!isNameConfirmed && appMode !== 'adminPortal' ? (
-            <div className="flex-1 bg-gradient-to-b from-phc-navy to-[#00263f] p-6 flex flex-col justify-between h-full text-white text-center overflow-y-auto">
+            <div className="flex-1 bg-gradient-to-b from-slate-900 to-indigo-950 p-6 flex flex-col justify-between h-full text-white text-center overflow-y-auto">
               <div className="my-auto flex flex-col items-center gap-4">
                 <h1 className="text-2xl font-black tracking-wide">
                   Patterson Health Adventure
                 </h1>
-                <p className="text-xs text-white/80 px-2 sm:px-4 leading-relaxed">
+                <p className="text-xs text-slate-300 px-2 sm:px-4 leading-relaxed">
                   Explore the hospital, find the job that fits you, and print your
                   own ID badge to take home.
                 </p>
@@ -1049,17 +1030,17 @@ export default function App() {
                     value={childName}
                     onChange={(e) => setChildName(e.target.value.toUpperCase())}
                     maxLength={14}
-                    className="w-full bg-white border-3 border-phc-gold rounded-2xl p-3.5 font-black text-slate-900 text-center text-sm focus:border-phc-blue focus:outline-none tracking-widest uppercase placeholder:text-slate-400 shadow-inner"
+                    className="w-full bg-white border-3 border-amber-400 rounded-2xl p-3.5 font-black text-slate-900 text-center text-sm focus:border-emerald-500 focus:outline-none tracking-widest uppercase placeholder:text-slate-400 shadow-inner"
                   />
                   <button
                     onClick={handleNameActivation}
-                    className={`w-full min-h-[48px] bg-phc-gold active:brightness-95 text-phc-navy font-black py-3.5 rounded-2xl text-xs uppercase tracking-widest shadow-md transition-all active:scale-95 ${focusRing}`}
+                    className={`w-full min-h-[48px] bg-amber-400 active:brightness-95 text-slate-950 font-black py-3.5 rounded-2xl text-xs uppercase tracking-widest shadow-md transition-all active:scale-95 ${focusRing}`}
                   >
                     Start Adventure ➔
                   </button>
                 </div>
               </div>
-              <div className="text-[11px] text-white/60 font-bold py-2">
+              <div className="text-[11px] text-indigo-300 font-bold py-2">
                 Patterson Health Center · {STATION_ID}
               </div>
             </div>
@@ -1071,7 +1052,7 @@ export default function App() {
                   <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-200">
                     <div className="flex justify-between items-center mb-2">
                       <div>
-                        <h2 className="text-sm font-black text-phc-navy uppercase tracking-wider">
+                        <h2 className="text-sm font-black text-slate-900 uppercase tracking-wider">
                           Badge Station
                         </h2>
                         <p className="text-[11px] text-slate-600">
@@ -1079,7 +1060,7 @@ export default function App() {
                         </p>
                       </div>
                       {pendingCount > 0 && (
-                        <span className="text-[10px] bg-phc-orange text-white font-black px-2 py-1 rounded-lg">
+                        <span className="text-[10px] bg-orange-600 text-white font-black px-2 py-1 rounded-lg">
                           {pendingCount} unsent
                         </span>
                       )}
@@ -1096,7 +1077,7 @@ export default function App() {
                           onClick={() => setAdminTab(t.key)}
                           className={`py-1.5 text-xs font-black rounded-lg transition-all ${focusRing} ${
                             adminTab === t.key
-                              ? 'bg-phc-blue text-white shadow'
+                              ? 'bg-blue-700 text-white shadow'
                               : 'text-slate-600'
                           }`}
                         >
@@ -1130,7 +1111,7 @@ export default function App() {
                             <span className="text-[11px] text-slate-600 truncate max-w-[100px]">
                               {item.career}
                             </span>
-                            <span className="text-[10px] font-mono font-bold bg-phc-blue/10 text-phc-navy px-1.5 py-0.5 rounded ml-2">
+                            <span className="text-[10px] font-mono font-bold bg-blue-100 text-blue-900 px-1.5 py-0.5 rounded ml-2">
                               {item.pin}
                             </span>
                           </button>
@@ -1148,11 +1129,11 @@ export default function App() {
                             placeholder="2026-K4TX"
                             value={reprintValue}
                             onChange={(e) => setReprintValue(e.target.value.toUpperCase())}
-                            className="flex-1 bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs font-bold focus:outline-none focus:border-phc-blue"
+                            className="flex-1 bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs font-bold focus:outline-none focus:border-blue-600"
                           />
                           <button
                             onClick={handleReprintLookup}
-                            className={`bg-phc-navy text-white font-black text-xs px-4 rounded-xl uppercase ${focusRing}`}
+                            className={`bg-slate-900 text-white font-black text-xs px-4 rounded-xl uppercase ${focusRing}`}
                           >
                             Find
                           </button>
@@ -1176,7 +1157,7 @@ export default function App() {
                               placeholder="e.g. KRISTEN"
                               value={adminName}
                               onChange={(e) => setAdminName(e.target.value)}
-                              className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-phc-blue uppercase"
+                              className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-blue-600 uppercase"
                             />
                           </div>
                           <div>
@@ -1187,7 +1168,7 @@ export default function App() {
                               id="admin-career"
                               value={adminCareer}
                               onChange={(e) => setAdminCareer(e.target.value)}
-                              className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-phc-blue"
+                              className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-blue-600"
                             >
                               {AVAILABLE_CAREERS.map((c) => (
                                 <option key={c} value={c}>{c}</option>
@@ -1204,7 +1185,7 @@ export default function App() {
                             </button>
                             <button
                               type="submit"
-                              className={`bg-phc-blue text-white font-black text-xs py-2.5 rounded-xl uppercase tracking-wider shadow ${focusRing}`}
+                              className={`bg-blue-700 text-white font-black text-xs py-2.5 rounded-xl uppercase tracking-wider shadow ${focusRing}`}
                             >
                               Generate
                             </button>
@@ -1231,7 +1212,7 @@ export default function App() {
                           </div>
                           <button
                             onClick={() => triggerPrintBadge(adminPreviewBadge.id)}
-                            className={`w-full max-w-[340px] mx-auto bg-phc-orange text-white font-black text-xs py-3 rounded-xl uppercase tracking-wider shadow-lg active:scale-95 ${focusRing}`}
+                            className={`w-full max-w-[340px] mx-auto bg-orange-600 text-white font-black text-xs py-3 rounded-xl uppercase tracking-wider shadow-lg active:scale-95 ${focusRing}`}
                           >
                             🖨️ Print Badge Front
                           </button>
@@ -1252,7 +1233,7 @@ export default function App() {
                       />
                       <button
                         onClick={() => triggerPrintBadge(null)}
-                        className={`w-full bg-phc-orange text-white font-black text-xs py-3 rounded-xl uppercase tracking-wider shadow-lg active:scale-95 ${focusRing}`}
+                        className={`w-full bg-orange-600 text-white font-black text-xs py-3 rounded-xl uppercase tracking-wider shadow-lg active:scale-95 ${focusRing}`}
                       >
                         🖨️ Print Card Back
                       </button>
@@ -1283,7 +1264,7 @@ export default function App() {
                   <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-xl border border-slate-200 z-10 text-center mb-2 min-h-[150px] flex flex-col justify-center">
                     {!quizActive ? (
                       <>
-                        <h3 className="font-bold text-lg text-phc-navy mb-1">
+                        <h3 className="font-bold text-lg text-emerald-700 mb-1">
                           {currentStep.characterName}{' '}
                           {isTargetCompleted(currentStep.title) && '✅'}
                         </h3>
@@ -1297,7 +1278,7 @@ export default function App() {
                       </>
                     ) : (
                       <div className="flex flex-col gap-2">
-                        <h3 className="font-extrabold text-phc-blue text-base">
+                        <h3 className="font-extrabold text-blue-700 text-base">
                           ✨ Stamp Challenge! ✨
                         </h3>
                         <p className="text-sm font-medium text-slate-800 mb-1">
@@ -1306,7 +1287,7 @@ export default function App() {
                         <div className="grid grid-cols-2 gap-2">
                           {shuffledStopOptions.map((opt, i) => {
                             let style =
-                              'bg-slate-50 border border-slate-400 text-slate-800 active:bg-slate-200';
+                              'bg-slate-50 border border-slate-300 text-slate-800 active:bg-slate-200';
                             if (quizFeedback !== null) {
                               style = opt.correct
                                 ? 'bg-emerald-50 border border-emerald-600 text-emerald-800 pointer-events-none'
@@ -1334,7 +1315,7 @@ export default function App() {
                           <div className="text-center mt-1">
                             <button
                               onClick={() => setQuizFeedback(null)}
-                              className={`text-[11px] bg-phc-navy text-white px-3 py-1.5 rounded-lg active:scale-95 ${focusRing}`}
+                              className={`text-[11px] bg-slate-800 text-white px-3 py-1.5 rounded-lg active:scale-95 ${focusRing}`}
                             >
                               Retry Choice 🔄
                             </button>
@@ -1346,7 +1327,7 @@ export default function App() {
                   {(!quizActive || quizFeedback === 'correct') && (
                     <button
                       onClick={handleNextAction}
-                      className={`w-full min-h-[48px] bg-phc-orange text-white font-bold py-3 rounded-xl z-10 uppercase tracking-wider shadow-md active:scale-95 transition-all ${focusRing}`}
+                      className={`w-full min-h-[48px] bg-emerald-600 active:bg-emerald-700 text-white font-bold py-3 rounded-xl z-10 uppercase tracking-wider shadow-md active:scale-95 transition-all ${focusRing}`}
                     >
                       {quizFeedback === 'correct'
                         ? 'Collect Stamp & Map ➔'
@@ -1361,14 +1342,14 @@ export default function App() {
                 <div className="flex-1 bg-slate-50 p-3 sm:p-4 flex flex-col justify-between overflow-y-auto h-full">
                   <div className="mb-2 flex justify-between items-center bg-white p-2.5 rounded-xl shadow-sm border border-slate-200">
                     <div className="text-left">
-                      <h2 className="text-sm font-extrabold text-phc-navy">
+                      <h2 className="text-sm font-extrabold text-slate-900">
                         Explorer: {childName}
                       </h2>
                       <p className="text-[11px] text-slate-600">
                         Unlock stamps at all {totalRoundsCount} stops!
                       </p>
                     </div>
-                    <span className="text-xs bg-phc-blue/10 text-phc-navy font-black px-2.5 py-1 rounded-lg border border-phc-blue/40 font-mono tracking-wider">
+                    <span className="text-xs bg-indigo-100 text-indigo-900 font-black px-2.5 py-1 rounded-lg border border-indigo-300 font-mono tracking-wider">
                       {assignedPin}
                     </span>
                   </div>
@@ -1393,7 +1374,7 @@ export default function App() {
                               const i = tourStops.findIndex((t) => t.id === s.id);
                               if (i !== -1) setCurrentStepIndex(i);
                             }}
-                            className={`p-2 min-h-[44px] bg-phc-blue/10 border border-phc-blue rounded-lg text-center text-xs font-bold text-phc-navy active:scale-95 ${focusRing}`}
+                            className={`p-2 min-h-[44px] bg-blue-50 border border-blue-400 rounded-lg text-center text-xs font-bold text-blue-900 active:scale-95 ${focusRing}`}
                           >
                             {s.label} {isTargetCompleted(s.key) && '⭐'}
                           </button>
@@ -1417,7 +1398,7 @@ export default function App() {
                               const i = tourStops.findIndex((t) => t.id === s.id);
                               if (i !== -1) setCurrentStepIndex(i);
                             }}
-                            className={`p-2 min-h-[44px] bg-phc-gold/20 border border-phc-gold rounded-lg text-center text-xs font-bold text-phc-navy active:scale-95 ${focusRing}`}
+                            className={`p-2 min-h-[44px] bg-amber-50 border border-amber-500 rounded-lg text-center text-xs font-bold text-amber-900 active:scale-95 ${focusRing}`}
                           >
                             {s.label} {isTargetCompleted(s.key) && '⭐'}
                           </button>
@@ -1440,7 +1421,7 @@ export default function App() {
                               const i = tourStops.findIndex((t) => t.id === s.id);
                               if (i !== -1) setCurrentStepIndex(i);
                             }}
-                            className={`p-2 min-h-[44px] bg-phc-orange/15 border border-phc-orange rounded-lg text-center text-xs font-bold text-phc-navy active:scale-95 ${focusRing}`}
+                            className={`p-2 min-h-[44px] bg-rose-50 border border-rose-400 rounded-lg text-center text-xs font-bold text-rose-900 active:scale-95 ${focusRing}`}
                           >
                             {s.label} {isTargetCompleted(s.key) && '⭐'}
                           </button>
@@ -1454,7 +1435,7 @@ export default function App() {
                           const i = tourStops.findIndex((t) => t.id === 17.0);
                           if (i !== -1) setCurrentStepIndex(i);
                         }}
-                        className={`w-full p-2.5 min-h-[44px] bg-phc-navy rounded-xl text-center text-xs font-bold text-white active:scale-95 shadow-sm ${focusRing}`}
+                        className={`w-full p-2.5 min-h-[44px] bg-slate-800 hover:bg-slate-900 rounded-xl text-center text-xs font-bold text-white active:scale-95 shadow-md ${focusRing}`}
                       >
                         🛠️ Maintenance Crew {isTargetCompleted('MAINTENANCE') && '⭐'}
                       </button>
@@ -1464,7 +1445,7 @@ export default function App() {
                   <div className="mt-2 pt-2 border-t border-slate-200">
                     <button
                       onClick={startCareerQuizDirect}
-                      className={`w-full min-h-[48px] py-3 rounded-xl font-bold text-sm uppercase bg-phc-gold text-phc-navy active:scale-95 shadow-md ${focusRing}`}
+                      className={`w-full min-h-[48px] py-3 rounded-xl font-bold text-sm uppercase bg-amber-400 active:bg-amber-500 text-slate-950 active:scale-95 shadow-md ${focusRing}`}
                     >
                       🎓 Find My Hospital Job ➔
                     </button>
@@ -1474,12 +1455,12 @@ export default function App() {
 
               {/* CAREER QUIZ */}
               {appMode === 'careerQuiz' && (
-                <div className="flex-1 bg-phc-blue/5 p-4 sm:p-6 flex flex-col justify-between h-full overflow-y-auto">
+                <div className="flex-1 bg-indigo-50 p-4 sm:p-6 flex flex-col justify-between h-full overflow-y-auto">
                   <div className="text-center my-auto">
-                    <span className="text-xs uppercase bg-phc-blue/15 text-phc-navy px-3 py-1 rounded-full font-bold">
+                    <span className="text-xs uppercase bg-indigo-200 text-indigo-900 px-3 py-1 rounded-full font-bold">
                       Career Explorer
                     </span>
-                    <h2 className="text-base sm:text-lg font-black text-phc-navy mt-3 px-2">
+                    <h2 className="text-base sm:text-lg font-black text-slate-900 mt-3 px-2">
                       {MATCHMAKER_QUESTIONS[currentQuizQuestion].q}
                     </h2>
                   </div>
@@ -1488,7 +1469,7 @@ export default function App() {
                       <button
                         key={idx}
                         onClick={() => handleCareerAnswer(opt.type)}
-                        className={`w-full min-h-[52px] p-3.5 bg-white active:bg-phc-blue/10 border-2 border-phc-blue font-bold text-xs text-slate-800 rounded-2xl shadow-sm text-left transition-all active:scale-95 ${focusRing}`}
+                        className={`w-full min-h-[52px] p-3.5 bg-white active:bg-indigo-100 border-2 border-indigo-400 font-bold text-xs text-slate-800 rounded-2xl shadow-sm text-left transition-all active:scale-95 ${focusRing}`}
                       >
                         {opt.text}
                       </button>
@@ -1504,10 +1485,10 @@ export default function App() {
               {appMode === 'careerResultsView' && (
                 <div className="flex-1 bg-slate-50 p-4 flex flex-col justify-between overflow-y-auto h-full">
                   <div className="text-center my-2">
-                    <span className="text-xs font-black uppercase text-phc-navy bg-phc-gold/30 px-3 py-1 rounded-full tracking-wider">
+                    <span className="text-xs font-black uppercase text-indigo-900 bg-amber-300 px-3 py-1 rounded-full tracking-wider">
                       Quiz Complete
                     </span>
-                    <h2 className="text-base font-extrabold text-phc-navy mt-2">
+                    <h2 className="text-base font-extrabold text-slate-900 mt-2">
                       Your Top Hospital Matches
                     </h2>
                     <p className="text-xs text-slate-600 mt-0.5">
@@ -1519,7 +1500,7 @@ export default function App() {
                     {careerResults.map((career, idx) => (
                       <div
                         key={idx}
-                        className="bg-white border-2 border-phc-blue/40 rounded-2xl p-3.5 shadow-sm flex items-center justify-between gap-3"
+                        className="bg-white border-2 border-indigo-200 rounded-2xl p-3.5 shadow-sm flex items-center justify-between gap-3"
                       >
                         <div className="flex items-center gap-3 overflow-hidden">
                           <img
@@ -1528,17 +1509,17 @@ export default function App() {
                             className="w-12 h-12 object-contain bg-slate-100 rounded-xl p-1 flex-shrink-0 border border-slate-200"
                           />
                           <div className="overflow-hidden text-left">
-                            <span className="text-[10px] font-black uppercase tracking-wider text-phc-blue block">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-indigo-600 block">
                               {idx === 0 ? '🥇 Top Match' : idx === 1 ? '🥈 Runner-Up' : '🥉 Also Great'}
                             </span>
-                            <h3 className="font-extrabold text-sm text-phc-navy truncate">
+                            <h3 className="font-extrabold text-sm text-slate-900 truncate">
                               {career}
                             </h3>
                           </div>
                         </div>
                         <button
                           onClick={() => selectCareerOption(career)}
-                          className={`flex-shrink-0 bg-phc-orange text-white font-bold text-xs py-2 px-3 rounded-xl uppercase tracking-wider shadow active:scale-95 ${focusRing}`}
+                          className={`flex-shrink-0 bg-emerald-600 active:bg-emerald-700 text-white font-bold text-xs py-2 px-3 rounded-xl uppercase tracking-wider shadow active:scale-95 ${focusRing}`}
                         >
                           Pick ➔
                         </button>
@@ -1564,8 +1545,8 @@ export default function App() {
                       alt=""
                       className="w-20 h-20 object-contain mx-auto"
                     />
-                    <h2 className="text-lg font-black text-phc-navy mt-1">{finalCareer}</h2>
-                    <p className="text-xs font-bold text-phc-orange uppercase tracking-wide mt-0.5">
+                    <h2 className="text-lg font-black text-slate-900 mt-1">{finalCareer}</h2>
+                    <p className="text-xs font-bold text-orange-600 uppercase tracking-wide mt-0.5">
                       {careerInfo[finalCareer]?.headline || 'A real job at Patterson Health Center'}
                     </p>
                   </div>
@@ -1582,8 +1563,8 @@ export default function App() {
                       </div>
                     )}
                     {careerInfo[finalCareer]?.training && (
-                      <div className="bg-phc-blue/5 border border-phc-blue/30 rounded-2xl p-3">
-                        <h3 className="text-[11px] font-black uppercase tracking-wider text-phc-navy mb-1">
+                      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-3">
+                        <h3 className="text-[11px] font-black uppercase tracking-wider text-blue-900 mb-1">
                           How you get there
                         </h3>
                         <p className="text-xs text-slate-800 leading-relaxed">
@@ -1592,8 +1573,8 @@ export default function App() {
                       </div>
                     )}
                     {careerInfo[finalCareer]?.local && (
-                      <div className="bg-phc-gold/15 border border-phc-gold rounded-2xl p-3">
-                        <h3 className="text-[11px] font-black uppercase tracking-wider text-phc-navy mb-1">
+                      <div className="bg-amber-50 border border-amber-300 rounded-2xl p-3">
+                        <h3 className="text-[11px] font-black uppercase tracking-wider text-amber-900 mb-1">
                           Right here in Harper County
                         </h3>
                         <p className="text-xs text-slate-800 leading-relaxed">
@@ -1605,7 +1586,7 @@ export default function App() {
 
                   <button
                     onClick={() => setAppMode('avatarBuilder')}
-                    className={`w-full min-h-[48px] bg-phc-orange text-white font-black py-3 rounded-xl uppercase text-xs tracking-wider shadow-lg active:scale-95 ${focusRing}`}
+                    className={`w-full min-h-[48px] bg-emerald-600 active:bg-emerald-700 text-white font-black py-3 rounded-xl uppercase text-xs tracking-wider shadow-lg active:scale-95 ${focusRing}`}
                   >
                     Build My Badge ➔
                   </button>
@@ -1616,17 +1597,17 @@ export default function App() {
               {appMode === 'avatarBuilder' && (
                 <div className="flex-1 bg-slate-100 p-3 sm:p-4 flex flex-col justify-between overflow-y-auto h-full">
                   <div className="text-center mb-1">
-                    <span className="text-[11px] uppercase font-black text-phc-navy bg-phc-gold/30 px-2.5 py-0.5 rounded-full tracking-wider">
+                    <span className="text-[11px] uppercase font-black text-indigo-900 bg-amber-300 px-2.5 py-0.5 rounded-full tracking-wider">
                       Final Step
                     </span>
-                    <h2 className="text-sm font-extrabold text-phc-navy mt-0.5">
+                    <h2 className="text-sm font-extrabold text-slate-900 mt-0.5">
                       Your Official ID Badge
                     </h2>
                   </div>
 
                   <button
                     onClick={() => setShowPhotoBooth(true)}
-                    className={`w-full max-w-[340px] mx-auto bg-phc-blue text-white font-black text-xs py-2.5 rounded-xl uppercase tracking-wider shadow active:scale-95 mb-1 ${focusRing}`}
+                    className={`w-full max-w-[340px] mx-auto bg-blue-700 active:bg-blue-800 text-white font-black text-xs py-2.5 rounded-xl uppercase tracking-wider shadow active:scale-95 mb-1 ${focusRing}`}
                   >
                     📸 Take a Turtle Selfie
                   </button>
@@ -1645,7 +1626,7 @@ export default function App() {
 
                   {capturedPhoto && (
                     <div className="w-full max-w-[340px] mx-auto bg-white p-3 rounded-2xl border border-slate-300 shadow-sm my-2 text-center">
-                      <p className="text-xs font-black text-phc-navy mb-2 leading-snug">
+                      <p className="text-xs font-black text-slate-900 mb-2 leading-snug">
                         Parent or guardian: may Patterson Health Center use this photo
                         on social media or event flyers?
                       </p>
@@ -1668,7 +1649,7 @@ export default function App() {
                           aria-pressed={photoPermission === false}
                           className={`py-2 px-3 rounded-xl font-black text-xs uppercase tracking-wider transition-all ${focusRing} ${
                             photoPermission === false
-                              ? 'bg-phc-orange text-white shadow-md ring-2 ring-orange-300'
+                              ? 'bg-rose-700 text-white shadow-md ring-2 ring-rose-400'
                               : 'bg-slate-100 text-slate-700 border border-slate-400'
                           }`}
                         >
@@ -1680,7 +1661,7 @@ export default function App() {
                         save or share it.
                       </p>
                       {photoPermission === null && (
-                        <span className="text-[11px] font-bold text-phc-orange block mt-1.5">
+                        <span className="text-[11px] font-bold text-amber-600 block mt-1.5">
                           ⚠️ Tap Yes or No to continue
                         </span>
                       )}
@@ -1690,7 +1671,7 @@ export default function App() {
                   <button
                     onClick={submitBadgeOrder}
                     disabled={submittingBadge}
-                    className={`w-full min-h-[48px] bg-phc-orange disabled:opacity-60 text-white font-black py-3 rounded-xl shadow-lg text-xs uppercase tracking-wider active:scale-95 transition-all my-auto ${focusRing}`}
+                    className={`w-full min-h-[48px] bg-emerald-600 active:bg-emerald-700 disabled:opacity-60 text-white font-black py-3 rounded-xl shadow-lg text-xs uppercase tracking-wider active:scale-95 transition-all my-auto ${focusRing}`}
                   >
                     {submittingBadge ? 'Sending to the booth...' : '🪪 Send My Badge to Print ➔'}
                   </button>
@@ -1699,17 +1680,17 @@ export default function App() {
 
               {/* SUCCESS */}
               {appMode === 'badgeSuccess' && (
-                <div className="flex-1 bg-gradient-to-b from-phc-gold/20 to-phc-gold/40 p-6 flex flex-col justify-center items-center text-center h-full">
-                  <div className="w-20 h-20 bg-phc-orange rounded-full text-white flex items-center justify-center text-4xl shadow-xl animate-bounce mb-5">
+                <div className="flex-1 bg-gradient-to-b from-emerald-50 to-teal-100 p-6 flex flex-col justify-center items-center text-center h-full">
+                  <div className="w-20 h-20 bg-emerald-600 rounded-full text-white flex items-center justify-center text-4xl shadow-xl animate-bounce mb-5">
                     🎉
                   </div>
-                  <h2 className="text-2xl font-black text-phc-navy">Badge Ordered!</h2>
+                  <h2 className="text-2xl font-black text-slate-900">Badge Ordered!</h2>
                   <p className="text-slate-800 text-sm font-medium mt-3 px-2 leading-relaxed">
                     Nice work, <strong>{childName}</strong>! Show this code at the booth
                     to pick up your printed badge:
                   </p>
-                  <div className="mt-4 bg-white border-2 border-phc-navy rounded-2xl px-6 py-3">
-                    <span className="text-2xl font-mono font-black text-phc-navy tracking-widest">
+                  <div className="mt-4 bg-white border-2 border-slate-900 rounded-2xl px-6 py-3">
+                    <span className="text-2xl font-mono font-black text-slate-900 tracking-widest">
                       {assignedPin}
                     </span>
                   </div>
@@ -1720,7 +1701,7 @@ export default function App() {
                   )}
                   <button
                     onClick={() => forceGlobalReset()}
-                    className={`mt-8 min-h-[48px] bg-phc-navy text-white text-xs font-bold py-3 px-6 rounded-xl shadow uppercase tracking-wide active:scale-95 ${focusRing}`}
+                    className={`mt-8 min-h-[48px] bg-slate-900 text-white text-xs font-bold py-3 px-6 rounded-xl shadow uppercase tracking-wide active:scale-95 ${focusRing}`}
                   >
                     Next Explorer 🔄
                   </button>
@@ -1729,11 +1710,11 @@ export default function App() {
 
               {/* MEMORY GAME */}
               {appMode === 'gamesHub' && (
-                <div className="flex-1 bg-gradient-to-b from-phc-navy to-[#00263f] p-4 flex flex-col justify-between h-full text-white overflow-y-auto">
+                <div className="flex-1 bg-gradient-to-b from-slate-900 to-indigo-950 p-4 flex flex-col justify-between h-full text-white overflow-y-auto">
                   <div className="text-center mt-1">
                     <span className="text-3xl">🧩</span>
                     <h2 className="text-base font-black tracking-wide">Turtle Memory Match</h2>
-                    <p className="text-[11px] text-white/80">
+                    <p className="text-[11px] text-indigo-200">
                       Tap cards to find matching pairs!
                     </p>
                   </div>
@@ -1751,7 +1732,7 @@ export default function App() {
                             className={`aspect-square rounded-xl font-bold text-2xl flex items-center justify-center shadow-md transition-all active:scale-95 overflow-hidden ${focusRing} ${
                               isFlipped
                                 ? 'bg-white'
-                                : 'bg-phc-blue border-2 border-white/30 text-white'
+                                : 'bg-indigo-600 border-2 border-indigo-400 text-white'
                             }`}
                           >
                             {isFlipped ? (
@@ -1766,11 +1747,11 @@ export default function App() {
                   ) : (
                     <div className="my-auto bg-white/10 border border-white/20 rounded-2xl p-6 text-center animate-fade-in">
                       <div className="text-4xl mb-2">🏆</div>
-                      <h3 className="text-lg font-black text-phc-gold">Matching Master!</h3>
+                      <h3 className="text-lg font-black text-amber-300">Matching Master!</h3>
                       <p className="text-xs text-white/90 mt-1">You found every pair.</p>
                       <button
                         onClick={startNewMemoryGame}
-                        className={`mt-4 bg-phc-gold text-phc-navy font-bold text-xs py-2.5 px-5 rounded-xl shadow uppercase tracking-wider active:scale-95 ${focusRing}`}
+                        className={`mt-4 bg-amber-400 text-slate-950 font-bold text-xs py-2.5 px-5 rounded-xl shadow uppercase tracking-wider active:scale-95 ${focusRing}`}
                       >
                         Play Again 🔄
                       </button>
@@ -1791,7 +1772,7 @@ export default function App() {
                 <div className="flex-1 bg-slate-100 p-4 flex flex-col justify-between overflow-y-auto h-full">
                   <div className="text-center mb-1">
                     <span className="text-xl">🪪</span>
-                    <h2 className="text-sm font-extrabold text-phc-navy mt-0.5">
+                    <h2 className="text-sm font-extrabold text-slate-900 mt-0.5">
                       Look Up My Badge
                     </h2>
                     <p className="text-xs text-slate-600">Enter the code from your card</p>
@@ -1806,16 +1787,16 @@ export default function App() {
                         placeholder="2026-K4TX"
                         value={lookupValue}
                         onChange={(e) => setLookupValue(e.target.value.toUpperCase())}
-                        className="w-full bg-slate-50 border-2 border-slate-400 rounded-xl p-3 font-black text-slate-900 text-center text-sm focus:border-phc-blue focus:outline-none tracking-wide placeholder:text-slate-400"
+                        className="w-full bg-slate-50 border-2 border-slate-400 rounded-xl p-3 font-black text-slate-900 text-center text-sm focus:border-blue-600 focus:outline-none tracking-wide placeholder:text-slate-400"
                       />
                       {searchError && (
-                        <p role="alert" className="text-phc-orange text-xs font-bold text-center">
+                        <p role="alert" className="text-orange-600 text-xs font-bold text-center">
                           {searchError}
                         </p>
                       )}
                       <button
                         onClick={handleLookupBadge}
-                        className={`w-full min-h-[48px] bg-phc-blue text-white font-bold py-3 rounded-xl text-xs uppercase tracking-wider shadow active:scale-95 ${focusRing}`}
+                        className={`w-full min-h-[48px] bg-blue-700 active:bg-blue-800 text-white font-bold py-3 rounded-xl text-xs uppercase tracking-wider shadow active:scale-95 ${focusRing}`}
                       >
                         Find My Badge ➔
                       </button>
@@ -1835,7 +1816,7 @@ export default function App() {
                       </div>
                       <button
                         onClick={() => { setFoundBadge(null); setLookupValue(''); }}
-                        className={`mx-auto text-xs font-bold text-phc-navy underline active:opacity-75 ${focusRing}`}
+                        className={`mx-auto text-xs font-bold text-slate-700 underline active:opacity-75 ${focusRing}`}
                       >
                         Search Another Code
                       </button>
@@ -1844,7 +1825,7 @@ export default function App() {
 
                   <button
                     onClick={() => setAppMode('tour')}
-                    className={`w-full min-h-[44px] bg-phc-navy text-white font-bold py-2.5 rounded-xl text-xs uppercase shadow-md mt-1 active:scale-95 ${focusRing}`}
+                    className={`w-full min-h-[44px] bg-slate-900 text-white font-bold py-2.5 rounded-xl text-xs uppercase shadow-md mt-1 active:scale-95 ${focusRing}`}
                   >
                     Return to Map
                   </button>
@@ -1902,7 +1883,7 @@ export default function App() {
               disabled={!isNameConfirmed}
               className={`flex flex-col items-center justify-center gap-0.5 h-full transition-all active:scale-90 ${focusRing} ${
                 !isNameConfirmed ? 'opacity-30' : ''
-              } ${item.active ? 'text-phc-blue font-black' : 'text-slate-600'}`}
+              } ${item.active ? 'text-blue-700 font-black' : 'text-slate-600'}`}
             >
               <span className="text-base" aria-hidden="true">{item.icon}</span>
               <span className="text-[10px] font-bold tracking-tight">{item.label}</span>
@@ -1912,7 +1893,7 @@ export default function App() {
           <button
             onClick={() => setShowResetConfirm(true)}
             aria-label="Start over"
-            className={`flex flex-col items-center justify-center gap-0.5 h-full text-slate-600 active:text-phc-orange transition-all active:scale-90 ${focusRing}`}
+            className={`flex flex-col items-center justify-center gap-0.5 h-full text-slate-600 active:text-rose-600 transition-all active:scale-90 ${focusRing}`}
           >
             <span className="text-base" aria-hidden="true">🔄</span>
             <span className="text-[10px] font-bold tracking-tight">Reset</span>
@@ -1925,7 +1906,7 @@ export default function App() {
           onPhotoCaptured={({ framed, raw }) => {
             setCapturedPhoto(framed);
             setRawPhoto(raw);
-            setPhotoPermission(null); // new photo = fresh consent
+            setPhotoPermission(null);
           }}
           onClose={() => setShowPhotoBooth(false)}
         />
