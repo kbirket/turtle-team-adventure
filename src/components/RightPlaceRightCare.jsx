@@ -72,8 +72,8 @@ const shuffle = (arr) => {
   return copy;
 };
 
-const focusRing =
-  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-phc-navy';
+const FOCUS =
+  'focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-[#22d3ee]';
 
 export default function RightPlaceRightCare({ onExit, onLogEvent }) {
   const [deck, setDeck] = useState([]);
@@ -112,16 +112,28 @@ export default function RightPlaceRightCare({ onExit, onLogEvent }) {
     setChoice(null);
   };
 
+  const Styles = () => (
+    <style>{`
+      @keyframes rprcPop {
+        0%   { opacity: 0; transform: scale(0.92) translateY(8px); }
+        60%  { transform: scale(1.03); }
+        100% { opacity: 1; transform: scale(1) translateY(0); }
+      }
+      .rprc-pop { animation: rprcPop 0.28s ease-out; }
+    `}</style>
+  );
+
   /* ---------- results ---------- */
   if (finished) {
     return (
-      <div className="flex-1 bg-gradient-to-b from-phc-navy to-[#00263f] p-6 flex flex-col justify-between h-full text-white overflow-y-auto">
+      <div className="flex-1 bg-[#3b0764] p-6 flex flex-col justify-between h-full text-white overflow-y-auto">
+        <Styles />
         <div className="my-auto text-center">
-          <div className="text-5xl mb-3">🩺</div>
-          <h2 className="text-xl font-black">
-            {score} out of {deck.length}
+          <div className="text-6xl mb-3">🩺</div>
+          <h2 className="text-3xl font-black text-[#22d3ee]">
+            {score} / {deck.length}
           </h2>
-          <p className="text-sm text-white/85 mt-2 leading-relaxed px-2">
+          <p className="text-sm text-white mt-2 leading-relaxed px-2 font-bold">
             {score === deck.length
               ? "Perfect! You know exactly where to go."
               : score >= deck.length - 2
@@ -129,32 +141,32 @@ export default function RightPlaceRightCare({ onExit, onLogEvent }) {
                 : "Nice try! The big rule: if it's sudden, severe, or scary, choose the ER."}
           </p>
 
-          <div className="bg-white/10 border border-white/20 rounded-2xl p-4 mt-5 text-left">
-            <h3 className="text-xs font-black uppercase tracking-wider text-phc-gold mb-2">
+          <div className="bg-white rounded-3xl p-4 mt-5 text-left border-4 border-[#22d3ee] shadow-2xl">
+            <h3 className="text-xs font-black uppercase tracking-wider text-[#5b21b6] mb-2">
               The short version
             </h3>
-            <ul className="text-xs text-white/90 leading-relaxed space-y-1.5">
-              <li>• <strong>Walk-in clinic:</strong> coughs, earaches, sprains, rashes, physicals, stitches for small cuts.</li>
-              <li>• <strong>Emergency room:</strong> trouble breathing, chest pain, bleeding that won't stop, head injuries, bones out of place.</li>
-              <li>• <strong>Call 911</strong> for anything sudden and severe. Never drive yourself.</li>
+            <ul className="text-xs text-slate-900 leading-relaxed space-y-2 font-medium">
+              <li>🩺 <strong>Walk-in clinic:</strong> coughs, earaches, sprains, rashes, physicals, stitches for small cuts.</li>
+              <li>🚨 <strong>Emergency room:</strong> trouble breathing, chest pain, bleeding that won't stop, head injuries, bones out of place.</li>
+              <li>📞 <strong>Call 911</strong> for anything sudden and severe. Never drive yourself.</li>
             </ul>
           </div>
 
-          <p className="text-[11px] text-white/70 mt-4 leading-snug">
+          <p className="text-xs text-white/90 mt-4 leading-snug font-bold">
             When you're not sure, call the clinic and ask. That's what we're here for.
           </p>
         </div>
 
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2.5 mt-4">
           <button
             onClick={startGame}
-            className={`w-full min-h-[48px] bg-phc-gold text-phc-navy font-black py-3 rounded-xl uppercase text-xs tracking-wider shadow-lg active:scale-95 ${focusRing}`}
+            className={`w-full min-h-[52px] bg-[#fbbf24] active:bg-[#f59e0b] text-[#3b0764] font-black py-3 rounded-2xl uppercase text-sm tracking-wider shadow-lg active:scale-95 transition-all ${FOCUS}`}
           >
             Play Again 🔄
           </button>
           <button
             onClick={onExit}
-            className={`w-full min-h-[44px] bg-white/20 text-white font-bold py-2 rounded-xl text-xs uppercase active:scale-95 ${focusRing}`}
+            className={`w-full min-h-[48px] bg-white/15 active:bg-white/25 border-2 border-white/40 text-white font-black py-2.5 rounded-2xl text-xs uppercase active:scale-95 transition-all ${FOCUS}`}
           >
             Back to Arcade ➔
           </button>
@@ -167,19 +179,21 @@ export default function RightPlaceRightCare({ onExit, onLogEvent }) {
   const isCorrect = choice === current.answer;
 
   return (
-    <div className="flex-1 bg-slate-50 p-4 flex flex-col justify-between h-full overflow-y-auto">
-      <div className="text-center">
-        <span className="text-[11px] uppercase bg-phc-blue/15 text-phc-navy px-3 py-1 rounded-full font-black tracking-wider">
+    <div className="flex-1 bg-[#3b0764] p-4 flex flex-col justify-between h-full overflow-y-auto">
+      <Styles />
+
+      <div className="text-center flex-shrink-0">
+        <span className="text-[11px] uppercase bg-[#22d3ee] text-[#3b0764] px-3 py-1 rounded-full font-black tracking-wider">
           Right Place, Right Care
         </span>
-        <p className="text-[11px] text-slate-600 font-bold mt-1.5">
+        <p className="text-xs text-white font-black mt-2">
           {index + 1} of {deck.length}
         </p>
       </div>
 
       <div className="my-auto">
-        <div className="bg-white border-2 border-slate-200 rounded-2xl p-5 shadow-sm text-center min-h-[120px] flex items-center justify-center">
-          <p className="text-base font-bold text-phc-navy leading-relaxed">
+        <div className="bg-white border-4 border-[#7c3aed] rounded-3xl p-5 shadow-2xl text-center min-h-[130px] flex items-center justify-center rprc-pop">
+          <p className="text-base font-black text-[#3b0764] leading-relaxed">
             {current.text}
           </p>
         </div>
@@ -188,38 +202,39 @@ export default function RightPlaceRightCare({ onExit, onLogEvent }) {
           <div className="grid grid-cols-2 gap-3 mt-4">
             <button
               onClick={() => handleChoice('er')}
-              className={`min-h-[80px] bg-phc-orange text-white font-black rounded-2xl uppercase text-sm tracking-wide shadow-md active:scale-95 transition-all ${focusRing}`}
+              className={`min-h-[92px] bg-[#e11d48] active:bg-[#be123c] text-white font-black rounded-3xl uppercase text-sm tracking-wide shadow-xl active:scale-95 transition-all border-4 border-white/30 ${FOCUS}`}
             >
-              🚨<br />Emergency<br />Room
+              <span className="text-3xl block" aria-hidden="true">🚨</span>
+              Emergency<br />Room
             </button>
             <button
               onClick={() => handleChoice('clinic')}
-              className={`min-h-[80px] bg-phc-blue text-white font-black rounded-2xl uppercase text-sm tracking-wide shadow-md active:scale-95 transition-all ${focusRing}`}
+              className={`min-h-[92px] bg-[#22d3ee] active:bg-[#06b6d4] text-[#3b0764] font-black rounded-3xl uppercase text-sm tracking-wide shadow-xl active:scale-95 transition-all border-4 border-white/40 ${FOCUS}`}
             >
-              🩺<br />Walk-In<br />Clinic
+              <span className="text-3xl block" aria-hidden="true">🩺</span>
+              Walk-In<br />Clinic
             </button>
           </div>
         ) : (
           <div
             role="status"
             aria-live="polite"
-            className={`mt-4 rounded-2xl p-4 border-2 animate-fade-in ${
+            className={`mt-4 rounded-3xl p-4 border-4 shadow-xl rprc-pop ${
               isCorrect
-                ? 'bg-emerald-50 border-emerald-600'
-                : 'bg-amber-50 border-phc-orange'
+                ? 'bg-[#4ade80] border-white'
+                : 'bg-[#fbbf24] border-white'
             }`}
           >
-            <p className={`text-sm font-black uppercase tracking-wide ${
-              isCorrect ? 'text-emerald-800' : 'text-phc-navy'
-            }`}>
-              {isCorrect ? '✅ That\'s right!' : '↪️ Actually — '}
-              {!isCorrect && (current.answer === 'er' ? 'Emergency Room' : 'Walk-In Clinic')}
+            <p className="text-base font-black uppercase tracking-wide text-[#14532d]">
+              {isCorrect
+                ? '✅ That\'s right!'
+                : `↪️ Actually — ${current.answer === 'er' ? 'Emergency Room' : 'Walk-In Clinic'}`}
             </p>
-            <p className="text-xs text-slate-800 leading-relaxed mt-1.5">
+            <p className="text-sm text-slate-900 leading-relaxed mt-1.5 font-medium">
               {current.why}
             </p>
             {current.urgent && (
-              <p className="text-xs font-black text-phc-orange mt-2">
+              <p className="text-sm font-black text-[#9f1239] mt-2 bg-white rounded-xl px-2 py-1.5">
                 📞 Call 911 for this one — don't drive.
               </p>
             )}
@@ -227,18 +242,18 @@ export default function RightPlaceRightCare({ onExit, onLogEvent }) {
         )}
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 flex-shrink-0">
         {choice && (
           <button
             onClick={handleNext}
-            className={`w-full min-h-[48px] bg-phc-navy text-white font-black py-3 rounded-xl uppercase text-xs tracking-wider shadow-md active:scale-95 ${focusRing}`}
+            className={`w-full min-h-[52px] bg-[#fbbf24] active:bg-[#f59e0b] text-[#3b0764] font-black py-3 rounded-2xl uppercase text-sm tracking-wider shadow-lg active:scale-95 transition-all ${FOCUS}`}
           >
             {index + 1 >= deck.length ? 'See My Score ➔' : 'Next One ➔'}
           </button>
         )}
         <button
           onClick={onExit}
-          className={`w-full min-h-[44px] bg-slate-200 text-slate-700 font-bold py-2 rounded-xl text-xs uppercase active:scale-95 ${focusRing}`}
+          className={`w-full min-h-[44px] bg-white/15 active:bg-white/25 border-2 border-white/40 text-white font-black py-2 rounded-2xl text-xs uppercase active:scale-95 transition-all ${FOCUS}`}
         >
           Back to Arcade
         </button>
