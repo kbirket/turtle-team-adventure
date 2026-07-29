@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Airtable from 'airtable';
 import TurtleBooth from './TurtleBooth';
 import BadgeCard from './components/BadgeCard';
+import RightPlaceRightCare from './components/RightPlaceRightCare';
 
 const base = new Airtable({
   apiKey: import.meta.env.VITE_AIRTABLE_PAT
@@ -215,6 +216,7 @@ export default function App() {
   const [flippedIndices, setFlippedIndices] = useState([]);
   const [matchedPairs, setMatchedPairs] = useState([]);
   const [gameWon, setGameWon] = useState(false);
+  const [arcadeGame, setArcadeGame] = useState(null); // null | 'memory' | 'rprc'
 
   /* ---------- admin ---------- */
   const [adminTab, setAdminTab] = useState('queue'); 
@@ -350,6 +352,7 @@ export default function App() {
     setFoundBadge(null);
     setLookupValue('');
     setShowResetConfirm(false);
+        setArcadeGame(null);
     setAppMode('tour');
     if (!silent) showToast('Ready for the next explorer!', 'success');
   }, [showToast]);
@@ -1708,64 +1711,105 @@ export default function App() {
                 </div>
               )}
 
-              {/* MEMORY GAME */}
-              {appMode === 'gamesHub' && (
-                <div className="flex-1 bg-gradient-to-b from-slate-900 to-indigo-950 p-4 flex flex-col justify-between h-full text-white overflow-y-auto">
-                  <div className="text-center mt-1">
-                    <span className="text-3xl">🧩</span>
-                    <h2 className="text-base font-black tracking-wide">Turtle Memory Match</h2>
-                    <p className="text-[11px] text-indigo-200">
-                      Tap cards to find matching pairs!
-                    </p>
-                  </div>
+              {/* ARCADE */}
+{appMode === 'gamesHub' && !arcadeGame && (
+  <div className="flex-1 bg-gradient-to-b from-phc-navy to-[#00263f] p-5 flex flex-col justify-between h-full text-white overflow-y-auto">
+    <div className="text-center mt-2">
+      <span className="text-3xl">🎮</span>
+      <h2 className="text-lg font-black tracking-wide">Turtle Arcade</h2>
+      <p className="text-[11px] text-white/80">Pick a game!</p>
+    </div>
 
-                  {!gameWon ? (
-                    <div className="grid grid-cols-4 gap-2 my-auto max-w-[280px] mx-auto w-full">
-                      {memoryDeck.map((card, idx) => {
-                        const isFlipped =
-                          flippedIndices.includes(idx) || matchedPairs.includes(idx);
-                        return (
-                          <button
-                            key={idx}
-                            onClick={() => handleCardClick(idx)}
-                            aria-label={isFlipped ? 'Revealed card' : 'Hidden card'}
-                            className={`aspect-square rounded-2xl font-black text-2xl flex items-center justify-center shadow-lg transition-all active:scale-95 overflow-hidden border-2 ${focusRing} ${
-  isFlipped
-    ? 'bg-white border-amber-400'
-    : 'bg-slate-800 hover:bg-slate-700 border-slate-600 text-amber-400'
-}`}
-                          >
-                            {isFlipped ? (
-                              <img src={card.icon} alt="" className="w-full h-full object-contain p-1" />
-                            ) : (
-                              '❓'
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="my-auto bg-white/10 border border-white/20 rounded-2xl p-6 text-center animate-fade-in">
-                      <div className="text-4xl mb-2">🏆</div>
-                      <h3 className="text-lg font-black text-amber-300">Matching Master!</h3>
-                      <p className="text-xs text-white/90 mt-1">You found every pair.</p>
-                      <button
-                        onClick={startNewMemoryGame}
-                        className={`mt-4 bg-amber-400 text-slate-950 font-bold text-xs py-2.5 px-5 rounded-xl shadow uppercase tracking-wider active:scale-95 ${focusRing}`}
-                      >
-                        Play Again 🔄
-                      </button>
-                    </div>
-                  )}
+    <div className="flex flex-col gap-3 my-auto">
+      <button
+        onClick={() => setArcadeGame('rprc')}
+        className={`w-full bg-white/10 border-2 border-phc-gold rounded-2xl p-4 text-left active:scale-95 transition-all ${focusRing}`}
+      >
+        <span className="text-2xl">🩺</span>
+        <h3 className="font-black text-sm text-phc-gold mt-1">Right Place, Right Care</h3>
+        <p className="text-[11px] text-white/80 leading-snug mt-0.5">
+          Emergency room or walk-in clinic? Test your instincts.
+        </p>
+      </button>
 
-                  <button
-                    onClick={() => setAppMode('tour')}
-                    className={`w-full min-h-[44px] bg-white/20 text-white font-bold py-2 rounded-xl text-xs uppercase shadow-md active:scale-95 ${focusRing}`}
-                  >
-                    Return to Map ➔
-                  </button>
-                </div>
-              )}
+      <button
+        onClick={() => { setArcadeGame('memory'); startNewMemoryGame(); }}
+        className={`w-full bg-white/10 border-2 border-white/30 rounded-2xl p-4 text-left active:scale-95 transition-all ${focusRing}`}
+      >
+        <span className="text-2xl">🧩</span>
+        <h3 className="font-black text-sm text-white mt-1">Turtle Memory Match</h3>
+        <p className="text-[11px] text-white/80 leading-snug mt-0.5">
+          Find all the matching pairs.
+        </p>
+      </button>
+    </div>
+
+    <button
+      onClick={() => setAppMode('tour')}
+      className={`w-full min-h-[44px] bg-white/20 text-white font-bold py-2 rounded-xl text-xs uppercase shadow-md active:scale-95 ${focusRing}`}
+    >
+      Return to Map ➔
+    </button>
+  </div>
+)}
+
+{appMode === 'gamesHub' && arcadeGame === 'rprc' && (
+  <RightPlaceRightCare
+    onExit={() => setArcadeGame(null)}
+    onLogEvent={logEvent}
+  />
+)}
+
+{appMode === 'gamesHub' && arcadeGame === 'memory' && (
+  <div className="flex-1 bg-gradient-to-b from-phc-navy to-[#00263f] p-4 flex flex-col justify-between h-full text-white overflow-y-auto">
+    <div className="text-center mt-1">
+      <span className="text-3xl">🧩</span>
+      <h2 className="text-base font-black tracking-wide">Turtle Memory Match</h2>
+      <p className="text-[11px] text-white/80">Tap cards to find matching pairs!</p>
+    </div>
+
+    {!gameWon ? (
+      <div className="grid grid-cols-4 gap-2 my-auto max-w-[280px] mx-auto w-full">
+        {memoryDeck.map((card, idx) => {
+          const isFlipped = flippedIndices.includes(idx) || matchedPairs.includes(idx);
+          return (
+            <button
+              key={idx}
+              onClick={() => handleCardClick(idx)}
+              aria-label={isFlipped ? 'Revealed card' : 'Hidden card'}
+              className={`aspect-square rounded-xl font-bold text-2xl flex items-center justify-center shadow-md transition-all active:scale-95 overflow-hidden ${focusRing} ${
+                isFlipped ? 'bg-white' : 'bg-phc-blue border-2 border-white/30 text-white'
+              }`}
+            >
+              {isFlipped ? (
+                <img src={card.icon} alt="" className="w-full h-full object-contain p-1" />
+              ) : '❓'}
+            </button>
+          );
+        })}
+      </div>
+    ) : (
+      <div className="my-auto bg-white/10 border border-white/20 rounded-2xl p-6 text-center animate-fade-in">
+        <div className="text-4xl mb-2">🏆</div>
+        <h3 className="text-lg font-black text-phc-gold">Matching Master!</h3>
+        <p className="text-xs text-white/90 mt-1">You found every pair.</p>
+        <button
+          onClick={startNewMemoryGame}
+          className={`mt-4 bg-phc-gold text-phc-navy font-bold text-xs py-2.5 px-5 rounded-xl shadow uppercase tracking-wider active:scale-95 ${focusRing}`}
+        >
+          Play Again 🔄
+        </button>
+      </div>
+    )}
+
+    <button
+      onClick={() => setArcadeGame(null)}
+      className={`w-full min-h-[44px] bg-white/20 text-white font-bold py-2 rounded-xl text-xs uppercase shadow-md active:scale-95 ${focusRing}`}
+    >
+      Back to Arcade ➔
+    </button>
+  </div>
+)}
 
               {/* BADGE LOOKUP */}
               {appMode === 'viewBadge' && (
