@@ -21,16 +21,21 @@ const IDLE_WARNING_MS = 120000; // 2 min of no touches
 const IDLE_GRACE_MS = 20000;    // then 20s to say "still here"
 
 /* ------------------------------------------------------------------
-   ARCADE POP PALETTE
-   grape   #3b0764   deep background
-   plum    #5b21b6   raised panels on grape
-   violet  #7c3aed   borders / accents
-   coral   #e11d48   primary "go" action
-   cyan    #22d3ee   secondary action / highlights
-   yellow  #fbbf24   rewards, celebration, forward motion
-   green   #4ade80   correct / success
-   Written as literal hex so nothing depends on tailwind.config.js.
+   PALETTE — each color has one job.
+
+   grape  #3b0764  the stage. Every screen sits on it.
+   plum   #5b21b6  header + nav chrome
+   white           content lives on white cards
+   coral  #e11d48  THE primary action. One per screen, at most.
+   cyan   #22d3ee  wayfinding accents, focus rings on dark
+   gold   #fbbf24  rewards ONLY — stamps earned, badge code, celebration
+   green  #4ade80  correct answers
+
+   Playfulness comes from roundness, space, and the illustrations —
+   not from filling every surface with saturated color.
+   Hex literals throughout so nothing depends on tailwind.config.js.
 ------------------------------------------------------------------- */
+
 // Focus rings sit OUTSIDE the element (outline-offset), so the ring is drawn
 // on the PARENT background. FOCUS = cyan, for controls on the grape/plum page
 // (8.3:1). FOCUS_CARD = grape, for controls inside white cards (15:1). Cyan on
@@ -39,16 +44,15 @@ const FOCUS =
   'focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-[#22d3ee]';
 const FOCUS_CARD =
   'focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-[#3b0764]';
+
 const BTN_CORAL =
-  'bg-[#e11d48] active:bg-[#be123c] text-white font-black border-4 border-white/25 shadow-xl active:scale-95 transition-all';
-const BTN_YELLOW =
-  'bg-[#fbbf24] active:bg-[#f59e0b] text-[#3b0764] font-black border-4 border-white/40 shadow-xl active:scale-95 transition-all';
-const BTN_CYAN =
-  'bg-[#22d3ee] active:bg-[#06b6d4] text-[#3b0764] font-black border-4 border-white/40 shadow-xl active:scale-95 transition-all';
+  'bg-[#e11d48] active:bg-[#be123c] text-white font-black shadow-lg active:scale-95 transition-all';
+const BTN_GOLD =
+  'bg-[#fbbf24] active:bg-[#f59e0b] text-[#3b0764] font-black shadow-lg active:scale-95 transition-all';
 const BTN_GHOST =
-  'bg-white/15 active:bg-white/25 border-2 border-white/40 text-white font-black active:scale-95 transition-all';
+  'bg-white/10 active:bg-white/20 border-2 border-white/30 text-white font-bold active:scale-95 transition-all';
 const BTN_PLAIN =
-  'bg-white border-4 border-[#7c3aed] text-[#3b0764] font-black active:bg-[#f5f3ff] active:scale-95 transition-all';
+  'bg-slate-100 active:bg-slate-200 border-2 border-slate-300 text-[#3b0764] font-bold active:scale-95 transition-all';
 
 const GAME_CARDS = [
   '/characters/doctor/avatar.png',
@@ -79,6 +83,52 @@ const CATEGORY_CAREERS = {
   technical: ['CNA', 'Radiology', 'Lab Tech'],
   creative:  ['Marketing', 'Dietary', 'Human Resources']
 };
+
+/* ---------- map layout: one section per wing, thin accent per section ---------- */
+const MAP_SECTIONS = [
+  {
+    label: 'Main Hallway',
+    accent: 'border-l-[#22d3ee]',
+    cols: 'grid-cols-3',
+    stops: [
+      { id: 4.0, icon: '🏃', name: 'PT', key: 'PT' },
+      { id: 5.0, icon: '🩺', name: 'Clinic', key: 'CLINIC' },
+      { id: 6.0, icon: '🧠', name: 'Behavioral', key: 'BEHAVIORAL' },
+      { id: 7.0, icon: '🔬', name: 'Lab', key: 'LAB' },
+      { id: 8.0, icon: '🏥', name: 'Surgery', key: 'SURGERY' },
+      { id: 9.0, icon: '🩻', name: 'Radiology', key: 'RADIOLOGY' }
+    ]
+  },
+  {
+    label: 'Left Wing',
+    accent: 'border-l-[#a78bfa]',
+    cols: 'grid-cols-3',
+    stops: [
+      { id: 10.0, icon: '☕', name: 'Cafe', key: 'CAFE' },
+      { id: 11.0, icon: '💼', name: 'Business', key: 'BUSINESS' },
+      { id: 12.0, icon: '⚙️', name: 'Mechanical', key: 'MECHANICAL' }
+    ]
+  },
+  {
+    label: 'Right Wing',
+    accent: 'border-l-[#fb7185]',
+    cols: 'grid-cols-2',
+    stops: [
+      { id: 13.0, icon: '🚨', name: 'Emergency', key: 'EMERGENCY' },
+      { id: 15.0, icon: '🏥', name: 'Hospital', key: 'HOSPITAL' },
+      { id: 14.0, icon: '👔', name: 'Admin', key: 'ADMIN' },
+      { id: 16.0, icon: '📣', name: 'Marketing', key: 'COMMUNITY' }
+    ]
+  },
+  {
+    label: 'Grounds',
+    accent: 'border-l-[#4ade80]',
+    cols: 'grid-cols-1',
+    stops: [
+      { id: 17.0, icon: '🛠️', name: 'Maintenance Crew', key: 'MAINTENANCE' }
+    ]
+  }
+];
 
 /* ---------- storage + safety helpers ---------- */
 
@@ -813,7 +863,7 @@ export default function App() {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-[#3b0764] p-4 select-none">
-        <div className="text-center font-black text-[#22d3ee] text-lg animate-pulse">
+        <div className="text-center font-black text-white text-lg animate-pulse">
           🐢 Waking up the hospital turtles...
         </div>
       </div>
@@ -825,13 +875,13 @@ export default function App() {
       <div className="flex justify-center items-center min-h-screen bg-[#3b0764] p-6 select-none">
         <div className="text-center max-w-xs text-white">
           <div className="text-6xl mb-3">🐢</div>
-          <h1 className="font-black text-[#22d3ee] text-xl">The turtles are offline</h1>
-          <p className="text-sm text-white mt-2 leading-relaxed font-bold">
+          <h1 className="font-black text-white text-xl">The turtles are offline</h1>
+          <p className="text-sm text-white/80 mt-2 leading-relaxed">
             We couldn't reach the tour. Check the wifi and try again.
           </p>
           <button
             onClick={() => window.location.reload()}
-            className={`mt-5 min-h-[52px] py-3 px-8 rounded-2xl uppercase text-sm tracking-wider ${BTN_YELLOW} ${FOCUS}`}
+            className={`mt-5 min-h-[52px] py-3 px-8 rounded-2xl uppercase text-sm tracking-wider ${BTN_CORAL} ${FOCUS}`}
           >
             Try Again
           </button>
@@ -870,17 +920,17 @@ export default function App() {
         .tta-fade-in { animation: ttaFadeIn 0.3s ease-out; }
 
         @keyframes ttaPop {
-          0%   { opacity: 0; transform: scale(0.9); }
-          60%  { transform: scale(1.04); }
+          0%   { opacity: 0; transform: scale(0.94); }
+          60%  { transform: scale(1.02); }
           100% { opacity: 1; transform: scale(1); }
         }
-        .tta-pop { animation: ttaPop 0.3s ease-out; }
+        .tta-pop { animation: ttaPop 0.28s ease-out; }
 
         @keyframes ttaWiggle {
-          0%, 100% { transform: rotate(-5deg); }
-          50%      { transform: rotate(5deg); }
+          0%, 100% { transform: rotate(-4deg); }
+          50%      { transform: rotate(4deg); }
         }
-        .tta-wiggle { animation: ttaWiggle 1.2s ease-in-out infinite; }
+        .tta-wiggle { animation: ttaWiggle 1.4s ease-in-out infinite; }
 
         @media print {
           @page { size: 3.375in 2.125in landscape; margin: 0 !important; }
@@ -924,10 +974,10 @@ export default function App() {
       </div>
 
       {/* MAIN APP FRAME */}
-      <div className="app-main-layout w-full max-w-sm h-[100dvh] sm:h-[820px] max-h-[850px] bg-white sm:rounded-[2rem] shadow-2xl overflow-hidden flex flex-col border-0 sm:border-8 border-[#7c3aed] relative">
+      <div className="app-main-layout w-full max-w-sm h-[100dvh] sm:h-[820px] max-h-[850px] bg-white sm:rounded-[2rem] shadow-2xl overflow-hidden flex flex-col border-0 sm:border-8 border-[#5b21b6] relative">
 
         {/* HEADER */}
-        <div className="bg-[#5b21b6] text-white px-4 py-3 font-black tracking-wide shadow-lg flex justify-between items-center gap-2 flex-shrink-0 z-20 border-b-4 border-[#22d3ee]">
+        <div className="bg-[#5b21b6] text-white px-4 py-3 font-black tracking-wide shadow-md flex justify-between items-center gap-2 flex-shrink-0 z-20">
           <span className="truncate text-sm sm:text-base flex items-center gap-1.5">
             {!isNameConfirmed
               ? '👋 Welcome'
@@ -941,7 +991,7 @@ export default function App() {
                       ? '🔒 Staff Portal'
                       : '🎓 Career Explorer'}
           </span>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             {isOffline && (
               <span className="text-[10px] bg-[#fbbf24] text-[#3b0764] px-2 py-0.5 rounded-full font-black">
                 Offline
@@ -950,12 +1000,12 @@ export default function App() {
             <button
               onClick={handleAdminToggle}
               aria-label="Staff admin portal"
-              className={`text-xs bg-white/20 active:bg-white/30 px-2 py-1 rounded-lg font-mono active:scale-95 transition-all ${FOCUS}`}
+              className={`text-xs bg-white/15 active:bg-white/25 px-2 py-1 rounded-lg font-mono active:scale-95 transition-all ${FOCUS}`}
             >
               ⚙️
             </button>
             {isNameConfirmed && (
-              <span className="flex-shrink-0 text-[11px] bg-[#22d3ee] text-[#3b0764] px-2 py-0.5 rounded-full whitespace-nowrap font-black">
+              <span className="flex-shrink-0 text-[11px] bg-white/20 text-white px-2 py-0.5 rounded-full whitespace-nowrap font-black">
                 ⭐ {completedStops.length}/{totalRoundsCount}
               </span>
             )}
@@ -967,12 +1017,12 @@ export default function App() {
           <div
             role="status"
             aria-live="polite"
-            className={`absolute top-16 left-3 right-3 z-40 rounded-2xl px-3 py-2.5 text-xs font-black shadow-2xl border-4 tta-pop ${
+            className={`absolute top-16 left-3 right-3 z-40 rounded-2xl px-3 py-2.5 text-xs font-black shadow-2xl tta-pop ${
               toast.tone === 'warn'
-                ? 'bg-[#fbbf24] text-[#3b0764] border-white'
+                ? 'bg-[#fbbf24] text-[#3b0764]'
                 : toast.tone === 'success'
-                  ? 'bg-[#4ade80] text-[#14532d] border-white'
-                  : 'bg-[#22d3ee] text-[#3b0764] border-white'
+                  ? 'bg-[#4ade80] text-[#14532d]'
+                  : 'bg-white text-[#3b0764]'
             }`}
           >
             {toast.message}
@@ -986,13 +1036,13 @@ export default function App() {
             <div className="absolute inset-0 bg-[#3b0764]/95 backdrop-blur-md z-50 flex items-center justify-center p-6 text-center text-white">
               <div>
                 <div className="text-6xl mb-2 tta-wiggle">🐢</div>
-                <h3 className="text-xl font-black text-[#22d3ee]">Still exploring?</h3>
-                <p className="text-sm text-white mt-1 mb-5 font-bold">
+                <h3 className="text-xl font-black">Still exploring?</h3>
+                <p className="text-sm text-white/85 mt-1 mb-5">
                   Starting over in {idleCountdown} seconds.
                 </p>
                 <button
                   onClick={() => { setIdleWarning(false); startIdleWatch(); }}
-                  className={`min-h-[52px] py-3 px-8 rounded-2xl uppercase text-sm tracking-wider ${BTN_YELLOW} ${FOCUS}`}
+                  className={`min-h-[52px] py-3 px-8 rounded-2xl uppercase text-sm tracking-wider ${BTN_CORAL} ${FOCUS}`}
                 >
                   I'm still here!
                 </button>
@@ -1003,22 +1053,22 @@ export default function App() {
           {/* RESET CONFIRM */}
           {showResetConfirm && (
             <div className="absolute inset-0 bg-[#3b0764]/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-[2rem] p-6 w-full max-w-[280px] text-center shadow-2xl border-4 border-[#22d3ee] tta-pop">
+              <div className="bg-white rounded-[1.75rem] p-6 w-full max-w-[280px] text-center shadow-2xl tta-pop">
                 <div className="text-4xl mb-1">🔄</div>
                 <h3 className="text-lg font-black text-[#3b0764] uppercase">Start Over?</h3>
-                <p className="text-xs text-slate-700 mt-1 mb-4 font-bold">
+                <p className="text-xs text-slate-700 mt-1 mb-4">
                   This clears your name, stamps, and badge.
                 </p>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => setShowResetConfirm(false)}
-                    className={`text-xs py-3 rounded-2xl uppercase ${BTN_PLAIN} ${FOCUS_CARD}`}
+                    className={`text-xs py-3 rounded-xl uppercase ${BTN_PLAIN} ${FOCUS_CARD}`}
                   >
                     Keep Going
                   </button>
                   <button
                     onClick={() => forceGlobalReset()}
-                    className={`text-xs py-3 rounded-2xl uppercase ${BTN_CORAL} ${FOCUS_CARD}`}
+                    className={`text-xs py-3 rounded-xl uppercase ${BTN_CORAL} ${FOCUS_CARD}`}
                   >
                     Start Over
                   </button>
@@ -1030,12 +1080,12 @@ export default function App() {
           {/* ADMIN PIN */}
           {showAdminPinModal && (
             <div className="absolute inset-0 bg-[#3b0764]/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-[2rem] p-6 w-full max-w-[280px] text-center shadow-2xl border-4 border-[#7c3aed]">
+              <div className="bg-white rounded-[1.75rem] p-6 w-full max-w-[280px] text-center shadow-2xl">
                 <div className="text-4xl mb-1">🔐</div>
                 <h3 className="text-lg font-black text-[#3b0764] uppercase tracking-wide">
                   Staff Access
                 </h3>
-                <p className="text-xs text-slate-700 mt-1 mb-4 font-bold">
+                <p className="text-xs text-slate-700 mt-1 mb-4">
                   Enter the 4-digit staff PIN.
                 </p>
                 <form onSubmit={verifyAdminPin} className="flex flex-col gap-3">
@@ -1048,11 +1098,11 @@ export default function App() {
                     placeholder="••••"
                     value={adminInputPin}
                     onChange={(e) => setAdminInputPin(e.target.value)}
-                    className="w-full bg-slate-100 border-4 border-[#7c3aed] rounded-2xl p-3 text-center text-2xl font-black tracking-widest text-slate-900 focus:outline-none focus:border-[#22d3ee]"
+                    className="w-full bg-slate-100 border-2 border-slate-300 rounded-xl p-3 text-center text-2xl font-black tracking-widest text-slate-900 focus:outline-none focus:border-[#5b21b6]"
                     autoFocus
                   />
                   {pinError && (
-                    <p role="alert" className="bg-[#fbbf24] text-[#3b0764] rounded-xl py-1.5 text-xs font-black">
+                    <p role="alert" className="bg-[#fbbf24] text-[#3b0764] rounded-lg py-1.5 text-xs font-black">
                       {pinError}
                     </p>
                   )}
@@ -1060,13 +1110,13 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => setShowAdminPinModal(false)}
-                      className={`text-xs py-3 rounded-2xl uppercase ${BTN_PLAIN} ${FOCUS_CARD}`}
+                      className={`text-xs py-3 rounded-xl uppercase ${BTN_PLAIN} ${FOCUS_CARD}`}
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className={`text-xs py-3 rounded-2xl uppercase ${BTN_CORAL} ${FOCUS_CARD}`}
+                      className={`text-xs py-3 rounded-xl uppercase ${BTN_CORAL} ${FOCUS_CARD}`}
                     >
                       Unlock
                     </button>
@@ -1080,13 +1130,13 @@ export default function App() {
           {!isNameConfirmed && appMode !== 'adminPortal' ? (
             <div className="flex-1 bg-[#3b0764] p-6 flex flex-col justify-between h-full text-white text-center overflow-y-auto">
               <div className="my-auto flex flex-col items-center gap-4">
-                <div className="text-6xl tta-wiggle">🐢</div>
-                <h1 className="text-3xl font-black tracking-wide text-[#22d3ee] leading-tight">
+                <div className="text-7xl tta-wiggle">🐢</div>
+                <h1 className="text-3xl font-black tracking-wide leading-tight">
                   Turtle Team<br />Adventure
                 </h1>
-                <p className="text-sm text-white px-2 sm:px-4 leading-relaxed font-bold">
+                <p className="text-sm text-white/85 px-3 leading-relaxed">
                   Explore the hospital, find the job that fits you, and print your
-                  own ID badge to take home!
+                  own ID badge to take home.
                 </p>
                 <div className="w-full max-w-xs mt-3 flex flex-col gap-3">
                   <label htmlFor="child-name" className="sr-only">Your first name</label>
@@ -1097,26 +1147,26 @@ export default function App() {
                     value={childName}
                     onChange={(e) => setChildName(e.target.value.toUpperCase())}
                     maxLength={14}
-                    className="w-full bg-white border-4 border-[#22d3ee] rounded-2xl p-4 font-black text-[#3b0764] text-center text-base focus:border-[#fbbf24] focus:outline-none tracking-widest uppercase placeholder:text-slate-500 shadow-inner"
+                    className="w-full bg-white border-2 border-white/40 rounded-2xl p-4 font-black text-[#3b0764] text-center text-base focus:border-[#22d3ee] focus:outline-none tracking-widest uppercase placeholder:text-slate-500 shadow-inner"
                   />
                   <button
                     onClick={handleNameActivation}
                     className={`w-full min-h-[56px] py-4 rounded-2xl text-base uppercase tracking-widest ${BTN_CORAL} ${FOCUS}`}
                   >
-                    Let's Go! ➔
+                    Let's Go ➔
                   </button>
                 </div>
               </div>
-              <div className="text-[11px] text-white/70 font-black py-2">
+              <div className="text-[11px] text-white/60 font-bold py-2">
                 Patterson Health Center · {STATION_ID}
               </div>
             </div>
           ) : (
             <>
-              {/* ADMIN PORTAL — kept calm and legible for staff */}
+              {/* ADMIN PORTAL — deliberately plain for staff */}
               {appMode === 'adminPortal' && (
                 <div className="flex-1 bg-slate-100 p-4 flex flex-col gap-3 overflow-y-auto h-full text-slate-800">
-                  <div className="bg-white rounded-2xl p-3 shadow-sm border-2 border-slate-300">
+                  <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-300">
                     <div className="flex justify-between items-center mb-2">
                       <div>
                         <h2 className="text-sm font-black text-[#5b21b6] uppercase tracking-wider">
@@ -1156,7 +1206,7 @@ export default function App() {
 
                   {/* QUEUE TAB */}
                   {adminTab === 'queue' && (
-                    <div className="bg-white rounded-2xl p-3 shadow-sm border-2 border-slate-300 flex flex-col gap-2">
+                    <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-300 flex flex-col gap-2">
                       <h3 className="text-[11px] font-black uppercase text-slate-600 tracking-wider">
                         Waiting to print ({printQueue.length})
                       </h3>
@@ -1178,7 +1228,7 @@ export default function App() {
                             <span className="text-[11px] text-slate-600 truncate max-w-[100px]">
                               {item.career}
                             </span>
-                            <span className="text-[10px] font-mono font-black bg-[#ede9fe] text-[#5b21b6] px-1.5 py-0.5 rounded ml-2">
+                            <span className="text-[10px] font-mono font-black bg-slate-200 text-[#3b0764] px-1.5 py-0.5 rounded ml-2">
                               {item.pin}
                             </span>
                           </button>
@@ -1196,11 +1246,11 @@ export default function App() {
                             placeholder="2026-K4TX"
                             value={reprintValue}
                             onChange={(e) => setReprintValue(e.target.value.toUpperCase())}
-                            className="flex-1 bg-slate-50 border-2 border-slate-400 rounded-xl p-2 text-xs font-bold focus:outline-none focus:border-[#7c3aed]"
+                            className="flex-1 bg-slate-50 border border-slate-400 rounded-xl p-2 text-xs font-bold focus:outline-none focus:border-[#5b21b6] placeholder:text-slate-500"
                           />
                           <button
                             onClick={handleReprintLookup}
-                            className="bg-[#5b21b6] active:bg-[#4c1d95] text-white font-black text-xs px-4 rounded-xl uppercase active:scale-95 transition-all"
+                            className={`bg-[#5b21b6] active:bg-[#4c1d95] text-white font-black text-xs px-4 rounded-xl uppercase active:scale-95 transition-all ${FOCUS_CARD}`}
                           >
                             Find
                           </button>
@@ -1212,7 +1262,7 @@ export default function App() {
                   {/* MANUAL TAB */}
                   {adminTab === 'manual' && (
                     <>
-                      <div className="bg-white rounded-2xl p-3 shadow-sm border-2 border-slate-300">
+                      <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-300">
                         <form onSubmit={handleAdminBadgeCreate} className="flex flex-col gap-2.5">
                           <div>
                             <label htmlFor="admin-name" className="text-[11px] font-black uppercase tracking-wider text-slate-600 block mb-1">
@@ -1224,7 +1274,7 @@ export default function App() {
                               placeholder="e.g. KRISTEN"
                               value={adminName}
                               onChange={(e) => setAdminName(e.target.value)}
-                              className="w-full bg-slate-50 border-2 border-slate-400 rounded-xl p-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-[#7c3aed] uppercase"
+                              className="w-full bg-slate-50 border border-slate-400 rounded-xl p-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-[#5b21b6] uppercase placeholder:text-slate-500"
                             />
                           </div>
                           <div>
@@ -1235,7 +1285,7 @@ export default function App() {
                               id="admin-career"
                               value={adminCareer}
                               onChange={(e) => setAdminCareer(e.target.value)}
-                              className="w-full bg-slate-50 border-2 border-slate-400 rounded-xl p-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-[#7c3aed]"
+                              className="w-full bg-slate-50 border border-slate-400 rounded-xl p-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-[#5b21b6]"
                             >
                               {AVAILABLE_CAREERS.map((c) => (
                                 <option key={c} value={c}>{c}</option>
@@ -1246,13 +1296,13 @@ export default function App() {
                             <button
                               type="button"
                               onClick={() => { clearPhotoState(); setAdminPreviewBadge(null); }}
-                              className="bg-slate-200 active:bg-slate-300 text-slate-800 font-black text-xs py-2.5 rounded-xl uppercase active:scale-95 transition-all"
+                              className={`text-xs py-2.5 rounded-xl uppercase ${BTN_PLAIN} ${FOCUS_CARD}`}
                             >
                               Clear
                             </button>
                             <button
                               type="submit"
-                              className="bg-[#5b21b6] active:bg-[#4c1d95] text-white font-black text-xs py-2.5 rounded-xl uppercase tracking-wider shadow active:scale-95 transition-all"
+                              className={`bg-[#5b21b6] active:bg-[#4c1d95] text-white font-black text-xs py-2.5 rounded-xl uppercase tracking-wider shadow active:scale-95 transition-all ${FOCUS_CARD}`}
                             >
                               Generate
                             </button>
@@ -1279,7 +1329,7 @@ export default function App() {
                           </div>
                           <button
                             onClick={() => triggerPrintBadge(adminPreviewBadge.id)}
-                            className="w-full max-w-[340px] mx-auto bg-[#e11d48] active:bg-[#be123c] text-white font-black text-xs py-3 rounded-xl uppercase tracking-wider shadow-lg active:scale-95 transition-all"
+                            className={`w-full max-w-[340px] mx-auto text-xs py-3 rounded-xl uppercase tracking-wider ${BTN_CORAL} ${FOCUS_CARD}`}
                           >
                             🖨️ Print Badge Front
                           </button>
@@ -1290,7 +1340,7 @@ export default function App() {
 
                   {/* BACKS TAB */}
                   {adminTab === 'backs' && (
-                    <div className="bg-white rounded-2xl p-4 shadow-sm border-2 border-slate-300 text-center">
+                    <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-300 text-center">
                       <p className="text-xs text-slate-700 font-medium">
                         Print card backs onto blank stock ahead of time.
                       </p>
@@ -1300,7 +1350,7 @@ export default function App() {
                       />
                       <button
                         onClick={() => triggerPrintBadge(null)}
-                        className="w-full bg-[#e11d48] active:bg-[#be123c] text-white font-black text-xs py-3 rounded-xl uppercase tracking-wider shadow-lg active:scale-95 transition-all"
+                        className={`w-full text-xs py-3 rounded-xl uppercase tracking-wider ${BTN_CORAL} ${FOCUS_CARD}`}
                       >
                         🖨️ Print Card Back
                       </button>
@@ -1328,14 +1378,14 @@ export default function App() {
                       />
                     </div>
                   )}
-                  <div className="bg-white rounded-[1.75rem] p-4 shadow-2xl border-4 border-[#7c3aed] z-10 text-center mb-2 min-h-[150px] flex flex-col justify-center">
+                  <div className="bg-white rounded-[1.5rem] p-4 shadow-2xl z-10 text-center mb-2 min-h-[150px] flex flex-col justify-center">
                     {!quizActive ? (
                       <>
                         <h3 className="font-black text-lg text-[#5b21b6] mb-1">
                           {currentStep.characterName}{' '}
                           {isTargetCompleted(currentStep.title) && '⭐'}
                         </h3>
-                        <p className="text-slate-900 text-sm leading-relaxed font-medium">
+                        <p className="text-slate-800 text-sm leading-relaxed">
                           <strong>{childName}</strong>,{' '}
                           {currentStep.dialogue
                             ? currentStep.dialogue.charAt(0).toLowerCase() +
@@ -1345,8 +1395,8 @@ export default function App() {
                       </>
                     ) : (
                       <div className="flex flex-col gap-2">
-                        <h3 className="font-black text-[#e11d48] text-lg">
-                          ✨ Stamp Challenge! ✨
+                        <h3 className="font-black text-[#5b21b6] text-base">
+                          ✨ Stamp Challenge
                         </h3>
                         <p className="text-sm font-bold text-slate-900 mb-1">
                           {currentStep.question}
@@ -1354,20 +1404,20 @@ export default function App() {
                         <div className="grid grid-cols-2 gap-2">
                           {shuffledStopOptions.map((opt, i) => {
                             let style =
-                              'bg-[#ede9fe] border-4 border-[#7c3aed] text-[#3b0764] active:bg-[#ddd6fe]';
+                              'bg-slate-50 border-2 border-slate-300 text-[#3b0764] active:bg-slate-200';
                             // Non-color cue as well as color — WCAG 1.4.1.
                             let mark = '';
                             if (quizFeedback !== null) {
                               style = opt.correct
-                                ? 'bg-[#4ade80] border-4 border-[#16a34a] text-[#14532d] pointer-events-none'
-                                : 'bg-[#fbbf24] border-4 border-[#d97706] text-[#78350f] pointer-events-none';
-                              mark = opt.correct ? '\u2713 ' : '\u2715 ';
+                                ? 'bg-[#4ade80] border-2 border-[#16a34a] text-[#14532d] pointer-events-none'
+                                : 'bg-[#fbbf24] border-2 border-[#d97706] text-[#78350f] pointer-events-none';
+                              mark = opt.correct ? '✓ ' : '✗ ';
                             }
                             return (
                               <button
                                 key={i}
                                 onClick={() => handleAnswerSubmit(opt.correct)}
-                                className={`p-3 font-black text-xs rounded-2xl transition-all min-h-[52px] active:scale-95 ${FOCUS_CARD} ${style}`}
+                                className={`p-3 font-bold text-xs rounded-xl transition-all min-h-[52px] active:scale-95 ${FOCUS_CARD} ${style}`}
                               >
                                 {mark}{opt.text}
                               </button>
@@ -1385,7 +1435,7 @@ export default function App() {
                           <div className="text-center mt-1">
                             <button
                               onClick={() => setQuizFeedback(null)}
-                              className="text-xs bg-[#5b21b6] active:bg-[#4c1d95] text-white font-black px-4 py-2 rounded-xl active:scale-95 transition-all"
+                              className={`text-xs bg-[#5b21b6] active:bg-[#4c1d95] text-white font-black px-4 py-2 rounded-lg active:scale-95 transition-all ${FOCUS_CARD}`}
                             >
                               Try Again 🔄
                             </button>
@@ -1397,12 +1447,12 @@ export default function App() {
                   {(!quizActive || quizFeedback === 'correct') && (
                     <button
                       onClick={handleNextAction}
-                      className={`w-full min-h-[56px] py-3 rounded-2xl z-10 uppercase tracking-wider text-base ${
-                        quizFeedback === 'correct' ? BTN_YELLOW : BTN_CORAL
+                      className={`w-full min-h-[56px] py-3 rounded-2xl z-10 uppercase tracking-wide text-base ${
+                        quizFeedback === 'correct' ? BTN_GOLD : BTN_CORAL
                       } ${FOCUS}`}
                     >
                       {quizFeedback === 'correct'
-                        ? '⭐ Collect Stamp! ➔'
+                        ? '⭐ Collect Stamp'
                         : currentStep.buttonText}
                     </button>
                   )}
@@ -1411,123 +1461,75 @@ export default function App() {
 
               {/* MAP */}
               {appMode === 'tour' && currentStep?.type === 'map' && (
-                <div className="flex-1 bg-[#3b0764] p-3 sm:p-4 flex flex-col justify-between overflow-y-auto h-full">
-                  <div className="mb-2 flex justify-between items-center bg-[#5b21b6] p-3 rounded-2xl shadow-lg border-4 border-[#22d3ee]">
+                <div className="flex-1 bg-[#3b0764] p-4 flex flex-col justify-between overflow-y-auto h-full">
+
+                  {/* Explorer strip */}
+                  <div className="flex justify-between items-center bg-white/10 border border-white/20 p-3 rounded-2xl flex-shrink-0">
                     <div className="text-left">
                       <h2 className="text-sm font-black text-white">
                         Explorer: {childName}
                       </h2>
-                      <p className="text-[11px] text-[#22d3ee] font-bold">
-                        Get stamps at all {totalRoundsCount} stops!
+                      <p className="text-[11px] text-white/70">
+                        {completedStops.length} of {totalRoundsCount} stamps collected
                       </p>
                     </div>
-                    <span className="text-xs bg-[#fbbf24] text-[#3b0764] font-black px-2.5 py-1.5 rounded-xl font-mono tracking-wider">
+                    <span className="text-xs bg-[#fbbf24] text-[#3b0764] font-black px-2.5 py-1.5 rounded-lg font-mono tracking-wider">
                       {assignedPin}
                     </span>
                   </div>
 
-                  <div className="flex flex-col gap-3 my-auto">
-                    <div>
-                      <span className="text-[11px] uppercase tracking-wider font-black text-[#22d3ee] block mb-1.5">
-                        Main Hallway
-                      </span>
-                      <div className="grid grid-cols-3 gap-2">
-                        {[
-                          { id: 4.0, label: '🏃 PT', key: 'PT' },
-                          { id: 5.0, label: '🩺 Clinic', key: 'CLINIC' },
-                          { id: 6.0, label: '🧠 Behav.', key: 'BEHAVIORAL' },
-                          { id: 7.0, label: '🔬 Lab', key: 'LAB' },
-                          { id: 8.0, label: '🏥 Surg.', key: 'SURGERY' },
-                          { id: 9.0, label: '🩻 Radio.', key: 'RADIOLOGY' }
-                        ].map((s) => (
-                          <button
-                            key={s.id}
-                            onClick={() => {
-                              const i = tourStops.findIndex((t) => t.id === s.id);
-                              if (i !== -1) setCurrentStepIndex(i);
-                            }}
-                            className={`p-2 min-h-[52px] bg-[#22d3ee] active:bg-[#06b6d4] border-4 border-white/40 rounded-2xl text-center text-xs font-black text-[#3b0764] active:scale-95 transition-all shadow-lg ${FOCUS}`}
-                          >
-                            {s.label} {isTargetCompleted(s.key) && '⭐'}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="flex flex-col gap-2">
-                        <span className="text-[11px] uppercase tracking-wider font-black text-[#fbbf24]">
-                          Left Wing
+                  {/* Stops — white cards, one thin accent bar per wing */}
+                  <div className="flex flex-col gap-4 my-5">
+                    {MAP_SECTIONS.map((section) => (
+                      <div key={section.label}>
+                        <span className="text-[11px] uppercase tracking-widest font-bold text-white/60 block mb-2">
+                          {section.label}
                         </span>
-                        {[
-                          { id: 10.0, label: '☕ Cafe', key: 'CAFE' },
-                          { id: 11.0, label: '💼 Business', key: 'BUSINESS' },
-                          { id: 12.0, label: '⚙️ Mech.', key: 'MECHANICAL' }
-                        ].map((s) => (
-                          <button
-                            key={s.id}
-                            onClick={() => {
-                              const i = tourStops.findIndex((t) => t.id === s.id);
-                              if (i !== -1) setCurrentStepIndex(i);
-                            }}
-                            className={`p-2 min-h-[52px] bg-[#fbbf24] active:bg-[#f59e0b] border-4 border-white/40 rounded-2xl text-center text-xs font-black text-[#3b0764] active:scale-95 transition-all shadow-lg ${FOCUS}`}
-                          >
-                            {s.label} {isTargetCompleted(s.key) && '⭐'}
-                          </button>
-                        ))}
+                        <div className={`grid ${section.cols} gap-2`}>
+                          {section.stops.map((s) => {
+                            const done = isTargetCompleted(s.key);
+                            return (
+                              <button
+                                key={s.id}
+                                onClick={() => {
+                                  const i = tourStops.findIndex((t) => t.id === s.id);
+                                  if (i !== -1) setCurrentStepIndex(i);
+                                }}
+                                className={`min-h-[58px] px-2 py-2 bg-white border-l-4 ${section.accent} rounded-xl text-center active:scale-95 transition-all shadow-md ${FOCUS} ${
+                                  done ? 'ring-2 ring-[#fbbf24]' : ''
+                                }`}
+                              >
+                                <span className="text-lg block leading-none" aria-hidden="true">
+                                  {s.icon}
+                                </span>
+                                <span className="text-[11px] font-bold text-[#3b0764] leading-tight block mt-0.5">
+                                  {s.name}{done && ' ⭐'}
+                                </span>
+                                <span className="sr-only">
+                                  {done ? 'stamp collected' : 'not visited yet'}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
-
-                      <div className="flex flex-col gap-2">
-                        <span className="text-[11px] uppercase tracking-wider font-black text-[#fb7185]">
-                          Right Wing
-                        </span>
-                        {[
-                          { id: 13.0, label: '🚨 Emergency', key: 'EMERGENCY' },
-                          { id: 15.0, label: '🏥 Hospital', key: 'HOSPITAL' },
-                          { id: 14.0, label: '👔 Admin', key: 'ADMIN' },
-                          { id: 16.0, label: '📣 Marketing', key: 'COMMUNITY' }
-                        ].map((s) => (
-                          <button
-                            key={s.id}
-                            onClick={() => {
-                              const i = tourStops.findIndex((t) => t.id === s.id);
-                              if (i !== -1) setCurrentStepIndex(i);
-                            }}
-                            className={`p-2 min-h-[52px] bg-[#e11d48] active:bg-[#be123c] border-4 border-white/30 rounded-2xl text-center text-xs font-black text-white active:scale-95 transition-all shadow-lg ${FOCUS}`}
-                          >
-                            {s.label} {isTargetCompleted(s.key) && '⭐'}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={() => {
-                        const i = tourStops.findIndex((t) => t.id === 17.0);
-                        if (i !== -1) setCurrentStepIndex(i);
-                      }}
-                      className={`w-full p-3 min-h-[52px] rounded-2xl text-center text-sm uppercase bg-[#4ade80] active:bg-[#22c55e] text-[#14532d] font-black border-4 border-white/40 shadow-lg active:scale-95 transition-all ${FOCUS}`}
-                    >
-                      🛠️ Maintenance Crew {isTargetCompleted('MAINTENANCE') && '⭐'}
-                    </button>
+                    ))}
                   </div>
 
-                  <div className="mt-3">
-                    <button
-                      onClick={startCareerQuizDirect}
-                      className={`w-full min-h-[60px] py-3 rounded-2xl text-base uppercase ${BTN_YELLOW} ${FOCUS}`}
-                    >
-                      🎓 Find My Hospital Job! ➔
-                    </button>
-                  </div>
+                  <button
+                    onClick={startCareerQuizDirect}
+                    className={`w-full min-h-[56px] py-3 rounded-2xl text-base uppercase tracking-wide flex-shrink-0 ${BTN_CORAL} ${FOCUS}`}
+                  >
+                    🎓 Find My Hospital Job
+                  </button>
                 </div>
               )}
 
               {/* CAREER QUIZ */}
               {appMode === 'careerQuiz' && (
-                <div className="flex-1 bg-[#3b0764] p-4 sm:p-6 flex flex-col justify-between h-full overflow-y-auto">
+                <div className="flex-1 bg-[#3b0764] p-5 flex flex-col justify-between h-full overflow-y-auto">
                   <div className="text-center flex-shrink-0">
-                    <span className="text-[11px] uppercase bg-[#22d3ee] text-[#3b0764] px-3 py-1 rounded-full font-black tracking-wider">
+                    <span className="text-[11px] uppercase text-white/70 font-bold tracking-widest">
                       Career Explorer
                     </span>
                   </div>
@@ -1536,18 +1538,18 @@ export default function App() {
                       {MATCHMAKER_QUESTIONS[currentQuizQuestion].q}
                     </h2>
                   </div>
-                  <div className="flex flex-col gap-3 my-auto p-1">
+                  <div className="flex flex-col gap-3 my-auto">
                     {shuffledCareerOptions.map((opt, idx) => (
                       <button
                         key={idx}
                         onClick={() => handleCareerAnswer(opt.type)}
-                        className={`w-full min-h-[60px] p-4 bg-white active:bg-[#ede9fe] border-4 border-[#22d3ee] font-black text-sm text-[#3b0764] rounded-2xl shadow-xl text-left transition-all active:scale-95 ${FOCUS}`}
+                        className={`w-full min-h-[60px] p-4 bg-white active:bg-slate-100 font-bold text-sm text-[#3b0764] rounded-2xl shadow-lg text-left transition-all active:scale-95 ${FOCUS}`}
                       >
                         {opt.text}
                       </button>
                     ))}
                   </div>
-                  <div className="text-center text-sm text-[#fbbf24] font-black pb-1 flex-shrink-0">
+                  <div className="text-center text-sm text-white/70 font-bold pb-1 flex-shrink-0">
                     Question {currentQuizQuestion + 1} of {MATCHMAKER_QUESTIONS.length}
                   </div>
                 </div>
@@ -1558,13 +1560,13 @@ export default function App() {
                 <div className="flex-1 bg-[#3b0764] p-4 flex flex-col justify-between overflow-y-auto h-full">
                   <div className="text-center my-2">
                     <span className="text-xs font-black uppercase text-[#3b0764] bg-[#fbbf24] px-3 py-1 rounded-full tracking-wider">
-                      🎉 Quiz Complete!
+                      🎉 Quiz Complete
                     </span>
-                    <h2 className="text-lg font-black text-[#22d3ee] mt-2">
+                    <h2 className="text-lg font-black text-white mt-2">
                       Your Top Matches
                     </h2>
-                    <p className="text-xs text-white mt-0.5 font-bold">
-                      Pick one to learn more and print your badge!
+                    <p className="text-xs text-white/75 mt-0.5">
+                      Pick one to learn more and print your badge.
                     </p>
                   </div>
 
@@ -1572,16 +1574,16 @@ export default function App() {
                     {careerResults.map((career, idx) => (
                       <div
                         key={idx}
-                        className="bg-white border-4 border-[#22d3ee] rounded-2xl p-3.5 shadow-xl flex items-center justify-between gap-3 tta-pop"
+                        className="bg-white rounded-2xl p-3.5 shadow-lg flex items-center justify-between gap-3 tta-pop"
                       >
                         <div className="flex items-center gap-3 overflow-hidden">
                           <img
                             src={getDynamicArtwork(career)}
                             alt=""
-                            className="w-14 h-14 object-contain bg-[#ede9fe] rounded-2xl p-1 flex-shrink-0 border-2 border-[#7c3aed]"
+                            className="w-14 h-14 object-contain bg-slate-100 rounded-xl p-1 flex-shrink-0"
                           />
                           <div className="overflow-hidden text-left">
-                            <span className="text-[10px] font-black uppercase tracking-wider text-[#e11d48] block">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 block">
                               {idx === 0 ? '🥇 Top Match' : idx === 1 ? '🥈 Runner-Up' : '🥉 Also Great'}
                             </span>
                             <h3 className="font-black text-sm text-[#3b0764] truncate">
@@ -1591,7 +1593,7 @@ export default function App() {
                         </div>
                         <button
                           onClick={() => selectCareerOption(career)}
-                          className={`flex-shrink-0 text-xs py-2.5 px-4 rounded-2xl uppercase tracking-wider ${BTN_CORAL} ${FOCUS_CARD}`}
+                          className={`flex-shrink-0 text-xs py-2.5 px-4 rounded-xl uppercase tracking-wider ${BTN_CORAL} ${FOCUS_CARD}`}
                         >
                           Pick ➔
                         </button>
@@ -1617,39 +1619,39 @@ export default function App() {
                       alt=""
                       className="w-24 h-24 object-contain mx-auto"
                     />
-                    <h2 className="text-xl font-black text-[#22d3ee] mt-1">{finalCareer}</h2>
-                    <p className="text-xs font-black text-[#fbbf24] uppercase tracking-wide mt-0.5">
+                    <h2 className="text-xl font-black text-white mt-1">{finalCareer}</h2>
+                    <p className="text-xs font-bold text-[#fbbf24] uppercase tracking-wide mt-0.5">
                       {careerInfo[finalCareer]?.headline || 'A real job at Patterson Health Center'}
                     </p>
                   </div>
 
                   <div className="flex flex-col gap-3 my-4">
                     {careerInfo[finalCareer]?.description && (
-                      <div className="bg-white rounded-2xl p-3.5 border-l-8 border-[#22d3ee] shadow-lg">
-                        <h3 className="text-[11px] font-black uppercase tracking-wider text-[#5b21b6] mb-1">
+                      <div className="bg-white rounded-2xl p-3.5 border-l-4 border-[#22d3ee] shadow-lg">
+                        <h3 className="text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1">
                           What they do
                         </h3>
-                        <p className="text-sm text-slate-900 leading-relaxed font-medium">
+                        <p className="text-sm text-slate-800 leading-relaxed">
                           {careerInfo[finalCareer].description}
                         </p>
                       </div>
                     )}
                     {careerInfo[finalCareer]?.training && (
-                      <div className="bg-white rounded-2xl p-3.5 border-l-8 border-[#fbbf24] shadow-lg">
-                        <h3 className="text-[11px] font-black uppercase tracking-wider text-[#5b21b6] mb-1">
+                      <div className="bg-white rounded-2xl p-3.5 border-l-4 border-[#a78bfa] shadow-lg">
+                        <h3 className="text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1">
                           How you get there
                         </h3>
-                        <p className="text-sm text-slate-900 leading-relaxed font-medium">
+                        <p className="text-sm text-slate-800 leading-relaxed">
                           {careerInfo[finalCareer].training}
                         </p>
                       </div>
                     )}
                     {careerInfo[finalCareer]?.local && (
-                      <div className="bg-white rounded-2xl p-3.5 border-l-8 border-[#e11d48] shadow-lg">
-                        <h3 className="text-[11px] font-black uppercase tracking-wider text-[#5b21b6] mb-1">
+                      <div className="bg-white rounded-2xl p-3.5 border-l-4 border-[#fbbf24] shadow-lg">
+                        <h3 className="text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1">
                           Right here in Harper County
                         </h3>
-                        <p className="text-sm text-slate-900 leading-relaxed font-medium">
+                        <p className="text-sm text-slate-800 leading-relaxed">
                           {careerInfo[finalCareer].local}
                         </p>
                       </div>
@@ -1658,7 +1660,7 @@ export default function App() {
 
                   <button
                     onClick={() => setAppMode('avatarBuilder')}
-                    className={`w-full min-h-[56px] py-3 rounded-2xl uppercase text-base tracking-wider ${BTN_CORAL} ${FOCUS}`}
+                    className={`w-full min-h-[56px] py-3 rounded-2xl uppercase text-base tracking-wide ${BTN_CORAL} ${FOCUS}`}
                   >
                     Build My Badge ➔
                   </button>
@@ -1667,25 +1669,25 @@ export default function App() {
 
               {/* BADGE BUILDER */}
               {appMode === 'avatarBuilder' && (
-                <div className="flex-1 bg-[#3b0764] p-3 sm:p-4 flex flex-col justify-between overflow-y-auto h-full">
-                  <div className="text-center mb-1">
-                    <span className="text-[11px] uppercase font-black text-[#3b0764] bg-[#fbbf24] px-3 py-1 rounded-full tracking-wider">
-                      Final Step!
+                <div className="flex-1 bg-[#3b0764] p-4 flex flex-col justify-between overflow-y-auto h-full">
+                  <div className="text-center mb-1 flex-shrink-0">
+                    <span className="text-[11px] uppercase font-bold text-white/70 tracking-widest">
+                      Final Step
                     </span>
-                    <h2 className="text-base font-black text-[#22d3ee] mt-1">
+                    <h2 className="text-base font-black text-white mt-0.5">
                       Your Official ID Badge
                     </h2>
                   </div>
 
                   <button
                     onClick={() => setShowPhotoBooth(true)}
-                    className={`w-full max-w-[340px] mx-auto text-sm py-3 rounded-2xl uppercase tracking-wider mb-2 ${BTN_CYAN} ${FOCUS}`}
+                    className={`w-full max-w-[340px] mx-auto text-sm py-3 rounded-2xl uppercase tracking-wide mb-2 ${BTN_GHOST} ${FOCUS}`}
                   >
-                    📸 Take a Turtle Selfie!
+                    📸 Take a Turtle Selfie
                   </button>
 
                   <div
-                    className="w-full max-w-[340px] aspect-[1000/630] mx-auto my-auto overflow-hidden relative flex-shrink-0 select-none bg-contain bg-no-repeat bg-center rounded-2xl border-4 border-[#22d3ee] shadow-2xl"
+                    className="w-full max-w-[340px] aspect-[1000/630] mx-auto my-auto overflow-hidden relative flex-shrink-0 select-none bg-contain bg-no-repeat bg-center rounded-2xl shadow-2xl"
                     style={{ backgroundImage: `url(/badge-template.png)` }}
                   >
                     <BadgeCard
@@ -1697,7 +1699,7 @@ export default function App() {
                   </div>
 
                   {capturedPhoto && (
-                    <div className="w-full max-w-[340px] mx-auto bg-white p-3.5 rounded-2xl border-4 border-[#fbbf24] shadow-xl my-2 text-center">
+                    <div className="w-full max-w-[340px] mx-auto bg-white p-3.5 rounded-2xl shadow-xl my-2 text-center">
                       <p className="text-xs font-black text-[#3b0764] mb-2 leading-snug">
                         Parent or guardian: may Patterson Health Center use this photo
                         on social media or event flyers?
@@ -1707,33 +1709,33 @@ export default function App() {
                           type="button"
                           onClick={() => setPhotoPermission(true)}
                           aria-pressed={photoPermission === true}
-                          className={`py-3 px-3 rounded-2xl font-black text-sm uppercase tracking-wider transition-all ${FOCUS_CARD} ${
+                          className={`py-3 px-3 rounded-xl font-black text-sm uppercase tracking-wider transition-all ${FOCUS_CARD} ${
                             photoPermission === true
-                              ? 'bg-[#4ade80] text-[#14532d] shadow-md ring-4 ring-[#16a34a]'
-                              : 'bg-slate-100 text-slate-800 border-4 border-slate-400'
+                              ? 'bg-[#4ade80] text-[#14532d] shadow-md ring-2 ring-[#16a34a]'
+                              : 'bg-slate-100 text-slate-800 border-2 border-slate-300'
                           }`}
                         >
-                          {photoPermission === true ? '✅ Yes' : 'Yes'}
+                          {photoPermission === true ? '✓ Yes' : 'Yes'}
                         </button>
                         <button
                           type="button"
                           onClick={() => setPhotoPermission(false)}
                           aria-pressed={photoPermission === false}
-                          className={`py-3 px-3 rounded-2xl font-black text-sm uppercase tracking-wider transition-all ${FOCUS_CARD} ${
+                          className={`py-3 px-3 rounded-xl font-black text-sm uppercase tracking-wider transition-all ${FOCUS_CARD} ${
                             photoPermission === false
-                              ? 'bg-[#e11d48] text-white shadow-md ring-4 ring-[#9f1239]'
-                              : 'bg-slate-100 text-slate-800 border-4 border-slate-400'
+                              ? 'bg-[#e11d48] text-white shadow-md ring-2 ring-[#9f1239]'
+                              : 'bg-slate-100 text-slate-800 border-2 border-slate-300'
                           }`}
                         >
-                          {photoPermission === false ? '🛑 No' : 'No'}
+                          {photoPermission === false ? '✗ No' : 'No'}
                         </button>
                       </div>
-                      <p className="text-[11px] text-slate-700 mt-2 leading-snug font-medium">
+                      <p className="text-[11px] text-slate-700 mt-2 leading-snug">
                         Either way the photo prints on the badge. "No" means we never
                         save or share it.
                       </p>
                       {photoPermission === null && (
-                        <span className="text-[11px] font-black text-[#3b0764] bg-[#fbbf24] rounded-xl block mt-2 py-1.5">
+                        <span className="text-[11px] font-black text-[#3b0764] bg-[#fbbf24] rounded-lg block mt-2 py-1.5">
                           ⚠️ Tap Yes or No to continue
                         </span>
                       )}
@@ -1743,9 +1745,9 @@ export default function App() {
                   <button
                     onClick={submitBadgeOrder}
                     disabled={submittingBadge}
-                    className={`w-full min-h-[56px] py-3 rounded-2xl text-sm uppercase tracking-wider disabled:opacity-60 my-auto ${BTN_CORAL} ${FOCUS}`}
+                    className={`w-full min-h-[56px] py-3 rounded-2xl text-sm uppercase tracking-wide disabled:opacity-60 flex-shrink-0 ${BTN_CORAL} ${FOCUS}`}
                   >
-                    {submittingBadge ? 'Sending to the booth...' : '🪪 Send My Badge to Print! ➔'}
+                    {submittingBadge ? 'Sending to the booth...' : '🪪 Send My Badge to Print ➔'}
                   </button>
                 </div>
               )}
@@ -1753,15 +1755,15 @@ export default function App() {
               {/* SUCCESS */}
               {appMode === 'badgeSuccess' && (
                 <div className="flex-1 bg-[#3b0764] p-6 flex flex-col justify-center items-center text-center h-full text-white">
-                  <div className="w-24 h-24 bg-[#fbbf24] rounded-full text-[#3b0764] flex items-center justify-center text-5xl shadow-2xl animate-bounce mb-5 border-4 border-white">
+                  <div className="w-24 h-24 bg-[#fbbf24] rounded-full text-[#3b0764] flex items-center justify-center text-5xl shadow-2xl animate-bounce mb-5">
                     🎉
                   </div>
-                  <h2 className="text-3xl font-black text-[#22d3ee]">Badge Ordered!</h2>
-                  <p className="text-sm font-bold mt-3 px-2 leading-relaxed text-white">
+                  <h2 className="text-3xl font-black">Badge Ordered!</h2>
+                  <p className="text-sm mt-3 px-2 leading-relaxed text-white/85">
                     Nice work, <strong>{childName}</strong>! Show this code at the booth
                     to pick up your printed badge:
                   </p>
-                  <div className="mt-4 bg-white rounded-2xl px-6 py-4 border-4 border-[#fbbf24] shadow-2xl">
+                  <div className="mt-4 bg-white rounded-2xl px-6 py-4 shadow-2xl">
                     <span className="text-3xl font-mono font-black text-[#3b0764] tracking-widest">
                       {assignedPin}
                     </span>
@@ -1773,7 +1775,7 @@ export default function App() {
                   )}
                   <button
                     onClick={() => forceGlobalReset()}
-                    className={`mt-8 min-h-[52px] text-sm py-3 px-8 rounded-2xl uppercase tracking-wide ${BTN_YELLOW} ${FOCUS}`}
+                    className={`mt-8 min-h-[52px] text-sm py-3 px-8 rounded-2xl uppercase tracking-wide ${BTN_CORAL} ${FOCUS}`}
                   >
                     Next Explorer 🔄
                   </button>
@@ -1785,8 +1787,8 @@ export default function App() {
                 <div className="flex-1 bg-[#3b0764] p-5 flex flex-col justify-between h-full text-white overflow-y-auto">
                   <div className="text-center mt-2">
                     <span className="text-4xl">🎮</span>
-                    <h2 className="text-xl font-black tracking-wide text-[#22d3ee]">Turtle Arcade</h2>
-                    <p className="text-xs text-white font-black">Pick a game!</p>
+                    <h2 className="text-xl font-black tracking-wide">Turtle Arcade</h2>
+                    <p className="text-xs text-white/75">Pick a game</p>
                   </div>
 
                   <div className="flex flex-col gap-3 my-auto">
@@ -1796,21 +1798,21 @@ export default function App() {
                         icon: '🩺',
                         title: 'Right Place, Right Care',
                         blurb: 'ER or walk-in clinic? Test your instincts.',
-                        accent: 'border-[#e11d48]'
+                        accent: 'border-l-[#fb7185]'
                       },
                       {
                         key: 'handwash',
                         icon: '🧼',
                         title: 'The 20-Second Scrub',
                         blurb: 'Zap the germs and wash your hands right.',
-                        accent: 'border-[#22d3ee]'
+                        accent: 'border-l-[#22d3ee]'
                       },
                       {
                         key: 'memory',
                         icon: '🧩',
                         title: 'Turtle Memory Match',
                         blurb: 'Find all the matching pairs.',
-                        accent: 'border-[#fbbf24]'
+                        accent: 'border-l-[#a78bfa]'
                       }
                     ].map((g) => (
                       <button
@@ -1819,18 +1821,18 @@ export default function App() {
                           setArcadeGame(g.key);
                           if (g.key === 'memory') startNewMemoryGame();
                         }}
-                        className={`w-full bg-white border-4 ${g.accent} rounded-2xl p-4 text-left shadow-2xl active:scale-95 transition-all ${FOCUS}`}
+                        className={`w-full bg-white border-l-4 ${g.accent} rounded-2xl p-4 text-left shadow-lg active:scale-95 transition-all ${FOCUS}`}
                       >
                         <span className="text-3xl" aria-hidden="true">{g.icon}</span>
                         <h3 className="font-black text-base text-[#3b0764] mt-1">{g.title}</h3>
-                        <p className="text-xs text-slate-700 leading-snug mt-0.5 font-medium">{g.blurb}</p>
+                        <p className="text-xs text-slate-700 leading-snug mt-0.5">{g.blurb}</p>
                       </button>
                     ))}
                   </div>
 
                   <button
                     onClick={() => setAppMode('tour')}
-                    className={`w-full min-h-[52px] py-3 rounded-2xl text-sm uppercase ${BTN_YELLOW} ${FOCUS}`}
+                    className={`w-full min-h-[52px] py-3 rounded-2xl text-sm uppercase ${BTN_GHOST} ${FOCUS}`}
                   >
                     Return to Map ➔
                   </button>
@@ -1855,8 +1857,8 @@ export default function App() {
                 <div className="flex-1 bg-[#3b0764] p-4 flex flex-col justify-between h-full text-white overflow-y-auto">
                   <div className="text-center mt-1">
                     <span className="text-4xl">🧩</span>
-                    <h2 className="text-lg font-black tracking-wide text-[#22d3ee]">Turtle Memory Match</h2>
-                    <p className="text-xs text-white font-bold">Tap cards to find matching pairs!</p>
+                    <h2 className="text-lg font-black tracking-wide">Turtle Memory Match</h2>
+                    <p className="text-xs text-white/75">Tap cards to find matching pairs</p>
                   </div>
 
                   {!gameWon ? (
@@ -1869,10 +1871,10 @@ export default function App() {
                             key={idx}
                             onClick={() => handleCardClick(idx)}
                             aria-label={isFlipped ? 'Revealed card' : 'Hidden card'}
-                            className={`aspect-square rounded-2xl font-black text-2xl flex items-center justify-center shadow-lg transition-all active:scale-95 overflow-hidden border-4 ${FOCUS} ${
+                            className={`aspect-square rounded-xl font-black text-2xl flex items-center justify-center shadow-md transition-all active:scale-95 overflow-hidden ${FOCUS} ${
                               isFlipped
-                                ? 'bg-white border-[#4ade80]'
-                                : 'bg-[#7c3aed] border-[#22d3ee] text-white'
+                                ? 'bg-white'
+                                : 'bg-[#5b21b6] border-2 border-white/25 text-white/80'
                             }`}
                           >
                             {isFlipped ? (
@@ -1883,13 +1885,13 @@ export default function App() {
                       })}
                     </div>
                   ) : (
-                    <div className="my-auto bg-white rounded-[2rem] p-6 text-center border-4 border-[#fbbf24] shadow-2xl tta-pop">
+                    <div className="my-auto bg-white rounded-[1.75rem] p-6 text-center shadow-2xl tta-pop">
                       <div className="text-5xl mb-2">🏆</div>
                       <h3 className="text-xl font-black text-[#3b0764]">Matching Master!</h3>
-                      <p className="text-xs text-slate-700 mt-1 font-bold">You found every pair.</p>
+                      <p className="text-xs text-slate-700 mt-1">You found every pair.</p>
                       <button
                         onClick={startNewMemoryGame}
-                        className={`mt-4 text-sm py-3 px-6 rounded-2xl uppercase tracking-wider ${BTN_CORAL} ${FOCUS_CARD}`}
+                        className={`mt-4 text-sm py-3 px-6 rounded-xl uppercase tracking-wider ${BTN_CORAL} ${FOCUS_CARD}`}
                       >
                         Play Again 🔄
                       </button>
@@ -1898,7 +1900,7 @@ export default function App() {
 
                   <button
                     onClick={() => setArcadeGame(null)}
-                    className={`w-full min-h-[52px] py-3 rounded-2xl text-sm uppercase ${BTN_YELLOW} ${FOCUS}`}
+                    className={`w-full min-h-[52px] py-3 rounded-2xl text-sm uppercase ${BTN_GHOST} ${FOCUS}`}
                   >
                     Back to Arcade ➔
                   </button>
@@ -1910,14 +1912,14 @@ export default function App() {
                 <div className="flex-1 bg-[#3b0764] p-4 flex flex-col justify-between overflow-y-auto h-full">
                   <div className="text-center mb-1">
                     <span className="text-3xl">🪪</span>
-                    <h2 className="text-base font-black text-[#22d3ee] mt-0.5">
+                    <h2 className="text-base font-black text-white mt-0.5">
                       Look Up My Badge
                     </h2>
-                    <p className="text-xs text-white font-bold">Enter the code from your card</p>
+                    <p className="text-xs text-white/75">Enter the code from your card</p>
                   </div>
 
                   {!foundBadge ? (
-                    <div className="bg-white rounded-2xl p-4 shadow-2xl border-4 border-[#22d3ee] my-auto flex flex-col gap-3">
+                    <div className="bg-white rounded-2xl p-4 shadow-2xl my-auto flex flex-col gap-3">
                       <label htmlFor="badge-code" className="sr-only">Badge code</label>
                       <input
                         id="badge-code"
@@ -1925,16 +1927,16 @@ export default function App() {
                         placeholder="2026-K4TX"
                         value={lookupValue}
                         onChange={(e) => setLookupValue(e.target.value.toUpperCase())}
-                        className="w-full bg-slate-50 border-4 border-[#7c3aed] rounded-2xl p-3.5 font-black text-[#3b0764] text-center text-base focus:border-[#22d3ee] focus:outline-none tracking-wide placeholder:text-slate-500"
+                        className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl p-3.5 font-black text-[#3b0764] text-center text-base focus:border-[#5b21b6] focus:outline-none tracking-wide placeholder:text-slate-500"
                       />
                       {searchError && (
-                        <p role="alert" className="bg-[#fbbf24] text-[#3b0764] rounded-xl py-2 text-xs font-black text-center">
+                        <p role="alert" className="bg-[#fbbf24] text-[#3b0764] rounded-lg py-2 text-xs font-black text-center">
                           {searchError}
                         </p>
                       )}
                       <button
                         onClick={handleLookupBadge}
-                        className={`w-full min-h-[52px] py-3 rounded-2xl text-sm uppercase tracking-wider ${BTN_CORAL} ${FOCUS_CARD}`}
+                        className={`w-full min-h-[52px] py-3 rounded-xl text-sm uppercase tracking-wider ${BTN_CORAL} ${FOCUS_CARD}`}
                       >
                         Find My Badge ➔
                       </button>
@@ -1942,7 +1944,7 @@ export default function App() {
                   ) : (
                     <div className="my-auto flex flex-col gap-3">
                       <div
-                        className="w-full max-w-[340px] aspect-[1000/630] mx-auto overflow-hidden relative select-none bg-contain bg-no-repeat bg-center rounded-2xl border-4 border-[#22d3ee] shadow-2xl"
+                        className="w-full max-w-[340px] aspect-[1000/630] mx-auto overflow-hidden relative select-none bg-contain bg-no-repeat bg-center rounded-2xl shadow-2xl"
                         style={{ backgroundImage: `url(/badge-template.png)` }}
                       >
                         <BadgeCard
@@ -1954,7 +1956,7 @@ export default function App() {
                       </div>
                       <button
                         onClick={() => { setFoundBadge(null); setLookupValue(''); }}
-                        className={`mx-auto text-xs font-black text-[#fbbf24] underline active:opacity-75 ${FOCUS}`}
+                        className={`mx-auto text-xs font-bold text-white underline active:opacity-75 ${FOCUS}`}
                       >
                         Search Another Code
                       </button>
@@ -1976,7 +1978,7 @@ export default function App() {
         {/* BOTTOM NAV */}
         <nav
           aria-label="Main"
-          className="absolute bottom-0 left-0 right-0 h-[65px] bg-[#5b21b6] border-t-4 border-[#22d3ee] grid grid-cols-6 items-center px-1 z-30 shadow-[0_-4px_14px_rgba(0,0,0,0.25)] pb-[env(safe-area-inset-bottom)]"
+          className="absolute bottom-0 left-0 right-0 h-[65px] bg-[#5b21b6] border-t border-white/20 grid grid-cols-6 items-center px-1 z-30 shadow-[0_-4px_14px_rgba(0,0,0,0.25)] pb-[env(safe-area-inset-bottom)]"
         >
           {[
             {
@@ -2021,20 +2023,20 @@ export default function App() {
               disabled={!isNameConfirmed}
               className={`flex flex-col items-center justify-center gap-0.5 h-full transition-all active:scale-90 rounded-xl ${FOCUS} ${
                 !isNameConfirmed ? 'opacity-30' : ''
-              } ${item.active ? 'bg-[#22d3ee] text-[#3b0764] font-black' : 'text-white'}`}
+              } ${item.active ? 'bg-white/20 text-white font-black' : 'text-white/70'}`}
             >
               <span className="text-lg" aria-hidden="true">{item.icon}</span>
-              <span className="text-[10px] font-black tracking-tight">{item.label}</span>
+              <span className="text-[10px] font-bold tracking-tight">{item.label}</span>
             </button>
           ))}
 
           <button
             onClick={() => setShowResetConfirm(true)}
             aria-label="Start over"
-            className={`flex flex-col items-center justify-center gap-0.5 h-full text-white active:text-[#fbbf24] transition-all active:scale-90 rounded-xl ${FOCUS}`}
+            className={`flex flex-col items-center justify-center gap-0.5 h-full text-white/70 active:text-white transition-all active:scale-90 rounded-xl ${FOCUS}`}
           >
             <span className="text-lg" aria-hidden="true">🔄</span>
-            <span className="text-[10px] font-black tracking-tight">Reset</span>
+            <span className="text-[10px] font-bold tracking-tight">Reset</span>
           </button>
         </nav>
       </div>
