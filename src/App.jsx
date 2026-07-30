@@ -5,6 +5,7 @@ import TurtleBooth from './TurtleBooth';
 import BadgeCard from './components/BadgeCard';
 import RightPlaceRightCare from './components/RightPlaceRightCare';
 import HandwashingGame from './components/HandwashingGame';
+import HospitalMap from './components/HospitalMap'
 
 const base = new Airtable({
   apiKey: import.meta.env.VITE_AIRTABLE_PAT
@@ -85,50 +86,20 @@ const CATEGORY_CAREERS = {
 };
 
 /* ---------- map layout: one section per wing, thin accent per section ---------- */
-const MAP_SECTIONS = [
-  {
-    label: 'Main Hallway',
-    accent: 'border-l-[#22d3ee]',
-    cols: 'grid-cols-3',
-    stops: [
-      { id: 4.0, icon: '🏃', name: 'PT', key: 'PT' },
-      { id: 5.0, icon: '🩺', name: 'Clinic', key: 'CLINIC' },
-      { id: 6.0, icon: '🧠', name: 'Behavioral', key: 'BEHAVIORAL' },
-      { id: 7.0, icon: '🔬', name: 'Lab', key: 'LAB' },
-      { id: 8.0, icon: '🏥', name: 'Surgery', key: 'SURGERY' },
-      { id: 9.0, icon: '🩻', name: 'Radiology', key: 'RADIOLOGY' }
-    ]
-  },
-  {
-    label: 'Left Wing',
-    accent: 'border-l-[#a78bfa]',
-    cols: 'grid-cols-3',
-    stops: [
-      { id: 10.0, icon: '☕', name: 'Cafe', key: 'CAFE' },
-      { id: 11.0, icon: '💼', name: 'Business', key: 'BUSINESS' },
-      { id: 12.0, icon: '⚙️', name: 'Mechanical', key: 'MECHANICAL' }
-    ]
-  },
-  {
-    label: 'Right Wing',
-    accent: 'border-l-[#fb7185]',
-    cols: 'grid-cols-2',
-    stops: [
-      { id: 13.0, icon: '🚨', name: 'Emergency', key: 'EMERGENCY' },
-      { id: 15.0, icon: '🏥', name: 'Hospital', key: 'HOSPITAL' },
-      { id: 14.0, icon: '👔', name: 'Admin', key: 'ADMIN' },
-      { id: 16.0, icon: '📣', name: 'Marketing', key: 'COMMUNITY' }
-    ]
-  },
-  {
-    label: 'Grounds',
-    accent: 'border-l-[#4ade80]',
-    cols: 'grid-cols-1',
-    stops: [
-      { id: 17.0, icon: '🛠️', name: 'Maintenance Crew', key: 'MAINTENANCE' }
-    ]
-  }
-];
+{appMode === 'tour' && currentStep?.type === 'map' && (
+  <HospitalMap
+    childName={childName}
+    assignedPin={assignedPin}
+    completedCount={completedStops.length}
+    totalCount={totalRoundsCount}
+    isCompleted={isTargetCompleted}
+    onSelectStop={(id) => {
+      const i = tourStops.findIndex((t) => t.id === id);
+      if (i !== -1) setCurrentStepIndex(i);
+    }}
+    onStartQuiz={startCareerQuizDirect}
+  />
+)}
 
 /* ---------- storage + safety helpers ---------- */
 
@@ -411,7 +382,7 @@ export default function App() {
 
   const currentStep = tourStops[currentStepIndex];
   const totalRoundsCount =
-    tourStops.filter((s) => s.id >= 4.0 && s.id <= 17.0).length || 1;
+    const totalRoundsCount = MAP_STOP_COUNT;
 
   /* ---------- idle reset ---------- */
   const clearIdleTimers = () => {
