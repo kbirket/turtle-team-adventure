@@ -1069,12 +1069,16 @@ export default function App() {
 {/* NAME GATE / SPLASH SCREEN */}
 {!isNameConfirmed && appMode !== 'adminPortal' ? (
   <div 
-    className="flex-1 bg-no-repeat bg-cover bg-center p-6 flex flex-col justify-end items-center h-full text-white text-center relative overflow-hidden select-none"
+    className="flex-1 bg-no-repeat bg-cover bg-center p-6 flex flex-col justify-end items-center h-full relative overflow-hidden select-none"
     style={{ backgroundImage: `url('/splash-image.png')` }}
   >
-    {/* Input Overlay positioned right over the stone pathway at the bottom */}
-    <div className="w-full max-w-xs mb-2 z-10 flex flex-col gap-3 bg-[#3b0764]/80 backdrop-blur-md p-4 rounded-3xl border-2 border-white/30 shadow-2xl tta-pop">
-      <label htmlFor="child-name" className="text-xs font-black uppercase tracking-wider text-[#22d3ee]">
+    {/* Wooden Signpost Box */}
+    <div className="w-full max-w-[290px] mb-3 z-10 flex flex-col gap-3 bg-[#4a2810] p-4 rounded-3xl border-4 border-[#8b5a2b] shadow-[0_10px_25px_rgba(0,0,0,0.8)] text-center ring-2 ring-[#f59e0b]">
+      
+      <label 
+        htmlFor="child-name" 
+        className="text-xs font-black uppercase tracking-widest text-[#fef3c7] drop-shadow-sm"
+      >
         What is your first name?
       </label>
       
@@ -1085,18 +1089,18 @@ export default function App() {
         value={childName}
         onChange={(e) => setChildName(e.target.value.toUpperCase())}
         maxLength={14}
-        className="w-full bg-white border-2 border-[#5b21b6] rounded-2xl p-3.5 font-black text-[#3b0764] text-center text-lg focus:border-[#22d3ee] focus:outline-none tracking-widest uppercase placeholder:text-slate-400 shadow-inner"
+        className="w-full bg-[#fef3c7] border-2 border-[#8b5a2b] rounded-2xl p-3 font-black text-[#4a2810] text-center text-lg focus:border-[#f59e0b] focus:outline-none tracking-widest uppercase placeholder:text-[#b45309]/50 shadow-inner"
         autoComplete="off"
       />
 
       <button
         onClick={handleNameActivation}
-        className="w-full min-h-[54px] py-3.5 rounded-2xl text-base font-black uppercase tracking-widest bg-[#e11d48] active:bg-[#be123c] text-white shadow-lg active:scale-95 transition-all focus-visible:outline focus-visible:outline-4 focus-visible:outline-[#22d3ee]"
+        className="w-full min-h-[50px] py-3 rounded-2xl text-base font-black uppercase tracking-widest bg-[#e11d48] active:bg-[#be123c] text-white shadow-lg active:scale-95 transition-all border-2 border-white/30"
       >
-        Let's Go ➔
+        LET'S GO ➔
       </button>
 
-        </div>
+    </div>
   </div>
 ) : (
             <>
