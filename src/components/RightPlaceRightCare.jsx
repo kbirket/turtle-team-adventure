@@ -146,7 +146,7 @@ export default function RightPlaceRightCare({ onExit, onLogEvent }) {
               The short version
             </h3>
             <ul className="text-xs text-slate-900 leading-relaxed space-y-2 font-medium">
-              <li>🩺 <strong>Walk-in clinic:</strong> coughs, earaches, sprains, rashes, physicals, stitches for small cuts.</li>
+              <li>🩺 <strong>Clinic:</strong> coughs, earaches, sprains, rashes, physicals, stitches for small cuts.</li>
               <li>🚨 <strong>Emergency room:</strong> trouble breathing, chest pain, bleeding that won't stop, head injuries, bones out of place.</li>
               <li>📞 <strong>Call 911</strong> for anything sudden and severe. Never drive yourself.</li>
             </ul>
@@ -212,7 +212,7 @@ export default function RightPlaceRightCare({ onExit, onLogEvent }) {
               className={`min-h-[92px] bg-[#22d3ee] active:bg-[#06b6d4] text-[#3b0764] font-black rounded-3xl uppercase text-sm tracking-wide shadow-xl active:scale-95 transition-all border-4 border-white/40 ${FOCUS}`}
             >
               <span className="text-3xl block" aria-hidden="true">🩺</span>
-              Walk-In<br />Clinic
+              <br />Clinic
             </button>
           </div>
         ) : (
@@ -228,7 +228,7 @@ export default function RightPlaceRightCare({ onExit, onLogEvent }) {
             <p className="text-base font-black uppercase tracking-wide text-[#14532d]">
               {isCorrect
                 ? '✅ That\'s right!'
-                : `↪️ Actually — ${current.answer === 'er' ? 'Emergency Room' : 'Walk-In Clinic'}`}
+                : `↪️ Actually — ${current.answer === 'er' ? 'Emergency Room' : 'Clinic'}`}
             </p>
             <p className="text-sm text-slate-900 leading-relaxed mt-1.5 font-medium">
               {current.why}
