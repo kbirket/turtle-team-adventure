@@ -18,7 +18,7 @@ export function HospitalMap({
 
   // All 14 stops shifted slightly UP
   const stops = [
-    { id: 4.0,  label: 'PT & Rehab',  iconSrc: 'clinic.svg',           key: 'PT',          top: '3%',   left: '28%' },
+    { id: 4.0,  label: 'PT & Rehab',  iconSrc: 'therapy.svg',           key: 'PT',          top: '3%',   left: '28%' },
     { id: 5.0,  label: 'Clinic',      iconSrc: 'clinic.svg',           key: 'CLINIC',      top: '8%',   left: '60%' },
     { id: 6.0,  label: 'Behavioral',  iconSrc: 'behavioralhealth.svg', key: 'BEHAVIORAL',  top: '14%',  left: '42%' },
     { id: 7.0,  label: 'Lab',         iconSrc: 'lab.svg',              key: 'LAB',         top: '20%',  left: '66%' },
