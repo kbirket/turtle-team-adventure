@@ -1,11 +1,12 @@
 // src/App.jsx
-import { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Airtable from 'airtable';
 import TurtleBooth from './TurtleBooth';
 import BadgeCard from './components/BadgeCard';
 import RightPlaceRightCare from './components/RightPlaceRightCare';
 import HandwashingGame from './components/HandwashingGame';
-import HospitalMap from './components/HospitalMap'
+import { HospitalMap } from './components/HospitalMap';
+import IconSprite from './components/IconSprite';
 
 const base = new Airtable({
   apiKey: import.meta.env.VITE_AIRTABLE_PAT
@@ -20,6 +21,7 @@ const ORDER_QUEUE_KEY = 'tta_pending_orders_v2';
 
 const IDLE_WARNING_MS = 120000; // 2 min of no touches
 const IDLE_GRACE_MS = 20000;    // then 20s to say "still here"
+const MAP_STOP_COUNT = 14;       // Total stops on map
 
 /* ------------------------------------------------------------------
    PALETTE — each color has one job.
@@ -31,16 +33,8 @@ const IDLE_GRACE_MS = 20000;    // then 20s to say "still here"
    cyan   #22d3ee  wayfinding accents, focus rings on dark
    gold   #fbbf24  rewards ONLY — stamps earned, badge code, celebration
    green  #4ade80  correct answers
-
-   Playfulness comes from roundness, space, and the illustrations —
-   not from filling every surface with saturated color.
-   Hex literals throughout so nothing depends on tailwind.config.js.
 ------------------------------------------------------------------- */
 
-// Focus rings sit OUTSIDE the element (outline-offset), so the ring is drawn
-// on the PARENT background. FOCUS = cyan, for controls on the grape/plum page
-// (8.3:1). FOCUS_CARD = grape, for controls inside white cards (15:1). Cyan on
-// white is only 1.8:1 and fails WCAG 1.4.11's 3:1 minimum for focus indicators.
 const FOCUS =
   'focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-[#22d3ee]';
 const FOCUS_CARD =
@@ -70,6 +64,7 @@ const AVAILABLE_CAREERS = [
   'Doctor',
   'Nurse',
   'CNA',
+  'Behavioral Health',
   'Marketing',
   'Therapy & Rehab',
   'Radiology',
@@ -80,26 +75,10 @@ const AVAILABLE_CAREERS = [
 ];
 
 const CATEGORY_CAREERS = {
-  clinical:  ['Doctor', 'Nurse', 'Therapy & Rehab'],
-  technical: ['CNA', 'Radiology', 'Lab Tech'],
+  clinical:  ['Doctor', 'Nurse', 'Therapy & Rehab', 'Behavioral Health'],
+  technical: ['CNA', 'Radiology', 'Lab Tech', 'Maintenance'],
   creative:  ['Marketing', 'Dietary', 'Human Resources']
 };
-
-/* ---------- map layout: one section per wing, thin accent per section ---------- */
-{appMode === 'tour' && currentStep?.type === 'map' && (
-  <HospitalMap
-    childName={childName}
-    assignedPin={assignedPin}
-    completedCount={completedStops.length}
-    totalCount={totalRoundsCount}
-    isCompleted={isTargetCompleted}
-    onSelectStop={(id) => {
-      const i = tourStops.findIndex((t) => t.id === id);
-      if (i !== -1) setCurrentStepIndex(i);
-    }}
-    onStartQuiz={startCareerQuizDirect}
-  />
-)}
 
 /* ---------- storage + safety helpers ---------- */
 
@@ -120,12 +99,9 @@ const writeCache = (key, value) => {
   }
 };
 
-// Airtable formulas are single-quoted; an unescaped apostrophe breaks
-// the query and is an injection vector.
 const escapeFormulaValue = (v) =>
   String(v).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 
-// ~1M combinations, no 0/O/1/I so it reads cleanly off a printed card.
 const generateBadgeCode = () => {
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   const code = Array.from(
@@ -135,7 +111,6 @@ const generateBadgeCode = () => {
   return `2026-${code}`;
 };
 
-// Fire-and-forget. Analytics must never break the booth.
 const logEvent = (eventName, detail = {}) => {
   try {
     base('Events').create(
@@ -153,8 +128,6 @@ const logEvent = (eventName, detail = {}) => {
   }
 };
 
-// Drains queued badge orders one at a time; stops on first failure
-// and keeps the rest for the next attempt.
 const flushOrderQueue = (onDone) => {
   const queue = readCache(ORDER_QUEUE_KEY, []);
   if (!queue.length) {
@@ -274,7 +247,7 @@ export default function App() {
   const [flippedIndices, setFlippedIndices] = useState([]);
   const [matchedPairs, setMatchedPairs] = useState([]);
   const [gameWon, setGameWon] = useState(false);
-  const [arcadeGame, setArcadeGame] = useState(null); // null | 'rprc' | 'handwash' | 'memory'
+  const [arcadeGame, setArcadeGame] = useState(null);
 
   /* ---------- admin ---------- */
   const [adminTab, setAdminTab] = useState('queue');
@@ -319,7 +292,7 @@ export default function App() {
     };
   }, []);
 
-  /* ---------- initial load (cache first, then network) ---------- */
+  /* ---------- initial load ---------- */
   useEffect(() => {
     base('Tour Stops')
       .select({ view: 'Grid view', sort: [{ field: 'id', direction: 'asc' }] })
@@ -359,7 +332,6 @@ export default function App() {
         setLoading(false);
       });
 
-    // Career info is optional — a missing table or row just skips the screen.
     base('Career Info')
       .select({ view: 'Grid view' })
       .firstPage((err, records) => {
@@ -381,8 +353,7 @@ export default function App() {
   }, []);
 
   const currentStep = tourStops[currentStepIndex];
-  const totalRoundsCount =
-    const totalRoundsCount = MAP_STOP_COUNT;
+  const totalRoundsCount = MAP_STOP_COUNT;
 
   /* ---------- idle reset ---------- */
   const clearIdleTimers = () => {
@@ -520,8 +491,6 @@ export default function App() {
     }
   };
 
-  // Clears any photo left over from the previous badge so one child's
-  // selfie can never land on another child's record.
   const clearPhotoState = () => {
     setCapturedPhoto(null);
     setRawPhoto(null);
@@ -713,15 +682,17 @@ export default function App() {
     );
     const [first, second, third] = sorted;
 
-    // Pick *within* the winning category by how decisive the win was, so
-    // all nine careers are reachable instead of only the first of each.
     const spread = updatedScores[first] - updatedScores[second];
-    const pickIndex = spread >= 4 ? 0 : spread >= 2 ? 1 : 2;
+    const baseIndex = spread >= 4 ? 0 : spread >= 2 ? 1 : 2;
+
+    const pick1 = baseIndex % CATEGORY_CAREERS[first].length;
+    const pick2 = (baseIndex + 1) % CATEGORY_CAREERS[second].length;
+    const pick3 = (baseIndex + 2) % CATEGORY_CAREERS[third].length;
 
     const top3Options = [
-      CATEGORY_CAREERS[first][pickIndex],
-      CATEGORY_CAREERS[second][(pickIndex + 1) % 3],
-      CATEGORY_CAREERS[third][(pickIndex + 2) % 3]
+      CATEGORY_CAREERS[first][pick1],
+      CATEGORY_CAREERS[second][pick2],
+      CATEGORY_CAREERS[third][pick3]
     ];
 
     setCareerResults(top3Options);
@@ -763,8 +734,6 @@ export default function App() {
         capturedPhoto
           ? (photoPermission ? 'YES - Approved' : 'NO - Declined')
           : 'N/A (Avatar Used)',
-      // A declined photo is never transmitted. It stays in local state
-      // long enough to print, then goes away on reset.
       'Photo Data': photoPermission === true ? (rawPhoto || '') : '',
       'Print Status': 'Pending',
       'Station': STATION_ID,
@@ -801,8 +770,6 @@ export default function App() {
     if (!raw) return;
     setSearchError('');
 
-    // Code-only lookup — searching by name would let anyone pull up
-    // another child's record.
     if (!/^2026-[A-Z0-9]{4}$/.test(raw)) {
       setSearchError('Enter your badge code exactly as printed (like 2026-K4TX).');
       return;
@@ -883,6 +850,8 @@ export default function App() {
       onPointerDown={handleActivity}
       onKeyDown={handleActivity}
     >
+      <IconSprite />
+
       <style>{`
         @keyframes ttaFadeIn {
           from { opacity: 0; transform: translateY(8px); }
@@ -926,7 +895,7 @@ export default function App() {
         @media screen { .smart21-print-area { display: none !important; } }
       `}</style>
 
-      {/* PRINTER-ONLY CONTAINER — badge artwork stays on-brand, untouched */}
+      {/* PRINTER-ONLY CONTAINER */}
       <div
         className="smart21-print-area select-none bg-contain bg-no-repeat bg-center"
         style={{
@@ -1134,7 +1103,7 @@ export default function App() {
             </div>
           ) : (
             <>
-              {/* ADMIN PORTAL — deliberately plain for staff */}
+              {/* ADMIN PORTAL */}
               {appMode === 'adminPortal' && (
                 <div className="flex-1 bg-slate-100 p-4 flex flex-col gap-3 overflow-y-auto h-full text-slate-800">
                   <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-300">
@@ -1376,7 +1345,6 @@ export default function App() {
                           {shuffledStopOptions.map((opt, i) => {
                             let style =
                               'bg-slate-50 border-2 border-slate-300 text-[#3b0764] active:bg-slate-200';
-                            // Non-color cue as well as color — WCAG 1.4.1.
                             let mark = '';
                             if (quizFeedback !== null) {
                               style = opt.correct
@@ -1430,70 +1398,20 @@ export default function App() {
                 </div>
               )}
 
-              {/* MAP */}
+              {/* HOSPITAL MAP COMPONENT */}
               {appMode === 'tour' && currentStep?.type === 'map' && (
-                <div className="flex-1 bg-[#3b0764] p-4 flex flex-col justify-between overflow-y-auto h-full">
-
-                  {/* Explorer strip */}
-                  <div className="flex justify-between items-center bg-white/10 border border-white/20 p-3 rounded-2xl flex-shrink-0">
-                    <div className="text-left">
-                      <h2 className="text-sm font-black text-white">
-                        Explorer: {childName}
-                      </h2>
-                      <p className="text-[11px] text-white/70">
-                        {completedStops.length} of {totalRoundsCount} stamps collected
-                      </p>
-                    </div>
-                    <span className="text-xs bg-[#fbbf24] text-[#3b0764] font-black px-2.5 py-1.5 rounded-lg font-mono tracking-wider">
-                      {assignedPin}
-                    </span>
-                  </div>
-
-                  {/* Stops — white cards, one thin accent bar per wing */}
-                  <div className="flex flex-col gap-4 my-5">
-                    {MAP_SECTIONS.map((section) => (
-                      <div key={section.label}>
-                        <span className="text-[11px] uppercase tracking-widest font-bold text-white/60 block mb-2">
-                          {section.label}
-                        </span>
-                        <div className={`grid ${section.cols} gap-2`}>
-                          {section.stops.map((s) => {
-                            const done = isTargetCompleted(s.key);
-                            return (
-                              <button
-                                key={s.id}
-                                onClick={() => {
-                                  const i = tourStops.findIndex((t) => t.id === s.id);
-                                  if (i !== -1) setCurrentStepIndex(i);
-                                }}
-                                className={`min-h-[58px] px-2 py-2 bg-white border-l-4 ${section.accent} rounded-xl text-center active:scale-95 transition-all shadow-md ${FOCUS} ${
-                                  done ? 'ring-2 ring-[#fbbf24]' : ''
-                                }`}
-                              >
-                                <span className="text-lg block leading-none" aria-hidden="true">
-                                  {s.icon}
-                                </span>
-                                <span className="text-[11px] font-bold text-[#3b0764] leading-tight block mt-0.5">
-                                  {s.name}{done && ' ⭐'}
-                                </span>
-                                <span className="sr-only">
-                                  {done ? 'stamp collected' : 'not visited yet'}
-                                </span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <button
-                    onClick={startCareerQuizDirect}
-                    className={`w-full min-h-[56px] py-3 rounded-2xl text-base uppercase tracking-wide flex-shrink-0 ${BTN_CORAL} ${FOCUS}`}
-                  >
-                    🎓 Find My Hospital Job
-                  </button>
-                </div>
+                <HospitalMap
+                  childName={childName}
+                  assignedPin={assignedPin}
+                  completedCount={completedStops.length}
+                  totalCount={totalRoundsCount}
+                  isCompleted={isTargetCompleted}
+                  onSelectStop={(id) => {
+                    const i = tourStops.findIndex((t) => t.id === id);
+                    if (i !== -1) setCurrentStepIndex(i);
+                  }}
+                  onStartQuiz={startCareerQuizDirect}
+                />
               )}
 
               {/* CAREER QUIZ */}
@@ -1842,10 +1760,10 @@ export default function App() {
                             key={idx}
                             onClick={() => handleCardClick(idx)}
                             aria-label={isFlipped ? 'Revealed card' : 'Hidden card'}
-                            className={`aspect-square rounded-xl font-black text-2xl flex items-center justify-center shadow-md transition-all active:scale-95 overflow-hidden ${FOCUS} ${
+                            className={`aspect-square rounded-2xl font-black text-2xl flex items-center justify-center shadow-lg transition-all active:scale-95 overflow-hidden border-2 ${FOCUS} ${
                               isFlipped
-                                ? 'bg-white'
-                                : 'bg-[#5b21b6] border-2 border-white/25 text-white/80'
+                                ? 'bg-white border-amber-400'
+                                : 'bg-slate-800 hover:bg-slate-700 border-slate-600 text-amber-400'
                             }`}
                           >
                             {isFlipped ? (
@@ -2017,7 +1935,7 @@ export default function App() {
           onPhotoCaptured={({ framed, raw }) => {
             setCapturedPhoto(framed);
             setRawPhoto(raw);
-            setPhotoPermission(null); // new photo = fresh consent
+            setPhotoPermission(null);
           }}
           onClose={() => setShowPhotoBooth(false)}
         />
