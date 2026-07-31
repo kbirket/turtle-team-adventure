@@ -11,12 +11,30 @@ export function HospitalMap({
   onSelectStop,
   onStartQuiz
 }) {
+  // All 14 stops mapped to their exact Airtable IDs and SVG filenames
+  const stops = [
+    { id: 4.0,  label: 'PT & Rehab',  iconSrc: 'clinic.svg',           key: 'PT',          top: '6%',   left: '20%' },
+    { id: 5.0,  label: 'Clinic',      iconSrc: 'clinic.svg',           key: 'CLINIC',      top: '12%',  left: '60%' },
+    { id: 6.0,  label: 'Behavioral',  iconSrc: 'behavioralhealth.svg', key: 'BEHAVIORAL',  top: '19%',  left: '22%' },
+    { id: 7.0,  label: 'Lab',         iconSrc: 'lab.svg',              key: 'LAB',         top: '26%',  left: '65%' },
+    { id: 8.0,  label: 'Surgery',     iconSrc: 'surgery.png.svg',      key: 'SURGERY',     top: '33%',  left: '18%' },
+    { id: 9.0,  label: 'Radiology',   iconSrc: 'radiology.svg',        key: 'RADIOLOGY',   top: '40%',  left: '62%' },
+    { id: 10.0, label: 'Café',        iconSrc: 'cafe.svg',             key: 'CAFE',        top: '47%',  left: '25%' },
+    { id: 11.0, label: 'Business',    iconSrc: 'business.svg',         key: 'BUSINESS',    top: '54%',  left: '68%' },
+    { id: 12.0, label: 'IT Dept',     iconSrc: 'it.svg',               key: 'MECHANICAL',  top: '61%',  left: '20%' },
+    { id: 13.0, label: 'Emergency',   iconSrc: 'ED.svg',               key: 'EMERGENCY',   top: '68%',  left: '60%' },
+    { id: 14.0, label: 'HR',          iconSrc: 'hr.svg',               key: 'ADMIN',       top: '74%',  left: '18%' },
+    { id: 15.0, label: 'Hospital',    iconSrc: 'hospital.svg',         key: 'HOSPITAL',    top: '80%',  left: '62%' },
+    { id: 16.0, label: 'Marketing',   iconSrc: 'marketing.svg',        key: 'COMMUNITY',   top: '86%',  left: '24%' },
+    { id: 17.0, label: 'Maintenance', iconSrc: 'maintenance.svg',      key: 'MAINTENANCE', top: '92%',  left: '58%' }
+  ];
+
   return (
-    <div className="flex-1 bg-[#3b0764] p-3 sm:p-4 flex flex-col justify-between overflow-y-auto h-full">
+    <div className="flex-1 bg-[#3b0764] p-3 flex flex-col justify-between overflow-y-auto h-full">
       {/* Explorer strip */}
       <div className="flex justify-between items-center bg-white/10 border border-white/20 p-2.5 rounded-2xl flex-shrink-0 mb-2">
         <div className="text-left">
-          <h2 className="text-xs sm:text-sm font-black text-white">
+          <h2 className="text-xs font-black text-white">
             Explorer: {childName}
           </h2>
           <p className="text-[10px] text-white/70">
@@ -28,85 +46,38 @@ export function HospitalMap({
         </span>
       </div>
 
-      {/* Map Container - Tall Vertical Aspect to Match Background */}
-      <div className="relative w-full flex-1 min-h-[360px] max-h-[480px] my-auto bg-[#260242] rounded-2xl overflow-hidden border-2 border-white/20 shadow-inner">
+      {/* Map Container */}
+      <div className="relative w-full flex-1 min-h-[420px] max-h-[580px] my-auto rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl">
         
-        {/* Full-bleed Map Graphic */}
+        {/* Background Graphic */}
         <img 
           src="/icons/hospital-map.svg" 
           alt="Hospital Map" 
           className="w-full h-full object-cover pointer-events-none"
         />
 
-        {/* --- OVERLAY BUILDING ICONS --- */}
-        {/* Adjust percentages (top/left) to position each building right where you want it on the path! */}
-
-        {/* 1. Clinic */}
-        <div className="absolute top-[12%] left-[15%] z-20">
-          <MapIcon 
-            label="Clinic" 
-            icon="🩺" 
-            done={isCompleted('CLINIC')} 
-            onClick={() => onSelectStop(5.0)} 
-          />
-        </div>
-
-        {/* 2. Physical Therapy */}
-        <div className="absolute top-[28%] left-[65%] z-20">
-          <MapIcon 
-            label="PT & Rehab" 
-            icon="🏃" 
-            done={isCompleted('PT')} 
-            onClick={() => onSelectStop(4.0)} 
-          />
-        </div>
-
-        {/* 3. Behavioral Health */}
-        <div className="absolute top-[42%] left-[20%] z-20">
-          <MapIcon 
-            label="Behavioral" 
-            icon="🧠" 
-            done={isCompleted('BEHAVIORAL')} 
-            onClick={() => onSelectStop(6.0)} 
-          />
-        </div>
-
-        {/* 4. Lab Tech */}
-        <div className="absolute top-[58%] left-[70%] z-20">
-          <MapIcon 
-            label="Lab" 
-            icon="🔬" 
-            done={isCompleted('LAB')} 
-            onClick={() => onSelectStop(7.0)} 
-          />
-        </div>
-
-        {/* 5. Emergency Room */}
-        <div className="absolute top-[72%] left-[25%] z-20">
-          <MapIcon 
-            label="ER" 
-            icon="🚨" 
-            done={isCompleted('EMERGENCY')} 
-            onClick={() => onSelectStop(13.0)} 
-          />
-        </div>
-
-        {/* 6. Maintenance */}
-        <div className="absolute top-[85%] left-[60%] z-20">
-          <MapIcon 
-            label="Maintenance" 
-            icon="🛠️" 
-            done={isCompleted('MAINTENANCE')} 
-            onClick={() => onSelectStop(17.0)} 
-          />
-        </div>
+        {/* --- ALL 14 SVG BUILDING STICKERS --- */}
+        {stops.map((s) => (
+          <div 
+            key={s.id} 
+            className="absolute z-20 transition-all duration-200" 
+            style={{ top: s.top, left: s.left }}
+          >
+            <MapIcon 
+              label={s.label} 
+              iconSrc={s.iconSrc} 
+              done={isCompleted(s.key)} 
+              onClick={() => onSelectStop(s.id)} 
+            />
+          </div>
+        ))}
 
       </div>
 
-      {/* Career Button */}
+      {/* Quiz Action Button */}
       <button
         onClick={onStartQuiz}
-        className="w-full min-h-[50px] py-3 mt-2 rounded-2xl text-sm uppercase tracking-wide flex-shrink-0 bg-[#e11d48] active:bg-[#be123c] text-white font-black shadow-lg active:scale-95 transition-all"
+        className="w-full min-h-[48px] py-3 mt-2 rounded-2xl text-sm uppercase tracking-wide flex-shrink-0 bg-[#e11d48] active:bg-[#be123c] text-white font-black shadow-lg active:scale-95 transition-all"
       >
         🎓 Find My Hospital Job
       </button>
