@@ -5,19 +5,24 @@ export default function MapIcon({ label, iconSrc, done, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col items-center justify-center p-1.5 bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl border-2 transition-all active:scale-90 ${
-        done ? 'border-amber-400 ring-2 ring-amber-400' : 'border-purple-300'
-      }`}
+      aria-label={label}
+      className="relative group focus:outline-none transition-transform duration-150 active:scale-90"
     >
-      {/* Custom SVG Building Image */}
+      {/* The Pure Custom SVG Graphic */}
       <img 
         src={`/icons/${iconSrc}`} 
         alt={label} 
-        className="w-10 h-10 object-contain drop-shadow-sm"
+        className={`w-12 h-12 sm:w-14 sm:h-14 object-contain drop-shadow-md transition-all ${
+          done ? 'filter brightness-110' : 'hover:scale-105'
+        }`}
       />
-      <span className="text-[10px] font-black text-purple-950 whitespace-nowrap mt-0.5">
-        {label} {done && '⭐'}
-      </span>
+
+      {/* Floating Completed Star Badge */}
+      {done && (
+        <span className="absolute -top-1 -right-1 bg-[#fbbf24] text-[#3b0764] text-xs font-black rounded-full w-5 h-5 flex items-center justify-center shadow-lg border border-white animate-bounce">
+          ⭐
+        </span>
+      )}
     </button>
   );
 }
