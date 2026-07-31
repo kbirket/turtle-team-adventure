@@ -28,18 +28,18 @@ export function HospitalMap({
         </span>
       </div>
 
-      {/* SVG Map Container with Overlay Icons */}
+      {/* Map Graphic Box */}
       <div className="relative w-full aspect-[4/3] my-auto bg-[#260242] rounded-2xl overflow-hidden border-2 border-white/20 shadow-inner flex items-center justify-center">
-        {/* Base Hospital Map Graphic */}
+        
+        {/* Floor Plan Base Image */}
         <img 
-          src="/icons/hospital-map-base.svg" 
-          alt="Hospital Floor Plan Base" 
-          className="w-full h-full object-contain pointer-events-none"
+          src="/icons/hospital-map.svg" 
+          alt="Hospital Map" 
+          className="w-full h-full object-contain pointer-events-none z-10"
         />
 
-        {/* Example Overlay Building Icons positioned via absolute coordinates */}
-        {/* You can adjust top/left percentages to match your floor plan layout */}
-        <div className="absolute top-[20%]" style={{ left: '25%' }}>
+        {/* Overlay Building Icons (Position using top/left percentages) */}
+        <div className="absolute top-[20%] left-[20%] z-20">
           <MapIcon 
             label="Clinic" 
             icon="🩺" 
@@ -48,7 +48,7 @@ export function HospitalMap({
           />
         </div>
 
-        <div className="absolute top-[50%]" style={{ left: '60%' }}>
+        <div className="absolute top-[50%] left-[60%] z-20">
           <MapIcon 
             label="Lab" 
             icon="🔬" 
@@ -57,7 +57,6 @@ export function HospitalMap({
           />
         </div>
 
-        {/* Add your other MapIcon elements here mapped to your specific stop IDs */}
       </div>
 
       <button
