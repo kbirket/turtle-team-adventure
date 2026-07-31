@@ -17,21 +17,22 @@ export function HospitalMap({
   const handleZoomOut = () => setZoomLevel((prev) => Math.max(prev - 0.3, 1));
 
   // All 14 stops mapped to custom SVG filenames
+// All 14 stops spread across Left, Middle, and Right path areas
   const stops = [
-    { id: 4.0,  label: 'PT & Rehab',  iconSrc: 'clinic.svg',           key: 'PT',          top: '7%',   left: '28%' },
-    { id: 5.0,  label: 'Clinic',      iconSrc: 'clinic.svg',           key: 'CLINIC',      top: '12%',  left: '60%' },
-    { id: 6.0,  label: 'Behavioral',  iconSrc: 'behavioralhealth.svg', key: 'BEHAVIORAL',  top: '20%',  left: '22%' },
-    { id: 7.0,  label: 'Lab',         iconSrc: 'lab.svg',              key: 'LAB',         top: '26%',  left: '65%' },
-    { id: 8.0,  label: 'Surgery',     iconSrc: 'surgery.svg',          key: 'SURGERY',     top: '33%',  left: '20%' },
-    { id: 9.0,  label: 'Radiology',   iconSrc: 'radiology.svg',        key: 'RADIOLOGY',   top: '41%',  left: '62%' },
-    { id: 10.0, label: 'Café',        iconSrc: 'cafe.svg',             key: 'CAFE',        top: '47%',  left: '25%' },
-    { id: 11.0, label: 'Business',    iconSrc: 'business.svg',         key: 'BUSINESS',    top: '54%',  left: '68%' },
-    { id: 12.0, label: 'IT Dept',     iconSrc: 'it.svg',               key: 'MECHANICAL',  top: '61%',  left: '20%' },
-    { id: 13.0, label: 'Emergency',   iconSrc: 'ED.svg',               key: 'EMERGENCY',   top: '68%',  left: '60%' },
-    { id: 14.0, label: 'HR',          iconSrc: 'hr.svg',               key: 'ADMIN',       top: '74%',  left: '22%' },
-    { id: 15.0, label: 'Hospital',    iconSrc: 'hospital.svg',         key: 'HOSPITAL',    top: '80%',  left: '62%' },
-    { id: 16.0, label: 'Marketing',   iconSrc: 'marketing.svg',        key: 'COMMUNITY',   top: '86%',  left: '26%' },
-    { id: 17.0, label: 'Maintenance', iconSrc: 'maintenance.svg',      key: 'MAINTENANCE', top: '91%',  left: '58%' }
+    { id: 4.0,  label: 'PT & Rehab',  iconSrc: 'clinic.svg',           key: 'PT',          top: '5%',   left: '28%' },
+    { id: 5.0,  label: 'Clinic',      iconSrc: 'clinic.svg',           key: 'CLINIC',      top: '10%',  left: '60%' },
+    { id: 6.0,  label: 'Behavioral',  iconSrc: 'behavioralhealth.svg', key: 'BEHAVIORAL',  top: '17%',  left: '42%' }, // 👈 Middle
+    { id: 7.0,  label: 'Lab',         iconSrc: 'lab.svg',              key: 'LAB',         top: '23%',  left: '66%' },
+    { id: 8.0,  label: 'Surgery',     iconSrc: 'surgery.svg',          key: 'SURGERY',     top: '30%',  left: '25%' },
+    { id: 9.0,  label: 'Radiology',   iconSrc: 'radiology.svg',        key: 'RADIOLOGY',   top: '37%',  left: '60%' },
+    { id: 10.0, label: 'Café',        iconSrc: 'cafe.svg',             key: 'CAFE',        top: '43%',  left: '40%' }, // 👈 Middle
+    { id: 11.0, label: 'Business',    iconSrc: 'business.svg',         key: 'BUSINESS',    top: '50%',  left: '65%' },
+    { id: 12.0, label: 'IT Dept',     iconSrc: 'it.svg',               key: 'MECHANICAL',  top: '57%',  left: '22%' },
+    { id: 13.0, label: 'Emergency',   iconSrc: 'ED.svg',               key: 'EMERGENCY',   top: '64%',  left: '52%' }, // 👈 Middle-Right
+    { id: 14.0, label: 'HR',          iconSrc: 'hr.svg',               key: 'ADMIN',       top: '71%',  left: '22%' },
+    { id: 15.0, label: 'Hospital',    iconSrc: 'hospital.svg',         key: 'HOSPITAL',    top: '78%',  left: '58%' },
+    { id: 16.0, label: 'Marketing',   iconSrc: 'marketing.svg',        key: 'COMMUNITY',   top: '84%',  left: '26%' },
+    { id: 17.0, label: 'Maintenance', iconSrc: 'maintenance.svg',      key: 'MAINTENANCE', top: '89%',  left: '50%' }  // 👈 Tucked inside map frame
   ];
 
   return (
