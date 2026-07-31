@@ -1,5 +1,5 @@
 // src/components/HospitalMap.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import MapIcon from './MapIcon';
 
 export function HospitalMap({
@@ -11,13 +11,19 @@ export function HospitalMap({
   onSelectStop,
   onStartQuiz
 }) {
-  // All 14 stops mapped to their exact Airtable IDs and SVG filenames
+  const [zoomLevel, setZoomLevel] = useState(1);
+
+  const handleZoomIn = () => setZoomLevel((prev) => Math.min(prev + 0.35, 2.1));
+  const handleZoomOut = () => setZoomLevel((prev) => Math.max(prev - 0.35, 1));
+  const handleResetZoom = () => setZoomLevel(1);
+
+  // All 14 stops mapped to your custom SVG filenames in public/icons/
   const stops = [
     { id: 4.0,  label: 'PT & Rehab',  iconSrc: 'clinic.svg',           key: 'PT',          top: '6%',   left: '20%' },
     { id: 5.0,  label: 'Clinic',      iconSrc: 'clinic.svg',           key: 'CLINIC',      top: '12%',  left: '60%' },
     { id: 6.0,  label: 'Behavioral',  iconSrc: 'behavioralhealth.svg', key: 'BEHAVIORAL',  top: '19%',  left: '22%' },
     { id: 7.0,  label: 'Lab',         iconSrc: 'lab.svg',              key: 'LAB',         top: '26%',  left: '65%' },
-    { id: 8.0,  label: 'Surgery',     iconSrc: 'surgery.png.svg',      key: 'SURGERY',     top: '33%',  left: '18%' },
+    { id: 8.0,  label: 'Surgery',     iconSrc: 'surgery.svg',      key: 'SURGERY',     top: '33%',  left: '18%' },
     { id: 9.0,  label: 'Radiology',   iconSrc: 'radiology.svg',        key: 'RADIOLOGY',   top: '40%',  left: '62%' },
     { id: 10.0, label: 'Café',        iconSrc: 'cafe.svg',             key: 'CAFE',        top: '47%',  left: '25%' },
     { id: 11.0, label: 'Business',    iconSrc: 'business.svg',         key: 'BUSINESS',    top: '54%',  left: '68%' },
@@ -46,32 +52,68 @@ export function HospitalMap({
         </span>
       </div>
 
-      {/* Map Container */}
-      <div className="relative w-full flex-1 min-h-[420px] max-h-[580px] my-auto rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl">
+      {/* Map Box Frame */}
+      <div className="relative w-full flex-1 min-h-[380px] max-h-[520px] my-auto rounded-2xl overflow-auto border-2 border-white/20 shadow-2xl touch-pan-x touch-pan-y bg-[#260242]">
         
-        {/* Background Graphic */}
-        <img 
-          src="/icons/hospital-map.svg" 
-          alt="Hospital Map" 
-          className="w-full h-full object-cover pointer-events-none"
-        />
-
-        {/* --- ALL 14 SVG BUILDING STICKERS --- */}
-        {stops.map((s) => (
-          <div 
-            key={s.id} 
-            className="absolute z-20 transition-all duration-200" 
-            style={{ top: s.top, left: s.left }}
+        {/* Floating Zoom Controls in Top Right */}
+        <div className="sticky top-2 right-2 float-right z-30 flex flex-col gap-1.5 bg-slate-900/80 backdrop-blur-md p-1.5 rounded-xl border border-white/20 shadow-lg">
+          <button
+            onClick={handleZoomIn}
+            aria-label="Zoom in map"
+            className="w-8 h-8 bg-white text-[#3b0764] font-black text-base rounded-lg flex items-center justify-center active:scale-90 transition-transform shadow"
           >
-            <MapIcon 
-              label={s.label} 
-              iconSrc={s.iconSrc} 
-              done={isCompleted(s.key)} 
-              onClick={() => onSelectStop(s.id)} 
-            />
-          </div>
-        ))}
+            ➕
+          </button>
+          <button
+            onClick={handleZoomOut}
+            aria-label="Zoom out map"
+            className="w-8 h-8 bg-white text-[#3b0764] font-black text-base rounded-lg flex items-center justify-center active:scale-90 transition-transform shadow"
+          >
+            ➖
+          </button>
+          {zoomLevel > 1 && (
+            <button
+              onClick={handleResetZoom}
+              aria-label="Reset zoom"
+              className="w-8 h-8 bg-[#fbbf24] text-[#3b0764] font-black text-[10px] rounded-lg flex items-center justify-center active:scale-90 transition-transform shadow"
+            >
+              RESET
+            </button>
+          )}
+        </div>
 
+        {/* Scalable Canvas Container */}
+        <div 
+          className="relative w-full h-full transition-transform duration-200 origin-top-left"
+          style={{ 
+            transform: `scale(${zoomLevel})`,
+            minWidth: zoomLevel > 1 ? `${zoomLevel * 100}%` : '100%',
+            minHeight: zoomLevel > 1 ? `${zoomLevel * 100}%` : '100%'
+          }}
+        >
+          {/* Background Map Graphic */}
+          <img 
+            src="/icons/hospital-map.svg" 
+            alt="Hospital Map" 
+            className="w-full h-full object-cover pointer-events-none"
+          />
+
+          {/* All 14 Floating SVG Building Markers */}
+          {stops.map((s) => (
+            <div 
+              key={s.id} 
+              className="absolute z-20" 
+              style={{ top: s.top, left: s.left }}
+            >
+              <MapIcon 
+                label={s.label} 
+                iconSrc={s.iconSrc} 
+                done={isCompleted(s.key)} 
+                onClick={() => onSelectStop(s.id)} 
+              />
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Quiz Action Button */}
