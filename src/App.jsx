@@ -1066,42 +1066,39 @@ export default function App() {
             </div>
           )}
 
-          {/* NAME GATE */}
-          {!isNameConfirmed && appMode !== 'adminPortal' ? (
-            <div className="flex-1 bg-[#3b0764] p-6 flex flex-col justify-between h-full text-white text-center overflow-y-auto">
-              <div className="my-auto flex flex-col items-center gap-4">
-                <div className="text-7xl tta-wiggle">🐢</div>
-                <h1 className="text-3xl font-black tracking-wide leading-tight">
-                  Turtle Team<br />Adventure
-                </h1>
-                <p className="text-sm text-white/85 px-3 leading-relaxed">
-                  Explore the hospital, find the job that fits you, and print your
-                  own ID badge to take home.
-                </p>
-                <div className="w-full max-w-xs mt-3 flex flex-col gap-3">
-                  <label htmlFor="child-name" className="sr-only">Your first name</label>
-                  <input
-                    id="child-name"
-                    type="text"
-                    placeholder="TYPE YOUR NAME"
-                    value={childName}
-                    onChange={(e) => setChildName(e.target.value.toUpperCase())}
-                    maxLength={14}
-                    className="w-full bg-white border-2 border-white/40 rounded-2xl p-4 font-black text-[#3b0764] text-center text-base focus:border-[#22d3ee] focus:outline-none tracking-widest uppercase placeholder:text-slate-500 shadow-inner"
-                  />
-                  <button
-                    onClick={handleNameActivation}
-                    className={`w-full min-h-[56px] py-4 rounded-2xl text-base uppercase tracking-widest ${BTN_CORAL} ${FOCUS}`}
-                  >
-                    Let's Go ➔
-                  </button>
-                </div>
-              </div>
-              <div className="text-[11px] text-white/60 font-bold py-2">
-                Patterson Health Center · {STATION_ID}
-              </div>
-            </div>
-          ) : (
+{/* NAME GATE / SPLASH SCREEN */}
+{!isNameConfirmed && appMode !== 'adminPortal' ? (
+  <div 
+    className="flex-1 bg-no-repeat bg-cover bg-center p-6 flex flex-col justify-end items-center h-full text-white text-center relative overflow-hidden select-none"
+    style={{ backgroundImage: `url('/splash-image.png')` }}
+  >
+    {/* Input Overlay positioned right over the stone pathway at the bottom */}
+    <div className="w-full max-w-xs mb-2 z-10 flex flex-col gap-3 bg-[#3b0764]/80 backdrop-blur-md p-4 rounded-3xl border-2 border-white/30 shadow-2xl tta-pop">
+      <label htmlFor="child-name" className="text-xs font-black uppercase tracking-wider text-[#22d3ee]">
+        What is your first name?
+      </label>
+      
+      <input
+        id="child-name"
+        type="text"
+        placeholder="TYPE YOUR NAME"
+        value={childName}
+        onChange={(e) => setChildName(e.target.value.toUpperCase())}
+        maxLength={14}
+        className="w-full bg-white border-2 border-[#5b21b6] rounded-2xl p-3.5 font-black text-[#3b0764] text-center text-lg focus:border-[#22d3ee] focus:outline-none tracking-widest uppercase placeholder:text-slate-400 shadow-inner"
+        autoComplete="off"
+      />
+
+      <button
+        onClick={handleNameActivation}
+        className="w-full min-h-[54px] py-3.5 rounded-2xl text-base font-black uppercase tracking-widest bg-[#e11d48] active:bg-[#be123c] text-white shadow-lg active:scale-95 transition-all focus-visible:outline focus-visible:outline-4 focus-visible:outline-[#22d3ee]"
+      >
+        Let's Go ➔
+      </button>
+
+        </div>
+  </div>
+) : (
             <>
               {/* ADMIN PORTAL */}
               {appMode === 'adminPortal' && (
