@@ -1,74 +1,59 @@
 // src/components/BadgeCard.jsx
-import React from 'react';
+export default function BadgeCard({
+  name,
+  careerTitle,
+  avatarSrc,
+  badgeCode,
+  qrSrc = '/qr-pediatrics.png',
+  variant = 'screen', // 'screen' | 'print'
+}) {
+  const nameSize = variant === 'print' ? 'text-2xl' : 'text-2xl sm:text-3xl';
 
-const getNameFontSize = (name = '') => {
-  const len = name.length;
-  if (len > 12) return 'text-xs leading-none';
-  if (len > 8)  return 'text-sm leading-none';
-  return 'text-lg leading-none';
-};
-
-const getTitleFontSize = (title = '') => {
-  const len = title.length;
-  if (len > 15) return 'text-[8px] leading-tight tracking-tighter';
-  if (len > 11) return 'text-[9.5px] leading-tight tracking-tight';
-  if (len > 7)  return 'text-xs leading-tight tracking-tight';
-  return 'text-sm leading-tight tracking-normal';
-};
-
-export default function BadgeCard({ name, careerTitle, avatarSrc, badgeCode, variant = 'display' }) {
-  const isPrint = variant === 'print';
+  // Dynamic font sizing so long career titles fit without truncation
+  const getTitleSize = (title = '') => {
+    const len = title.length;
+    if (variant === 'print') {
+      if (len > 15) return 'text-[8px] tracking-tighter';  // BEHAVIORAL HEALTH, PHYSICAL THERAPY
+      if (len > 11) return 'text-[9.5px] tracking-tight';   // THERAPY & REHAB, HUMAN RESOURCES
+      return 'text-xs tracking-wider';                     // DOCTOR, NURSE
+    }
+    // Screen Variant
+    if (len > 15) return 'text-[8px] sm:text-[10px] tracking-tighter';
+    if (len > 11) return 'text-[10px] sm:text-xs tracking-tight';
+    return 'text-xs sm:text-sm tracking-wider';
+  };
 
   return (
-    <div className={`w-full h-full relative select-none p-2 flex flex-col justify-between ${isPrint ? 'print-card' : ''}`}>
-      
-      {/* Spacer for Top Logo Header baked into template */}
-      <div className="h-6 w-full" />
+    <>
+      <div className="absolute top-[26%] left-[4%] w-[32.5%] h-[60%] flex items-center justify-center">
+        <img src={avatarSrc} alt="" className="w-full h-full object-contain" />
+      </div>
 
-      {/* Main Content Row */}
-      <div className="flex items-center gap-2 my-auto px-2">
-        {/* Avatar Circle */}
-        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-[#5b21b6] overflow-hidden bg-white flex-shrink-0 shadow-md flex items-center justify-center">
-          <img 
-            src={avatarSrc || '/characters/doctor/avatar.png'} 
-            alt="" 
-            className="w-full h-full object-cover" 
-          />
-        </div>
+      <div className="absolute top-[26.5%] left-[39.5%] right-[19.5%] text-center">
+        <h2 className={`${nameSize} font-black text-[#0c2340] tracking-tight uppercase truncate leading-none`}>
+          {name || 'EXPLORER'}
+        </h2>
+      </div>
 
-        {/* Dynamic Text Column */}
-        <div className="flex-1 text-center overflow-hidden flex flex-col justify-center">
-          {/* Child Name */}
-          <h1 className={`font-black text-[#1e1b4b] uppercase text-center ${getNameFontSize(name)}`}>
-            {name || 'EXPLORER'}
-          </h1>
-
-          {/* Red Accent Bar */}
-          <div className="w-full h-[2px] bg-rose-600 my-1 rounded-full opacity-80" />
-
-          {/* Dynamic Career Title */}
-          <h2 className={`font-black text-rose-600 uppercase text-center whitespace-nowrap ${getTitleFontSize(careerTitle)}`}>
-            {careerTitle || 'EXPLORER'}
-          </h2>
+      <div className="absolute top-[48.5%] left-[39.5%] right-[19.5%] text-center">
+        {/* Replaced 'truncate' with whitespace-nowrap and dynamic getTitleSize */}
+        <div className={`${getTitleSize(careerTitle)} text-[#d93856] font-black uppercase leading-none whitespace-nowrap`}>
+          {careerTitle}
         </div>
       </div>
 
-      {/* Footer Row: Badge Code + Pediatrics QR Code */}
-      <div className="flex justify-between items-end px-2 pb-1 text-left">
-        <div>
-          <span className="text-[7px] text-slate-500 font-bold block uppercase tracking-wider">BADGE #</span>
-          <span className="text-xs font-mono font-black text-[#3b0764]">{badgeCode || '2026-XXXX'}</span>
-        </div>
-
-        {/* Pediatrics Web Page QR Code */}
-        <div className="flex items-center gap-1 bg-white/80 p-0.5 rounded-md border border-slate-200">
-          <img 
-            src="/pediatrics-qr.png" 
-            alt="Pediatrics Page QR Code" 
-            className="w-7 h-7 sm:w-8 sm:h-8 object-contain" 
-          />
-        </div>
+      <div className="absolute bottom-[14%] left-[44.5%] leading-none text-left">
+        <span className="text-[7px] font-bold text-slate-500 block tracking-wider uppercase mb-0.5">
+          BADGE #
+        </span>
+        <span className="text-[9px] font-mono font-black text-[#d93856] tracking-wide block">
+          {badgeCode}
+        </span>
       </div>
-    </div>
+
+      <div className="absolute bottom-[10%] left-[58.5%] w-[11%] aspect-square bg-white rounded-md p-0.5 flex items-center justify-center border border-slate-300 shadow-sm">
+        <img src={qrSrc} alt="" className="w-full h-full object-contain" />
+      </div>
+    </>
   );
 }
