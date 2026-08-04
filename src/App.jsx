@@ -7,6 +7,7 @@ import RightPlaceRightCare from './components/RightPlaceRightCare';
 import HandwashingGame from './components/HandwashingGame';
 import { HospitalMap } from './components/HospitalMap';
 import IconSprite from './components/IconSprite';
+import ScavengerHunt from './components/ScavengerHunt';
 
 const base = new Airtable({
   apiKey: import.meta.env.VITE_AIRTABLE_PAT
@@ -443,16 +444,19 @@ export default function App() {
         sort: [{ field: 'Ordered Date', direction: 'asc' }]
       })
       .firstPage((err, records) => {
-        if (err || !records) return;
-        setPrintQueue(
-          records.map((r) => ({
-            id: r.id,
-            name: r.fields['Child Name'] || 'EXPLORER',
-            career: r.fields['Assigned Career'] || 'Doctor',
-            pin: r.fields['Badge Code'] || '2026-XXXX',
-            photo: r.fields['Photo Data'] || null
-          }))
-        );
+        if (err) {
+          console.error('Error fetching print queue:', err);
+        } else {
+          setPrintQueue(
+            records.map((r) => ({
+              id: r.id,
+              name: r.fields['Child Name'] || 'EXPLORER',
+              career: r.fields['Assigned Career'] || 'Doctor',
+              pin: r.fields['Badge Code'] || '2026-XXXX',
+              photo: r.fields['Photo Data'] || null
+            }))
+          );
+        }
       });
   }, []);
 
@@ -923,13 +927,15 @@ export default function App() {
               ? '👋 Welcome'
               : appMode === 'tour'
                 ? (currentStep?.title || 'Hospital Tour')
-                : appMode === 'gamesHub'
-                  ? '🎮 Game Arcade'
-                  : appMode === 'viewBadge'
-                    ? '🪪 Badge Lookup'
-                    : appMode === 'adminPortal'
-                      ? '🔒 Staff Portal'
-                      : '🎓 Career Explorer'}
+                : appMode === 'scavengerHunt'
+                  ? '📸 Scavenger Hunt'
+                  : appMode === 'gamesHub'
+                    ? '🎮 Game Arcade'
+                    : appMode === 'viewBadge'
+                      ? '🪪 Badge Lookup'
+                      : appMode === 'adminPortal'
+                        ? '🔒 Staff Portal'
+                        : '🎓 Career Explorer'}
           </span>
           <div className="flex items-center gap-1.5">
             {isOffline && (
@@ -1066,43 +1072,41 @@ export default function App() {
             </div>
           )}
 
-{/* NAME GATE / SPLASH SCREEN */}
-{!isNameConfirmed && appMode !== 'adminPortal' ? (
-  <div 
-    className="flex-1 bg-no-repeat bg-cover bg-center p-6 flex flex-col justify-end items-center h-full relative overflow-hidden select-none"
-    style={{ backgroundImage: `url('/splash-image.png')` }}
-  >
-    {/* Wooden Signpost Box */}
-    <div className="w-full max-w-[290px] mb-3 z-10 flex flex-col gap-3 bg-[#4a2810] p-4 rounded-3xl border-4 border-[#8b5a2b] shadow-[0_10px_25px_rgba(0,0,0,0.8)] text-center ring-2 ring-[#f59e0b]">
-      
-      <label 
-        htmlFor="child-name" 
-        className="text-xs font-black uppercase tracking-widest text-[#fef3c7] drop-shadow-sm"
-      >
-        What is your first name?
-      </label>
-      
-      <input
-        id="child-name"
-        type="text"
-        placeholder="TYPE YOUR NAME"
-        value={childName}
-        onChange={(e) => setChildName(e.target.value.toUpperCase())}
-        maxLength={14}
-        className="w-full bg-[#fef3c7] border-2 border-[#8b5a2b] rounded-2xl p-3 font-black text-[#4a2810] text-center text-lg focus:border-[#f59e0b] focus:outline-none tracking-widest uppercase placeholder:text-[#b45309]/50 shadow-inner"
-        autoComplete="off"
-      />
+          {/* NAME GATE / SPLASH SCREEN */}
+          {!isNameConfirmed && appMode !== 'adminPortal' ? (
+            <div 
+              className="flex-1 bg-no-repeat bg-cover bg-center p-6 flex flex-col justify-end items-center h-full relative overflow-hidden select-none"
+              style={{ backgroundImage: `url('/splash-image.png')` }}
+            >
+              {/* Wooden Signpost Box */}
+              <div className="w-full max-w-[290px] mb-3 z-10 flex flex-col gap-3 bg-[#4a2810] p-4 rounded-3xl border-4 border-[#8b5a2b] shadow-[0_10px_25px_rgba(0,0,0,0.8)] text-center ring-2 ring-[#f59e0b]">
+                <label 
+                  htmlFor="child-name" 
+                  className="text-xs font-black uppercase tracking-widest text-[#fef3c7] drop-shadow-sm"
+                >
+                  What is your first name?
+                </label>
+                
+                <input
+                  id="child-name"
+                  type="text"
+                  placeholder="TYPE YOUR NAME"
+                  value={childName}
+                  onChange={(e) => setChildName(e.target.value.toUpperCase())}
+                  maxLength={14}
+                  className="w-full bg-[#fef3c7] border-2 border-[#8b5a2b] rounded-2xl p-3 font-black text-[#4a2810] text-center text-lg focus:border-[#f59e0b] focus:outline-none tracking-widest uppercase placeholder:text-[#b45309]/50 shadow-inner"
+                  autoComplete="off"
+                />
 
-      <button
-        onClick={handleNameActivation}
-        className="w-full min-h-[50px] py-3 rounded-2xl text-base font-black uppercase tracking-widest bg-[#e11d48] active:bg-[#be123c] text-white shadow-lg active:scale-95 transition-all border-2 border-white/30"
-      >
-        LET'S GO ➔
-      </button>
-
-    </div>
-  </div>
-) : (
+                <button
+                  onClick={handleNameActivation}
+                  className="w-full min-h-[50px] py-3 rounded-2xl text-base font-black uppercase tracking-widest bg-[#e11d48] active:bg-[#be123c] text-white shadow-lg active:scale-95 transition-all border-2 border-white/30"
+                >
+                  LET'S GO ➔
+                </button>
+              </div>
+            </div>
+          ) : (
             <>
               {/* ADMIN PORTAL */}
               {appMode === 'adminPortal' && (
@@ -1415,6 +1419,17 @@ export default function App() {
                 />
               )}
 
+              {/* SCAVENGER HUNT (CAMERA TAB) */}
+              {appMode === 'scavengerHunt' && (
+                <ScavengerHunt 
+                  onBackToArcade={() => {
+                    setAppMode('tour');
+                    const idx = tourStops.findIndex((s) => s.type === 'map');
+                    if (idx !== -1) setCurrentStepIndex(idx);
+                  }} 
+                />
+              )}
+
               {/* CAREER QUIZ */}
               {appMode === 'careerQuiz' && (
                 <div className="flex-1 bg-[#3b0764] p-5 flex flex-col justify-between h-full overflow-y-auto">
@@ -1687,7 +1702,7 @@ export default function App() {
                         key: 'rprc',
                         icon: '🩺',
                         title: 'Right Place, Right Care',
-                        blurb: 'ER or walk-in clinic? Test your instincts.',
+                        blurb: 'ER or clinic? Test your instincts.',
                         accent: 'border-l-[#fb7185]'
                       },
                       {
@@ -1865,70 +1880,71 @@ export default function App() {
           )}
         </div>
 
-        {/* BOTTOM NAV */}
-        <nav
-          aria-label="Main"
-          className="absolute bottom-0 left-0 right-0 h-[65px] bg-[#5b21b6] border-t border-white/20 grid grid-cols-6 items-center px-1 z-30 shadow-[0_-4px_14px_rgba(0,0,0,0.25)] pb-[env(safe-area-inset-bottom)]"
-        >
-          {[
-            {
-              icon: '🗺️', label: 'Map', aria: 'Go to hospital map',
-              onClick: () => {
-                setAppMode('tour');
-                const idx = tourStops.findIndex((s) => s.type === 'map');
-                if (idx !== -1) setCurrentStepIndex(idx);
-              },
-              active: appMode === 'tour' && currentStep?.type === 'map'
-            },
-            {
-              icon: '📸', label: 'Camera', aria: 'Open photo booth',
-              onClick: () => setShowPhotoBooth(true),
-              active: showPhotoBooth
-            },
-            {
-              icon: '🎓', label: 'Careers', aria: 'Take the career quiz',
-              onClick: startCareerQuizDirect,
-              active: ['careerQuiz', 'careerResultsView', 'careerInfo', 'avatarBuilder', 'badgeSuccess'].includes(appMode)
-            },
-            {
-              icon: '🎮', label: 'Arcade', aria: 'Play games',
-              onClick: () => { setAppMode('gamesHub'); setArcadeGame(null); },
-              active: appMode === 'gamesHub'
-            },
-            {
-              icon: '🪪', label: 'Badge', aria: 'Look up my badge',
-              onClick: () => {
-                setAppMode('viewBadge');
-                setFoundBadge(null);
-                setLookupValue('');
-                setSearchError('');
-              },
-              active: appMode === 'viewBadge'
-            }
-          ].map((item) => (
-            <button
-              key={item.label}
-              onClick={() => { if (isNameConfirmed) item.onClick(); }}
-              aria-label={item.aria}
-              disabled={!isNameConfirmed}
-              className={`flex flex-col items-center justify-center gap-0.5 h-full transition-all active:scale-90 rounded-xl ${FOCUS} ${
-                !isNameConfirmed ? 'opacity-30' : ''
-              } ${item.active ? 'bg-white/20 text-white font-black' : 'text-white/70'}`}
-            >
-              <span className="text-lg" aria-hidden="true">{item.icon}</span>
-              <span className="text-[10px] font-bold tracking-tight">{item.label}</span>
-            </button>
-          ))}
-
-          <button
-            onClick={() => setShowResetConfirm(true)}
-            aria-label="Start over"
-            className={`flex flex-col items-center justify-center gap-0.5 h-full text-white/70 active:text-white transition-all active:scale-90 rounded-xl ${FOCUS}`}
+        {/* BOTTOM NAV - Only shown after child enters their name */}
+        {isNameConfirmed && (
+          <nav
+            aria-label="Main"
+            className="absolute bottom-0 left-0 right-0 h-[65px] bg-[#5b21b6] border-t border-white/20 grid grid-cols-6 items-center px-1 z-30 shadow-[0_-4px_14px_rgba(0,0,0,0.25)] pb-[env(safe-area-inset-bottom)]"
           >
-            <span className="text-lg" aria-hidden="true">🔄</span>
-            <span className="text-[10px] font-bold tracking-tight">Reset</span>
-          </button>
-        </nav>
+            {[
+              {
+                icon: '🗺️', label: 'Map', aria: 'Go to hospital map',
+                onClick: () => {
+                  setAppMode('tour');
+                  const idx = tourStops.findIndex((s) => s.type === 'map');
+                  if (idx !== -1) setCurrentStepIndex(idx);
+                },
+                active: appMode === 'tour' && currentStep?.type === 'map'
+              },
+              {
+                icon: '📸', label: 'Camera', aria: 'Open Scavenger Hunt',
+                onClick: () => setAppMode('scavengerHunt'),
+                active: appMode === 'scavengerHunt'
+              },
+              {
+                icon: '🎓', label: 'Careers', aria: 'Take the career quiz',
+                onClick: startCareerQuizDirect,
+                active: ['careerQuiz', 'careerResultsView', 'careerInfo', 'avatarBuilder', 'badgeSuccess'].includes(appMode)
+              },
+              {
+                icon: '🎮', label: 'Arcade', aria: 'Play games',
+                onClick: () => { setAppMode('gamesHub'); setArcadeGame(null); },
+                active: appMode === 'gamesHub'
+              },
+              {
+                icon: '🪪', label: 'Badge', aria: 'Look up my badge',
+                onClick: () => {
+                  setAppMode('viewBadge');
+                  setFoundBadge(null);
+                  setLookupValue('');
+                  setSearchError('');
+                },
+                active: appMode === 'viewBadge'
+              }
+            ].map((item) => (
+              <button
+                key={item.label}
+                onClick={item.onClick}
+                aria-label={item.aria}
+                className={`flex flex-col items-center justify-center gap-0.5 h-full transition-all active:scale-90 rounded-xl ${FOCUS} ${
+                  item.active ? 'bg-white/20 text-white font-black' : 'text-white/70'
+                }`}
+              >
+                <span className="text-lg" aria-hidden="true">{item.icon}</span>
+                <span className="text-[10px] font-bold tracking-tight">{item.label}</span>
+              </button>
+            ))}
+
+            <button
+              onClick={() => setShowResetConfirm(true)}
+              aria-label="Start over"
+              className={`flex flex-col items-center justify-center gap-0.5 h-full text-white/70 active:text-white transition-all active:scale-90 rounded-xl ${FOCUS}`}
+            >
+              <span className="text-lg" aria-hidden="true">🔄</span>
+              <span className="text-[10px] font-bold tracking-tight">Reset</span>
+            </button>
+          </nav>
+        )}
       </div>
 
       {showPhotoBooth && (
