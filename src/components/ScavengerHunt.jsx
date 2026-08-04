@@ -17,51 +17,51 @@ const huntItems = [
   { id: 5, label: 'A Giant Carnival Prize Stuffed Animal 🧸', key: 'carnival_prize' },
   { id: 6, label: 'A 4-H Purple or Blue Prize Ribbon 🏅', key: 'ribbon' },
   { id: 7, label: 'Someone Wearing Boots Covered in Barn Dust 👢', key: 'dusty_boots' },
-  { id: 8, label: 'Carnival rides glowing or spinning in action!,' key: 'glow-ride'},
+{ id: 8, label: 'Carnival rides glowing or spinning in action!', key: 'glow-ride' },
 ];
 
-  const handleImageUpload = async (event, item) => {
-    if (facebookConsent === null) {
-      alert('Please select YES or NO for Facebook permission above before snapping photos!');
-      return;
+  async function handleImageUpload(event, item) {
+        if (facebookConsent === null) {
+            alert('Please select YES or NO for Facebook permission above before snapping photos!');
+            return;
+        }
+
+        const file = event.target.files[0];
+        if (!file) return;
+
+        setUploading(true);
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', UPLOAD_PRESET);
+        // Attach tags so you can filter approved photos easily in Cloudinary!
+        formData.append('tags', facebookConsent ? 'fb_approved,scavenger_hunt' : 'private,scavenger_hunt');
+
+        try {
+            const response = await fetch(
+                `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+                { method: 'POST', body: formData }
+            );
+
+            const data = await response.json();
+
+            if (data.secure_url) {
+                setCompletedItems((prev) => [...prev, item.id]);
+                alert(
+                    facebookConsent
+                        ? `Awesome shot! Saved & tagged for our Facebook page! 📸`
+                        : `Great find! Saved for your game badge! 📸`
+                );
+            } else {
+                alert('Upload failed. Please check your connection!');
+            }
+        } catch (error) {
+            console.error('Error uploading photo:', error);
+            alert('Oops! Upload error. Try again!');
+        } finally {
+            setUploading(false);
+        }
     }
-
-    const file = event.target.files[0];
-    if (!file) return;
-
-    setUploading(true);
-
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', UPLOAD_PRESET);
-    // Attach tags so you can filter approved photos easily in Cloudinary!
-    formData.append('tags', facebookConsent ? 'fb_approved,scavenger_hunt' : 'private,scavenger_hunt');
-
-    try {
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
-        { method: 'POST', body: formData }
-      );
-
-      const data = await response.json();
-
-      if (data.secure_url) {
-        setCompletedItems((prev) => [...prev, item.id]);
-        alert(
-          facebookConsent
-            ? `Awesome shot! Saved & tagged for our Facebook page! 📸`
-            : `Great find! Saved for your game badge! 📸`
-        );
-      } else {
-        alert('Upload failed. Please check your connection!');
-      }
-    } catch (error) {
-      console.error('Error uploading photo:', error);
-      alert('Oops! Upload error. Try again!');
-    } finally {
-      setUploading(false);
-    }
-  };
 
   return (
     <div className="flex-1 bg-[#3b0764] p-4 flex flex-col justify-between overflow-y-auto h-full text-white text-center">
