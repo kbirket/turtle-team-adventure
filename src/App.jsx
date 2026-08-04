@@ -1688,61 +1688,72 @@ export default function App() {
               )}
 
               {/* ARCADE MENU */}
-              {appMode === 'gamesHub' && !arcadeGame && (
-                <div className="flex-1 bg-[#3b0764] p-5 flex flex-col justify-between h-full text-white overflow-y-auto">
-                  <div className="text-center mt-2">
-                    <span className="text-4xl">🎮</span>
-                    <h2 className="text-xl font-black tracking-wide">Turtle Arcade</h2>
-                    <p className="text-xs text-white/75">Pick a game</p>
-                  </div>
+{appMode === 'gamesHub' && !arcadeGame && (
+  <div className="flex-1 bg-[#3b0764] p-5 flex flex-col justify-between h-full text-white overflow-y-auto">
+    <div className="text-center mt-2">
+      <span className="text-4xl">🎮</span>
+      <h2 className="text-xl font-black tracking-wide">Turtle Arcade</h2>
+      <p className="text-xs text-white/75">Pick a game</p>
+    </div>
 
-                  <div className="flex flex-col gap-3 my-auto">
-                    {[
-                      {
-                        key: 'rprc',
-                        icon: '🩺',
-                        title: 'Right Place, Right Care',
-                        blurb: 'ER or clinic? Test your instincts.',
-                        accent: 'border-l-[#fb7185]'
-                      },
-                      {
-                        key: 'handwash',
-                        icon: '🧼',
-                        title: 'The 20-Second Scrub',
-                        blurb: 'Zap the germs and wash your hands right.',
-                        accent: 'border-l-[#22d3ee]'
-                      },
-                      {
-                        key: 'memory',
-                        icon: '🧩',
-                        title: 'Turtle Memory Match',
-                        blurb: 'Find all the matching pairs.',
-                        accent: 'border-l-[#a78bfa]'
-                      }
-                    ].map((g) => (
-                      <button
-                        key={g.key}
-                        onClick={() => {
-                          setArcadeGame(g.key);
-                          if (g.key === 'memory') startNewMemoryGame();
-                        }}
-                        className={`w-full bg-white border-l-4 ${g.accent} rounded-2xl p-4 text-left shadow-lg active:scale-95 transition-all ${FOCUS}`}
-                      >
-                        <span className="text-3xl" aria-hidden="true">{g.icon}</span>
-                        <h3 className="font-black text-base text-[#3b0764] mt-1">{g.title}</h3>
-                        <p className="text-xs text-slate-700 leading-snug mt-0.5">{g.blurb}</p>
-                      </button>
-                    ))}
-                  </div>
+    <div className="flex flex-col gap-3 my-auto">
+      {[
+        {
+          key: 'scavenger',
+          icon: '📸',
+          title: 'Photo Scavenger Hunt',
+          blurb: 'Snap fair photos & get featured on Facebook!',
+          accent: 'border-l-[#e11d48]'
+        },
+        {
+          key: 'rprc',
+          icon: '🩺',
+          title: 'Right Place, Right Care',
+          blurb: 'ER or clinic? Test your instincts.',
+          accent: 'border-l-[#fb7185]'
+        },
+        {
+          key: 'handwash',
+          icon: '🧼',
+          title: 'The 20-Second Scrub',
+          blurb: 'Zap the germs and wash your hands right.',
+          accent: 'border-l-[#22d3ee]'
+        },
+        {
+          key: 'memory',
+          icon: '🧩',
+          title: 'Turtle Memory Match',
+          blurb: 'Find all the matching pairs.',
+          accent: 'border-l-[#a78bfa]'
+        }
+      ].map((g) => (
+        <button
+          key={g.key}
+          onClick={() => {
+            if (g.key === 'scavenger') {
+              setAppMode('scavengerHunt');
+            } else {
+              setArcadeGame(g.key);
+              if (g.key === 'memory') startNewMemoryGame();
+            }
+          }}
+          className={`w-full bg-white border-l-4 ${g.accent} rounded-2xl p-4 text-left shadow-lg active:scale-95 transition-all ${FOCUS}`}
+        >
+          <span className="text-3xl" aria-hidden="true">{g.icon}</span>
+          <h3 className="font-black text-base text-[#3b0764] mt-1">{g.title}</h3>
+          <p className="text-xs text-slate-700 leading-snug mt-0.5">{g.blurb}</p>
+        </button>
+      ))}
+    </div>
 
-                  <button
-                    onClick={() => setAppMode('tour')}
-                    className={`w-full min-h-[52px] py-3 rounded-2xl text-sm uppercase ${BTN_GHOST} ${FOCUS}`}
-                  >
-                    Return to Map ➔
-                  </button>
-                </div>
-              )}
+    <button
+      onClick={() => setAppMode('tour')}
+      className={`w-full min-h-[52px] py-3 rounded-2xl text-sm uppercase ${BTN_GHOST} ${FOCUS}`}
+    >
+      Return to Map ➔
+    </button>
+  </div>
+)}
 
               {appMode === 'gamesHub' && arcadeGame === 'rprc' && (
                 <RightPlaceRightCare
