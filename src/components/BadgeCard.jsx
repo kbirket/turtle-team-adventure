@@ -12,10 +12,10 @@ const getNameFontSize = (name = '') => {
 // Dynamic font scaling for Career Title
 const getTitleFontSize = (title = '') => {
   const len = title.length;
-  if (len > 16) return 'text-[8.5px] leading-tight tracking-tighter'; // Very long (BEHAVIORAL HEALTH)
-  if (len > 12) return 'text-[10px] leading-tight tracking-tight';   // Long (HUMAN RESOURCES)
-  if (len > 8)  return 'text-xs leading-tight tracking-tight';      // Medium (RADIOLOGY, LAB TECH)
-  return 'text-sm leading-tight tracking-normal';                    // Short (DOCTOR, NURSE)
+  if (len > 15) return 'text-[7.5px] leading-tight tracking-tighter'; // (e.g. BEHAVIORAL HEALTH, PHYSICAL THERAPY)
+  if (len > 11) return 'text-[9.5px] leading-tight tracking-tight';   // (e.g. HUMAN RESOURCES, LAB TECH)
+  if (len > 7)  return 'text-xs leading-tight tracking-tight';      // (e.g. RADIOLOGY, SURGERY)
+  return 'text-sm leading-tight tracking-normal';                    // (e.g. DOCTOR, NURSE)
 };
 
 export default function BadgeCard({ name, careerTitle, avatarSrc, badgeCode, variant = 'display' }) {
@@ -56,7 +56,7 @@ export default function BadgeCard({ name, careerTitle, avatarSrc, badgeCode, var
             <div className="h-[1px] bg-rose-500 flex-1"></div>
           </div>
 
-          {/* Scaled Career Title (Truncate removed, tracking adjusted) */}
+          {/* Scaled Career Title */}
           <div className="h-6 flex items-center justify-center px-0.5">
             <h2 className={`font-black text-rose-600 uppercase text-center whitespace-nowrap ${getTitleFontSize(careerTitle)}`}>
               {careerTitle || 'EXPLORER'}
