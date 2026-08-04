@@ -1,84 +1,73 @@
 // src/components/BadgeCard.jsx
 import React from 'react';
 
-// Dynamic font scaling for Child Name
 const getNameFontSize = (name = '') => {
   const len = name.length;
-  if (len > 12) return 'text-xs leading-none';     // Long names (e.g. CHRISTOPHER)
-  if (len > 8)  return 'text-sm leading-none';     // Medium names (e.g. ALEXANDER)
-  return 'text-lg leading-none';                   // Short names (e.g. KRISTEN, K, SAM)
+  if (len > 12) return 'text-xs leading-none';
+  if (len > 8)  return 'text-sm leading-none';
+  return 'text-lg leading-none';
 };
 
-// Dynamic font scaling for Career Title
 const getTitleFontSize = (title = '') => {
   const len = title.length;
-  if (len > 15) return 'text-[7.5px] leading-tight tracking-tighter'; // (e.g. BEHAVIORAL HEALTH, PHYSICAL THERAPY)
-  if (len > 11) return 'text-[9.5px] leading-tight tracking-tight';   // (e.g. HUMAN RESOURCES, LAB TECH)
-  if (len > 7)  return 'text-xs leading-tight tracking-tight';      // (e.g. RADIOLOGY, SURGERY)
-  return 'text-sm leading-tight tracking-normal';                    // (e.g. DOCTOR, NURSE)
+  if (len > 15) return 'text-[8px] leading-tight tracking-tighter';
+  if (len > 11) return 'text-[9.5px] leading-tight tracking-tight';
+  if (len > 7)  return 'text-xs leading-tight tracking-tight';
+  return 'text-sm leading-tight tracking-normal';
 };
 
 export default function BadgeCard({ name, careerTitle, avatarSrc, badgeCode, variant = 'display' }) {
   const isPrint = variant === 'print';
 
   return (
-    <div className={`w-full h-full relative flex flex-col justify-between p-3 select-none ${isPrint ? 'print-card' : ''}`}>
+    <div className={`w-full h-full relative select-none p-2 flex flex-col justify-between ${isPrint ? 'print-card' : ''}`}>
       
-      {/* Top Header Row */}
-      <div className="flex justify-between items-start pt-1 px-1">
-        <img src="/logo-patterson.png" alt="Patterson Health Center" className="h-7 object-contain" />
-        <div className="text-right">
-          <div className="text-[9px] font-black tracking-widest text-[#5b21b6] uppercase">TURTLE TEAM</div>
-          <div className="text-[7px] font-bold text-slate-500 uppercase tracking-wider">HONORARY MEMBER</div>
-        </div>
-      </div>
+      {/* Spacer for Top Logo Header baked into template */}
+      <div className="h-6 w-full" />
 
-      {/* Main Content Area */}
-      <div className="flex items-center gap-2 my-auto px-1">
-        {/* Avatar / Selfie Photo */}
-        <div className="w-20 h-20 rounded-full border-2 border-[#5b21b6] overflow-hidden bg-slate-100 flex-shrink-0 shadow-inner flex items-center justify-center">
-          <img src={avatarSrc || '/characters/doctor/avatar.png'} alt="" className="w-full h-full object-cover" />
+      {/* Main Content Row */}
+      <div className="flex items-center gap-2 my-auto px-2">
+        {/* Avatar Circle */}
+        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-[#5b21b6] overflow-hidden bg-white flex-shrink-0 shadow-md flex items-center justify-center">
+          <img 
+            src={avatarSrc || '/characters/doctor/avatar.png'} 
+            alt="" 
+            className="w-full h-full object-cover" 
+          />
         </div>
 
-        {/* Name & Title Block */}
+        {/* Dynamic Text Column */}
         <div className="flex-1 text-center overflow-hidden flex flex-col justify-center">
-          {/* Scaled Child Name */}
-          <div className="h-6 flex items-center justify-center">
-            <h1 className={`font-black text-[#3b0764] uppercase text-center ${getNameFontSize(name)}`}>
-              {name || 'EXPLORER'}
-            </h1>
-          </div>
+          {/* Child Name */}
+          <h1 className={`font-black text-[#1e1b4b] uppercase text-center ${getNameFontSize(name)}`}>
+            {name || 'EXPLORER'}
+          </h1>
 
-          {/* Star Divider Line */}
-          <div className="flex items-center justify-center gap-1 my-0.5 opacity-60">
-            <div className="h-[1px] bg-rose-500 flex-1"></div>
-            <span className="text-[8px] text-rose-500">★</span>
-            <div className="h-[1px] bg-rose-500 flex-1"></div>
-          </div>
+          {/* Red Accent Bar */}
+          <div className="w-full h-[2px] bg-rose-600 my-1 rounded-full opacity-80" />
 
-          {/* Scaled Career Title */}
-          <div className="h-6 flex items-center justify-center px-0.5">
-            <h2 className={`font-black text-rose-600 uppercase text-center whitespace-nowrap ${getTitleFontSize(careerTitle)}`}>
-              {careerTitle || 'EXPLORER'}
-            </h2>
-          </div>
-
-          {/* Subtitle */}
-          <div className="text-[7px] font-extrabold text-slate-700 tracking-wider uppercase mt-0.5">
-            HONORARY PATTERSON HEALTH CENTER
-            <br />
-            <span className="text-[#5b21b6]">★ TURTLE TEAM MEMBER ★</span>
-          </div>
+          {/* Dynamic Career Title */}
+          <h2 className={`font-black text-rose-600 uppercase text-center whitespace-nowrap ${getTitleFontSize(careerTitle)}`}>
+            {careerTitle || 'EXPLORER'}
+          </h2>
         </div>
       </div>
 
-      {/* Footer Info / Badge Code */}
-      <div className="flex justify-between items-end pb-1 px-1 text-[8px] font-mono font-bold text-slate-600">
+      {/* Footer Row: Badge Code + Pediatrics QR Code */}
+      <div className="flex justify-between items-end px-2 pb-1 text-left">
         <div>
-          <span className="text-[7px] text-slate-400 block font-sans uppercase">BADGE #</span>
-          <span className="text-[#3b0764] font-black">{badgeCode || '2026-XXXX'}</span>
+          <span className="text-[7px] text-slate-500 font-bold block uppercase tracking-wider">BADGE #</span>
+          <span className="text-xs font-mono font-black text-[#3b0764]">{badgeCode || '2026-XXXX'}</span>
         </div>
-        <img src="/official-seal.png" alt="" className="h-7 object-contain opacity-90" />
+
+        {/* Pediatrics Web Page QR Code */}
+        <div className="flex items-center gap-1 bg-white/80 p-0.5 rounded-md border border-slate-200">
+          <img 
+            src="/pediatrics-qr.png" 
+            alt="Pediatrics Page QR Code" 
+            className="w-7 h-7 sm:w-8 sm:h-8 object-contain" 
+          />
+        </div>
       </div>
     </div>
   );
