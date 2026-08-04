@@ -1892,8 +1892,7 @@ export default function App() {
         </div>
 
         {/* BOTTOM NAV - Only shown after child enters their name */}
-        {isNameConfirmed && (
-          <nav
+                  <nav
             aria-label="Main"
             className="absolute bottom-0 left-0 right-0 h-[65px] bg-[#5b21b6] border-t border-white/20 grid grid-cols-6 items-center px-1 z-30 shadow-[0_-4px_14px_rgba(0,0,0,0.25)] pb-[env(safe-area-inset-bottom)]"
           >
