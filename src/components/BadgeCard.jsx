@@ -1,21 +1,21 @@
 // src/components/BadgeCard.jsx
 import React from 'react';
 
-// Auto-scale font size based on Name length
+// Dynamic font scaling for Child Name
 const getNameFontSize = (name = '') => {
   const len = name.length;
   if (len > 12) return 'text-xs leading-none';     // Long names (e.g. CHRISTOPHER)
   if (len > 8)  return 'text-sm leading-none';     // Medium names (e.g. ALEXANDER)
-  return 'text-lg leading-none';                   // Short names (e.g. K, SARAH, SAM)
+  return 'text-lg leading-none';                   // Short names (e.g. KRISTEN, K, SAM)
 };
 
-// Auto-scale font size based on Career Title length
+// Dynamic font scaling for Career Title
 const getTitleFontSize = (title = '') => {
   const len = title.length;
-  if (len > 18) return 'text-[9px] leading-tight';  // Very long (e.g. BEHAVIORAL HEALTH)
-  if (len > 12) return 'text-[11px] leading-tight'; // Long (e.g. HUMAN RESOURCES)
-  if (len > 8)  return 'text-xs leading-tight';     // Medium (e.g. RADIOLOGY, LAB TECH)
-  return 'text-sm leading-tight';                   // Short (e.g. DOCTOR, NURSE)
+  if (len > 16) return 'text-[8.5px] leading-tight tracking-tighter'; // Very long (BEHAVIORAL HEALTH)
+  if (len > 12) return 'text-[10px] leading-tight tracking-tight';   // Long (HUMAN RESOURCES)
+  if (len > 8)  return 'text-xs leading-tight tracking-tight';      // Medium (RADIOLOGY, LAB TECH)
+  return 'text-sm leading-tight tracking-normal';                    // Short (DOCTOR, NURSE)
 };
 
 export default function BadgeCard({ name, careerTitle, avatarSrc, badgeCode, variant = 'display' }) {
@@ -44,7 +44,7 @@ export default function BadgeCard({ name, careerTitle, avatarSrc, badgeCode, var
         <div className="flex-1 text-center overflow-hidden flex flex-col justify-center">
           {/* Scaled Child Name */}
           <div className="h-6 flex items-center justify-center">
-            <h1 className={`font-black text-[#3b0764] uppercase tracking-wide text-center ${getNameFontSize(name)}`}>
+            <h1 className={`font-black text-[#3b0764] uppercase text-center ${getNameFontSize(name)}`}>
               {name || 'EXPLORER'}
             </h1>
           </div>
@@ -56,9 +56,9 @@ export default function BadgeCard({ name, careerTitle, avatarSrc, badgeCode, var
             <div className="h-[1px] bg-rose-500 flex-1"></div>
           </div>
 
-          {/* Scaled Career Title */}
-          <div className="h-6 flex items-center justify-center px-1">
-            <h2 className={`font-black text-rose-600 uppercase tracking-tight text-center ${getTitleFontSize(careerTitle)}`}>
+          {/* Scaled Career Title (Truncate removed, tracking adjusted) */}
+          <div className="h-6 flex items-center justify-center px-0.5">
+            <h2 className={`font-black text-rose-600 uppercase text-center whitespace-nowrap ${getTitleFontSize(careerTitle)}`}>
               {careerTitle || 'EXPLORER'}
             </h2>
           </div>
