@@ -16,9 +16,9 @@ export function HospitalMap({
   const handleZoomIn = () => setZoomLevel((prev) => Math.min(prev + 0.3, 1.8));
   const handleZoomOut = () => setZoomLevel((prev) => Math.max(prev - 0.3, 1));
 
-  // All 14 stops shifted slightly UP
+  // All 14 stops
   const stops = [
-    { id: 4.0,  label: 'PT & Rehab',  iconSrc: 'therapy.svg',           key: 'PT',          top: '3%',   left: '28%' },
+    { id: 4.0,  label: 'PT & Rehab',  iconSrc: 'therapy.svg',          key: 'PT',          top: '3%',   left: '28%' },
     { id: 5.0,  label: 'Clinic',      iconSrc: 'clinic.svg',           key: 'CLINIC',      top: '8%',   left: '60%' },
     { id: 6.0,  label: 'Behavioral',  iconSrc: 'behavioralhealth.svg', key: 'BEHAVIORAL',  top: '14%',  left: '42%' },
     { id: 7.0,  label: 'Lab',         iconSrc: 'lab.svg',              key: 'LAB',         top: '20%',  left: '66%' },
@@ -80,10 +80,11 @@ export function HospitalMap({
               transformOrigin: '50% 0%'
             }}
           >
+            {/* Map background image locked to z-0 */}
             <img 
               src="/icons/hospital-map.svg" 
               alt="Hospital Map" 
-              className="w-full h-full object-cover pointer-events-none"
+              className="absolute inset-0 w-full h-full object-cover pointer-events-none z-0"
             />
 
             {stops.map((s) => (

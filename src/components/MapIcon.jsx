@@ -6,7 +6,8 @@ export default function MapIcon({ label, iconSrc, done, onClick }) {
     <button
       onClick={onClick}
       aria-label={label}
-      className="relative group focus:outline-none transition-transform duration-150 active:scale-90"
+      // Added z-10 and transform-gpu to lock high stacking layer above the map image
+      className="relative z-10 group focus:outline-none transition-transform duration-150 active:scale-90 transform-gpu"
     >
       {/* Custom Building Graphic with Steady Glow */}
       <img 
@@ -23,7 +24,7 @@ export default function MapIcon({ label, iconSrc, done, onClick }) {
 
       {/* Floating Completed Star Badge */}
       {done && (
-        <span className="absolute -top-1 -right-1 bg-[#fbbf24] text-[#3b0764] text-xs font-black rounded-full w-6 h-6 flex items-center justify-center shadow-lg border-2 border-white animate-bounce">
+        <span className="absolute -top-1 -right-1 bg-[#fbbf24] text-[#3b0764] text-xs font-black rounded-full w-6 h-6 flex items-center justify-center shadow-lg border-2 border-white animate-bounce z-20">
           ⭐
         </span>
       )}

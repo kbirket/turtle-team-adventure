@@ -1954,7 +1954,7 @@ export default function App() {
               <span className="text-[10px] font-bold tracking-tight">Reset</span>
             </button>
           </nav>
-        )}
+
       </div>
 
       {showPhotoBooth && (
