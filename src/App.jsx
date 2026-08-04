@@ -315,6 +315,11 @@ export default function App() {
           if (stop.character) new Image().src = stop.character;
         });
 
+     GAME_CARDS.forEach((src) => {
+          const img = new Image();
+          img.src = src;
+        });
+        
         setTourStops(formattedStops);
         writeCache(TOUR_CACHE_KEY, formattedStops);
         setLoadError(false);

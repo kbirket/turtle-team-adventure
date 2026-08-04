@@ -257,6 +257,12 @@ export default function RightPlaceRightCare({ onExit, onLogEvent }) {
         >
           Back to Arcade
         </button>
+        {/* MEDICAL DISCLAIMER BANNER */}
+<div className="bg-slate-100 border border-slate-300 rounded-xl p-2 mb-3 text-center">
+  <p className="text-[10px] text-slate-700 leading-tight font-medium">
+    📋 <strong>Note:</strong> This game is for educational purposes only and does not constitute medical advice. In a real medical emergency, always call 911 immediately.
+  </p>
+</div>
       </div>
     </div>
   );
