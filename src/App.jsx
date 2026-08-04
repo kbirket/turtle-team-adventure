@@ -506,7 +506,6 @@ export default function App() {
 
     setAdminPreviewBadge(newBadgeObj);
 
-    // Matches exact Airtable schema!
     base('Badge Orders').create(
       [{
         fields: {
@@ -514,7 +513,7 @@ export default function App() {
           'Career Selected': newBadgeObj.career,
           'Badge Code': generatedPin,
           'Stamps Collected': completedStops.length,
-          'Order Date': new Date().toISOString(),
+          'Order Date': new Date().toISOString().split('T')[0],
           'Print Status': 'Needs Printing'
         }
       }],
@@ -704,20 +703,15 @@ export default function App() {
       showToast('Confirm your name first!', 'warn');
       return;
     }
-    if (capturedPhoto && photoPermission === null) {
-      showToast('Please tap Yes or No for photo permission.', 'warn');
-      return;
-    }
 
     setSubmittingBadge(true);
 
-    // Exact match to your Airtable table headers!
     const fields = {
-      'Child Name': childName,
-      'Career Selected': finalCareer || 'Doctor',
-      'Stamps Collected': completedStops.length,
-      'Order Date': new Date().toISOString(),
-      'Badge Code': assignedPin,
+      'Child Name': String(childName).toUpperCase().trim(),
+      'Career Selected': String(finalCareer || 'Doctor'),
+      'Stamps Collected': Number(completedStops?.length || 0),
+      'Order Date': new Date().toISOString().split('T')[0],
+      'Badge Code': String(assignedPin || generateBadgeCode()),
       'Print Status': 'Needs Printing'
     };
 
@@ -735,13 +729,15 @@ export default function App() {
       return;
     }
 
-    base('Badge Orders').create([{ fields }], (err) => {
+    base('Badge Orders').create([{ fields }], (err, records) => {
       setSubmittingBadge(false);
       if (err) {
-        console.error('Airtable submit error:', err);
+        console.error('❌ AIRTABLE API ERROR:', err);
         queueIt();
+      } else {
+        console.log('✅ BADGE CREATED SUCCESSFULLY:', records[0].id);
+        logEvent('badge_ordered', { career: finalCareer });
       }
-      logEvent('badge_ordered', { career: finalCareer, queued: !!err });
       setAppMode('badgeSuccess');
     });
   };
