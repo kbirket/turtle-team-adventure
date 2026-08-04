@@ -351,8 +351,6 @@ export default function App() {
   };
 
   const forceGlobalReset = useCallback((silent = false) => {
-    localStorage.removeItem('tta_scavenger_consent');
-localStorage.removeItem('tta_scavenger_photos');
     clearIdleTimers();
     setIdleWarning(false);
     setCompletedStops([]);
@@ -373,6 +371,11 @@ localStorage.removeItem('tta_scavenger_photos');
     setLookupValue('');
     setShowResetConfirm(false);
     setArcadeGame(null);
+    
+    // Clear Scavenger Hunt session data
+    localStorage.removeItem('tta_scavenger_consent');
+    localStorage.removeItem('tta_scavenger_completed');
+
     setAppMode('tour');
     if (!silent) showToast('Ready for the next explorer!', 'success');
   }, [showToast]);
