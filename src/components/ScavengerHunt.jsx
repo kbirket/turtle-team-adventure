@@ -6,8 +6,26 @@ const UPLOAD_PRESET = 'ScavengerHunt';
 
 export default function ScavengerHunt({ onBackToArcade }) {
   const [uploading, setUploading] = useState(false);
-  const [completedItems, setCompletedItems] = useState([]);
-  const [facebookConsent, setFacebookConsent] = useState(null); // null = unselected, true = yes, false = no
+
+  // 1. Read saved consent synchronously from localStorage to stop layout flickering/resetting
+  const [facebookConsent, setFacebookConsent] = useState(() => {
+    try {
+      const saved = localStorage.getItem('tta_scavenger_consent');
+      return saved !== null ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  // 2. Read completed hunt items from localStorage so progress stays put!
+  const [completedItems, setCompletedItems] = useState(() => {
+    try {
+      const saved = localStorage.getItem('tta_scavenger_completed');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   const huntItems = [
     { id: 1, label: 'Patterson Health Center Booth 🏥', key: 'booth' },
@@ -20,8 +38,17 @@ export default function ScavengerHunt({ onBackToArcade }) {
     { id: 8, label: 'Carnival rides glowing or spinning in action!', key: 'glow-ride' },
   ];
 
+  // Helper to persist consent selection
+  const handleSelectConsent = (consentValue) => {
+    setFacebookConsent(consentValue);
+    try {
+      localStorage.setItem('tta_scavenger_consent', JSON.stringify(consentValue));
+    } catch (err) {
+      console.error('Failed to save consent preference:', err);
+    }
+  };
+
   const handleImageUpload = async (event, item) => {
-    // Safety check just in case
     if (facebookConsent === null) return;
 
     const file = event.target.files[0];
@@ -32,7 +59,6 @@ export default function ScavengerHunt({ onBackToArcade }) {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('upload_preset', UPLOAD_PRESET);
-    // Attach tags so you can filter approved photos easily in Cloudinary!
     formData.append('tags', facebookConsent ? 'fb_approved,scavenger_hunt' : 'private,scavenger_hunt');
 
     try {
@@ -44,7 +70,16 @@ export default function ScavengerHunt({ onBackToArcade }) {
       const data = await response.json();
 
       if (data.secure_url) {
-        setCompletedItems((prev) => [...prev, item.id]);
+        setCompletedItems((prev) => {
+          const updated = [...prev, item.id];
+          try {
+            localStorage.setItem('tta_scavenger_completed', JSON.stringify(updated));
+          } catch (e) {
+            console.error(e);
+          }
+          return updated;
+        });
+
         alert(
           facebookConsent
             ? `Awesome shot! Saved & tagged for our Facebook page! 📸`
@@ -80,10 +115,10 @@ export default function ScavengerHunt({ onBackToArcade }) {
         )}
       </div>
 
-      {/* Required Permission Box */}
-      <div className={`p-3 rounded-2xl mb-3 flex flex-col gap-2 flex-shrink-0 border-2 transition-all ${
+      {/* Required Permission Box - Fixed structure prevents layout shifts */}
+      <div className={`p-3 rounded-2xl mb-3 flex flex-col gap-2 flex-shrink-0 border-2 transition-none ${
         !isPermissionSelected 
-          ? 'bg-amber-500/20 border-amber-400 animate-pulse' 
+          ? 'bg-amber-500/20 border-amber-400' 
           : 'bg-white/10 border-white/20'
       }`}>
         <p className="text-xs font-bold text-amber-300">
@@ -92,10 +127,10 @@ export default function ScavengerHunt({ onBackToArcade }) {
         <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
-            onClick={() => setFacebookConsent(true)}
-            className={`py-2.5 text-xs font-black rounded-xl uppercase transition-all ${
+            onClick={() => handleSelectConsent(true)}
+            className={`py-2.5 text-xs font-black rounded-xl uppercase transition-none ${
               facebookConsent === true
-                ? 'bg-emerald-500 text-white shadow-md ring-2 ring-emerald-300 scale-105'
+                ? 'bg-emerald-500 text-white shadow-md ring-2 ring-emerald-300'
                 : 'bg-white/10 text-white/70 hover:bg-white/20'
             }`}
           >
@@ -103,10 +138,10 @@ export default function ScavengerHunt({ onBackToArcade }) {
           </button>
           <button
             type="button"
-            onClick={() => setFacebookConsent(false)}
-            className={`py-2.5 text-xs font-black rounded-xl uppercase transition-all ${
+            onClick={() => handleSelectConsent(false)}
+            className={`py-2.5 text-xs font-black rounded-xl uppercase transition-none ${
               facebookConsent === false
-                ? 'bg-rose-600 text-white shadow-md ring-2 ring-rose-300 scale-105'
+                ? 'bg-rose-600 text-white shadow-md ring-2 ring-rose-300'
                 : 'bg-white/10 text-white/70 hover:bg-white/20'
             }`}
           >
