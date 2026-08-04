@@ -15,7 +15,7 @@ export default function App() {
   const [childName, setChildName] = useState('');
   const [isNameConfirmed, setIsNameConfirmed] = useState(false);
   const [assignedPin, setAssignedPin] = useState('');
-  const [appMode, setAppMode] = useState('welcome'); // welcome, tour, careers, gamesHub, scavengerHunt, badge, reset
+  const [appMode, setAppMode] = useState('welcome'); // welcome, tour, careers, gamesHub, scavengerHunt, badge
   const [arcadeGame, setArcadeGame] = useState(null);
   
   // Stamp Tracking State
@@ -117,13 +117,14 @@ export default function App() {
     const code = generatePin();
     setOrderCode(code);
 
+    // EXACT MATCH to your Airtable table headers!
     const orderPayload = {
       'Child Name': childName || 'Explorer',
       'Career Selected': selectedCareer?.title || 'Turtle Team Member',
-      'Badge Code': code,
       'Stamps Collected': completedStamps.length,
-      'Status': 'Pending',
       'Order Date': new Date().toISOString(),
+      'Badge Code': code,
+      'Print Status': 'Needs Printing',
     };
 
     try {
@@ -140,10 +141,12 @@ export default function App() {
         setBadgeOrdered(true);
         setIsOfflineQueued(false);
       } else {
-        throw new Error('Airtable API error response');
+        const data = await res.json();
+        console.error('Airtable Error:', data);
+        throw new Error(data.error?.message || 'Airtable error');
       }
     } catch (err) {
-      console.warn('Airtable failed. Queuing locally:', err);
+      console.warn('Network issue or Airtable mismatch. Queuing locally:', err);
       const existing = JSON.parse(localStorage.getItem('tta_pending_orders_v2') || '[]');
       existing.push(orderPayload);
       localStorage.setItem('tta_pending_orders_v2', JSON.stringify(existing));
