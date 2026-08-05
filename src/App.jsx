@@ -1374,42 +1374,88 @@ useEffect(() => {
                     </div>
                   )}
 
-                  {/* PHOTOS TAB IN ADMIN — CLOUDINARY TAGGED PORTAL */}
+{/* PHOTOS TAB — APPROVAL QUEUE */}
                   {adminTab === 'photos' && (
-                    <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-300 flex flex-col gap-3 text-center">
-                      <div>
-                        <h3 className="text-xs font-black uppercase text-slate-700 tracking-wider">
-                          📸 Scavenger Hunt & Kiosk Photos
-                        </h3>
-                        <p className="text-[11px] text-slate-500 mt-1">
-                          Photos upload directly to Cloudinary tagged with <strong>'fb_approved'</strong> or <strong>'scavenger_hunt'</strong>.
-                        </p>
+                    <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-300 flex flex-col gap-3">
+                      <div className="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-xl border border-slate-300">
+                        {['Pending', 'Approved', 'Rejected'].map((s) => (
+                          <button
+                            key={s}
+                            onClick={() => setPhotoFilter(s)}
+                            className={`py-2 text-[11px] font-black rounded-lg transition-all ${FOCUS_CARD} ${
+                              photoFilter === s ? 'bg-[#5b21b6] text-white shadow' : 'text-slate-700'
+                            }`}
+                          >
+                            {s}
+                          </button>
+                        ))}
                       </div>
 
-                      <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex flex-col gap-2">
-                        <span className="text-2xl">☁️</span>
-                        <p className="text-xs text-slate-700 font-medium">
-                          Quick-link filter by permission tag in Cloudinary:
+                      {photoQueue.length === 0 && (
+                        <p className="text-xs text-slate-600 py-6 text-center">
+                          No {photoFilter.toLowerCase()} photos.
                         </p>
+                      )}
 
-                        <div className="grid grid-cols-1 gap-2 mt-1">
-                          <a
-                            href={`https://console.cloudinary.com/console/c-${cloudName}/media_library/search?q=tags%3Dfb_approved`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow transition-all"
-                          >
-                            ✅ View Approved Photos (fb_approved)
-                          </a>
-                          <a
-                            href={`https://console.cloudinary.com/console/c-${cloudName}/media_library/search?q=tags%3Dscavenger_hunt`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="py-2 px-3 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-[11px] uppercase tracking-wider rounded-xl transition-all"
-                          >
-                            📁 View All Scavenger Photos
-                          </a>
-                        </div>
+                      <div className="flex flex-col gap-3 max-h-[420px] overflow-y-auto">
+                        {photoQueue.map((p) => (
+                          <div key={p.id} className="border border-slate-300 rounded-xl overflow-hidden">
+                            <img
+                              src={p.url}
+                              alt={p.item}
+                              className="w-full h-40 object-cover bg-slate-100"
+                            />
+                            <div className="p-2.5 flex flex-col gap-2">
+                              <div className="flex justify-between items-start gap-2">
+                                <div className="text-left min-w-0">
+                                  <p className="text-xs font-black text-slate-800 truncate">
+                                    {p.name || 'No name given'}
+                                  </p>
+                                  <p className="text-[11px] text-slate-600 truncate">{p.item}</p>
+                                </div>
+                                <span className={`text-[10px] font-black px-2 py-1 rounded-lg flex-shrink-0 ${
+                                  p.consent === 'Yes'
+                                    ? 'bg-emerald-100 text-emerald-800'
+                                    : 'bg-rose-100 text-rose-800'
+                                }`}>
+                                  {p.consent === 'Yes' ? 'CONSENT: YES' : 'CONSENT: NO'}
+                                </span>
+                              </div>
+
+                              {p.consent !== 'Yes' && (
+                                <p className="text-[10px] font-bold text-rose-700 bg-rose-50 rounded-lg py-1.5 px-2 text-left">
+                                  Parent declined Facebook use. Do not post.
+                                </p>
+                              )}
+
+                              <div className="grid grid-cols-3 gap-1.5">
+                                
+                                  href={p.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={`py-2 text-[11px] font-black uppercase rounded-lg bg-slate-100 text-slate-800 text-center ${FOCUS_CARD}`}
+                                >
+                                  Open
+                                </a>
+                                <button
+                                  onClick={() => setPhotoStatus(p.id, 'Approved')}
+                                  disabled={p.consent !== 'Yes'}
+                                  className={`py-2 text-[11px] font-black uppercase rounded-lg text-white disabled:opacity-30 ${FOCUS_CARD} ${
+                                    p.consent === 'Yes' ? 'bg-emerald-600 active:bg-emerald-700' : 'bg-slate-400'
+                                  }`}
+                                >
+                                  Approve
+                                </button>
+                                <button
+                                  onClick={() => setPhotoStatus(p.id, 'Rejected')}
+                                  className={`py-2 text-[11px] font-black uppercase rounded-lg bg-rose-600 active:bg-rose-700 text-white ${FOCUS_CARD}`}
+                                >
+                                  Reject
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}
