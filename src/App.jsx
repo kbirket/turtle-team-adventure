@@ -236,7 +236,7 @@ export default function App() {
   const [photoPermission, setPhotoPermission] = useState(null);
 
   /* ---------- arcade ---------- */
-  const [arcadeCategory, setArcadeCategory] = useState('kids'); // 'kids' or 'adults'
+  const [arcadeCategory, setArcadeCategory] = useState('kids');
   const [memoryDeck, setMemoryDeck] = useState([]);
   const [flippedIndices, setFlippedIndices] = useState([]);
   const [matchedPairs, setMatchedPairs] = useState([]);
@@ -253,8 +253,6 @@ export default function App() {
   const [adminInputPin, setAdminInputPin] = useState('');
   const [pinError, setPinError] = useState('');
   const [reprintValue, setReprintValue] = useState('');
-  const [photoGallery, setPhotoGallery] = useState([]);
-  const [loadingPhotos, setLoadingPhotos] = useState(false);
 
   /* ---------- modals ---------- */
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -322,7 +320,6 @@ export default function App() {
           if (stop.character) new Image().src = stop.character;
         });
 
-        // Preload arcade memory cards for instant game load
         GAME_CARDS.forEach((src) => {
           const img = new Image();
           img.src = src;
@@ -386,7 +383,6 @@ export default function App() {
     setArcadeGame(null);
     setArcadeCategory('kids');
     
-    // Clear Scavenger Hunt session data
     localStorage.removeItem('tta_scavenger_consent');
     localStorage.removeItem('tta_scavenger_completed');
 
@@ -442,7 +438,7 @@ export default function App() {
   const formatBadgeTitle = (rawCareer) =>
     rawCareer ? rawCareer.toUpperCase() : 'EXPLORER';
 
-  /* ---------- admin & photo moderation ---------- */
+  /* ---------- admin ---------- */
   const fetchPrintQueue = useCallback(() => {
     base('Badge Orders')
       .select({
@@ -465,54 +461,6 @@ export default function App() {
         }
       });
   }, []);
-
-  const fetchPendingPhotos = useCallback(() => {
-    setLoadingPhotos(true);
-    base('Badge Orders')
-      .select({
-        maxRecords: 30,
-        filterByFormula: "AND(NOT({Photo Data} = ''), OR({Photo Status} = 'Pending Approval', {Photo Status} = ''))"
-      })
-      .firstPage((err, records) => {
-        setLoadingPhotos(false);
-        if (err) {
-          console.error('Error fetching photos:', err);
-          return;
-        }
-        setPhotoGallery(
-          records.map((r) => ({
-            id: r.id,
-            name: r.fields['Child Name'] || 'EXPLORER',
-            career: r.fields['Career Selected'] || 'Explorer',
-            photo: r.fields['Photo Data'],
-            code: r.fields['Badge Code'],
-            status: r.fields['Photo Status'] || 'Pending'
-          }))
-        );
-      });
-  }, []);
-
-  const handlePhotoModeration = (recordId, newStatus) => {
-    if (!recordId) return;
-
-    base('Badge Orders').update(
-      [{ id: recordId, fields: { 'Photo Status': newStatus } }],
-      (err) => {
-        if (err) {
-          showToast('Could not update photo status.', 'warn');
-          return;
-        }
-        showToast(newStatus === 'Approved' ? 'Photo approved! ✅' : 'Photo rejected. ❌', 'info');
-        setPhotoGallery((prev) => prev.filter((item) => item.id !== recordId));
-      }
-    );
-  };
-
-  useEffect(() => {
-    if (appMode === 'adminPortal' && adminTab === 'photos') {
-      fetchPendingPhotos();
-    }
-  }, [appMode, adminTab, fetchPendingPhotos]);
 
   const markPrinted = (recordId) => {
     if (!recordId) return;
@@ -780,17 +728,16 @@ export default function App() {
 
     let uploadedPhotoUrl = null;
 
-    // 1. Upload to Cloudinary IF photo exists & Parent gave permission ('Yes')
     if (capturedPhoto && photoPermission === true) {
       try {
-        const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-        const uploadPreset = import.meta.env.VITE_CLOUDINARY_PRESET;
+        const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dbvm7hy4d';
+        const uploadPreset = import.meta.env.VITE_CLOUDINARY_PRESET || 'ScavengerHunt';
 
         if (cloudName && uploadPreset) {
           const formData = new FormData();
           formData.append('file', rawPhoto || capturedPhoto);
           formData.append('upload_preset', uploadPreset);
-          formData.append('tags', 'fb_approved,kiosk_selfie');
+          formData.append('tags', 'fb_approved,scavenger_hunt,kiosk_selfie');
 
           const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
             method: 'POST',
@@ -808,18 +755,15 @@ export default function App() {
       }
     }
 
-    // 2. Prepare Airtable Badge Record
     const fields = {
       'Child Name': String(childName).toUpperCase().trim(),
       'Career Selected': String(finalCareer || 'Doctor'),
       'Stamps Collected': Number(completedStops?.length || 0),
       'Order Date': new Date().toISOString().split('T')[0],
       'Badge Code': String(assignedPin || generateBadgeCode()),
-      'Print Status': 'Needs Printing',
-      'Photo Status': photoPermission === true ? 'Pending Approval' : 'No Consent'
+      'Print Status': 'Needs Printing'
     };
 
-    // Attach photo data if permission was granted
     if (photoPermission === true) {
       fields['Photo Data'] = uploadedPhotoUrl || capturedPhoto;
     }
@@ -929,6 +873,8 @@ export default function App() {
     ? (adminPreviewBadge?.photo || capturedPhoto)
     : capturedPhoto;
   const printingBacks = isAdmin && adminTab === 'backs';
+
+  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dbvm7hy4d';
 
   return (
     <div
@@ -1384,76 +1330,43 @@ export default function App() {
                     </div>
                   )}
 
-                  {/* PHOTOS MODERATION TAB IN ADMIN */}
+                  {/* PHOTOS TAB IN ADMIN — CLOUDINARY TAGGED PORTAL */}
                   {adminTab === 'photos' && (
-                    <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-300 flex flex-col gap-2">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <h3 className="text-[11px] font-black uppercase text-slate-600 tracking-wider">
-                            Photo Approval Queue ({photoGallery.length})
-                          </h3>
-                          <p className="text-[10px] text-slate-500">
-                            Review & approve selfies before publishing
-                          </p>
-                        </div>
-                        <button
-                          onClick={fetchPendingPhotos}
-                          className="text-[10px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded-lg border border-slate-300 active:scale-95"
-                        >
-                          🔄 Refresh
-                        </button>
+                    <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-300 flex flex-col gap-3 text-center">
+                      <div>
+                        <h3 className="text-xs font-black uppercase text-slate-700 tracking-wider">
+                          📸 Scavenger Hunt & Kiosk Photos
+                        </h3>
+                        <p className="text-[11px] text-slate-500 mt-1">
+                          Photos upload directly to Cloudinary tagged with <strong>'fb_approved'</strong> or <strong>'scavenger_hunt'</strong>.
+                        </p>
                       </div>
 
-                      {loadingPhotos ? (
-                        <div className="text-center py-8 text-xs font-bold text-slate-500 animate-pulse">
-                          Loading pending photos...
-                        </div>
-                      ) : photoGallery.length === 0 ? (
-                        <div className="p-6 bg-slate-50 border border-slate-200 rounded-xl text-center">
-                          <p className="text-xs text-slate-500 font-medium">
-                            🎉 All caught up! No photos waiting for approval.
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="grid grid-cols-2 gap-2.5 max-h-[340px] overflow-y-auto p-1">
-                          {photoGallery.map((item) => (
-                            <div
-                              key={item.id}
-                              className="bg-slate-50 border border-slate-300 p-2 rounded-xl flex flex-col items-center gap-2 shadow-sm"
-                            >
-                              <img
-                                src={item.photo}
-                                alt={item.name}
-                                className="w-full aspect-square object-cover rounded-lg bg-slate-200 border border-slate-200"
-                              />
-                              <div className="text-center w-full overflow-hidden">
-                                <span className="text-xs font-black text-slate-800 truncate block">
-                                  {item.name}
-                                </span>
-                                <span className="text-[10px] font-mono text-[#5b21b6] font-bold block">
-                                  {item.code}
-                                </span>
-                              </div>
+                      <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex flex-col gap-2">
+                        <span className="text-2xl">☁️</span>
+                        <p className="text-xs text-slate-700 font-medium">
+                          Quick-link filter by permission tag in Cloudinary:
+                        </p>
 
-                              {/* APPROVAL BUTTONS */}
-                              <div className="grid grid-cols-2 gap-1 w-full pt-1">
-                                <button
-                                  onClick={() => handlePhotoModeration(item.id, 'Rejected')}
-                                  className="py-1.5 bg-rose-500 active:bg-rose-600 text-white font-black text-[10px] uppercase rounded-lg shadow-sm transition-all"
-                                >
-                                  ❌ Reject
-                                </button>
-                                <button
-                                  onClick={() => handlePhotoModeration(item.id, 'Approved')}
-                                  className="py-1.5 bg-emerald-500 active:bg-emerald-600 text-white font-black text-[10px] uppercase rounded-lg shadow-sm transition-all"
-                                >
-                                  ✅ Approve
-                                </button>
-                              </div>
-                            </div>
-                          ))}
+                        <div className="grid grid-cols-1 gap-2 mt-1">
+                          <a
+                            href={`https://console.cloudinary.com/console/c-${cloudName}/media_library/search?q=tags%3Dfb_approved`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow transition-all"
+                          >
+                            ✅ View Approved Photos (fb_approved)
+                          </a>
+                          <a
+                            href={`https://console.cloudinary.com/console/c-${cloudName}/media_library/search?q=tags%3Dscavenger_hunt`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="py-2 px-3 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-[11px] uppercase tracking-wider rounded-xl transition-all"
+                          >
+                            📁 View All Scavenger Photos
+                          </a>
                         </div>
-                      )}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1850,7 +1763,6 @@ export default function App() {
                     <h2 className="text-lg font-black tracking-wide">Patterson Arcade</h2>
                     <p className="text-xs text-white/75">Pick a game mode</p>
 
-                    {/* CATEGORY SWITCHER TOGGLE */}
                     <div className="grid grid-cols-2 gap-1 bg-white/10 p-1 rounded-xl mt-2.5 border border-white/20">
                       <button
                         onClick={() => setArcadeCategory('kids')}
@@ -1873,7 +1785,6 @@ export default function App() {
 
                   <div className="flex flex-col gap-2 my-auto py-1">
                     {arcadeCategory === 'kids' ? (
-                      /* KIDS GAMES LIST */
                       [
                         { key: 'scavenger', icon: '📸', title: 'Photo Scavenger Hunt', blurb: 'Snap fair photos & get featured!', accent: 'border-l-[#e11d48]' },
                         { key: 'rprc', icon: '🩺', title: 'Right Place, Right Care', blurb: 'ER or clinic? Test your instincts.', accent: 'border-l-[#fb7185]' },
@@ -1894,7 +1805,6 @@ export default function App() {
                         </button>
                       ))
                     ) : (
-                      /* ADULT & TEEN GAMES LIST */
                       [
                         { key: 'careograms', icon: '🔤', title: 'Care-O-Grams', blurb: 'Unscramble services & learn local health options!', accent: 'border-l-[#e11d48]' },
                         { key: 'wordsearch', icon: '🔍', title: 'Medical Word Search', blurb: 'Find health, career, and anatomy terms!', accent: 'border-l-[#fbbf24]' },
