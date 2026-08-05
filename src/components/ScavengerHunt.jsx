@@ -1,12 +1,11 @@
 // src/components/ScavengerHunt.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
-const CLOUD_NAME = 'dbvm7hy4d'; 
+const CLOUD_NAME = 'dbvm7hy4d';
 const UPLOAD_PRESET = 'ScavengerHunt';
 
-export default function ScavengerHunt({ onBackToArcade }) {
+export default function ScavengerHunt({ onBackToArcade, base }) {
   const [uploading, setUploading] = useState(false);
-  const [approvedPhotos, setApprovedPhotos] = useState([]);
 
   // Read saved consent synchronously to prevent flicker
   const [facebookConsent, setFacebookConsent] = useState(() => {
@@ -27,22 +26,6 @@ export default function ScavengerHunt({ onBackToArcade }) {
       return [];
     }
   });
-
-  // Fetch approved photos for live gallery feed at bottom
-  useEffect(() => {
-    fetch(`https://res.cloudinary.com/${CLOUD_NAME}/image/list/gallery_live.json`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data?.resources) {
-          setApprovedPhotos(
-            data.resources.map((img) =>
-              `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/v${img.version}/${img.public_id}.${img.format}`
-            )
-          );
-        }
-      })
-      .catch(() => {}); // Silent fail if resource list restrictions aren't opened yet
-  }, []);
 
   const huntItems = [
     { id: 1, label: 'Patterson Health Center Booth 🏥', key: 'booth' },
@@ -86,6 +69,21 @@ export default function ScavengerHunt({ onBackToArcade }) {
       const data = await response.json();
 
       if (data.secure_url) {
+        // Write a row so the admin panel has something to approve.
+        // Cloudinary stores the image; Airtable tracks its status.
+        if (base) {
+          base('Scavenger Photos').create([{
+            fields: {
+              'Photo URL': data.secure_url,
+              'Hunt Item': item.label,
+              'Consent': facebookConsent ? 'Yes' : 'No',
+              'Status': 'Pending'
+            }
+          }], (err) => {
+            if (err) console.error('Airtable photo record failed:', err);
+          });
+        }
+
         setCompletedItems((prev) => {
           const updated = [...prev, item.id];
           try {
@@ -98,7 +96,7 @@ export default function ScavengerHunt({ onBackToArcade }) {
 
         alert(
           facebookConsent
-            ? `Awesome shot! Saved & tagged for our Facebook page! 📸`
+            ? `Awesome shot! Sent to Patterson Health Center for review! 📸`
             : `Great find! Photo saved safely! 📸`
         );
       } else {
@@ -133,8 +131,8 @@ export default function ScavengerHunt({ onBackToArcade }) {
 
       {/* Permission Box */}
       <div className={`p-3 rounded-2xl mb-3 flex flex-col gap-2 flex-shrink-0 border-2 transition-none ${
-        !isPermissionSelected 
-          ? 'bg-amber-500/20 border-amber-400' 
+        !isPermissionSelected
+          ? 'bg-amber-500/20 border-amber-400'
           : 'bg-white/10 border-white/20'
       }`}>
         <p className="text-xs font-bold text-amber-300">
@@ -192,10 +190,10 @@ export default function ScavengerHunt({ onBackToArcade }) {
                     ? 'bg-gray-600/50 text-white/50 cursor-not-allowed border border-white/10'
                     : 'bg-[#e11d48] active:bg-[#be123c] text-white cursor-pointer shadow active:scale-95'
                 }`}>
-                  {uploading 
-                    ? 'UPLOADING...' 
-                    : !isPermissionSelected 
-                      ? 'SELECT PERMISSION 👆' 
+                  {uploading
+                    ? 'UPLOADING...'
+                    : !isPermissionSelected
+                      ? 'SELECT PERMISSION 👆'
                       : 'SNAP PHOTO 📷'
                   }
                   <input
@@ -212,25 +210,6 @@ export default function ScavengerHunt({ onBackToArcade }) {
           );
         })}
       </div>
-
-      {/* LIVE APPROVED PHOTO REEL */}
-      {approvedPhotos.length > 0 && (
-        <div className="mt-3 pt-3 border-t border-white/20 flex-shrink-0 text-left">
-          <h3 className="text-[11px] font-black uppercase text-[#22d3ee] tracking-wider mb-2">
-            🌟 Live Fair Submissions
-          </h3>
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-            {approvedPhotos.map((url, idx) => (
-              <img
-                key={idx}
-                src={url}
-                alt="Approved submission"
-                className="w-14 h-14 object-cover rounded-xl border-2 border-white/30 shadow-md flex-shrink-0"
-              />
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
