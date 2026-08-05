@@ -1429,7 +1429,7 @@ useEffect(() => {
                               )}
 
                               <div className="grid grid-cols-3 gap-1.5">
-                                
+                                <a 
                                   href={p.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
