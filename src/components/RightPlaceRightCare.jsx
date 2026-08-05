@@ -57,7 +57,7 @@ const SCENARIOS = [
     why: "Schedule that at the clinic — the ER is for things that can't wait."
   },
   {
-    text: "You fell off the monkey bars and your arm is bent the wrong way.",
+    text: "You fell during an outdoor activity and your arm is bent the wrong way.",
     answer: 'er',
     why: "A bone that looks out of place needs the ER right away."
   }

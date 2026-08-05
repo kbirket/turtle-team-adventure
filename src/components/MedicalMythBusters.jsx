@@ -135,8 +135,14 @@ export default function MedicalMythBusters({ onExit, onLogEvent }) {
         </div>
       )}
 
-      <div className="text-center text-[10px] text-white/50">
-        Patterson Health Center · Community Education
+      {/* FOOTER & MEDICAL DISCLAIMER */}
+      <div className="mt-3 text-center flex flex-col gap-1">
+        <p className="text-[9px] text-white/50 leading-tight">
+          📋 <em>Educational purposes only. Does not constitute medical advice. In an emergency, call 911.</em>
+        </p>
+        <div className="text-[10px] text-white/40 font-bold">
+          Patterson Health Center · Community Education
+        </div>
       </div>
     </div>
   );
