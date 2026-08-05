@@ -708,9 +708,13 @@ export default function App() {
     logEvent('quiz_started');
   };
 
-  const submitBadgeOrder = () => {
+const submitBadgeOrder = () => {
     if (!childName.trim()) {
       showToast('Confirm your name first!', 'warn');
+      return;
+    }
+    if (capturedPhoto && photoPermission === null) {
+      showToast('Please tap Yes or No for photo permission.', 'warn');
       return;
     }
 
