@@ -6,6 +6,9 @@ import BadgeCard from './components/BadgeCard';
 import RightPlaceRightCare from './components/RightPlaceRightCare';
 import HandwashingGame from './components/HandwashingGame';
 import MedicalMythBusters from './components/MedicalMythBusters';
+import MedicalWordSearch from './components/MedicalWordSearch';
+import MedicalCryptogram from './components/MedicalCryptogram';
+import CareOGrams from './components/CareOGrams';
 import { HospitalMap } from './components/HospitalMap';
 import IconSprite from './components/IconSprite';
 import ScavengerHunt from './components/ScavengerHunt';
@@ -1724,7 +1727,7 @@ export default function App() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-2.5 my-auto">
+                  <div className="flex flex-col gap-2 my-auto py-1">
                     {arcadeCategory === 'kids' ? (
                       /* KIDS GAMES LIST */
                       [
@@ -1739,27 +1742,30 @@ export default function App() {
                             if (g.key === 'scavenger') setAppMode('scavengerHunt');
                             else { setArcadeGame(g.key); if (g.key === 'memory') startNewMemoryGame(); }
                           }}
-                          className={`w-full bg-white border-l-4 ${g.accent} rounded-2xl p-3 text-left shadow-lg active:scale-95 transition-all ${FOCUS}`}
+                          className={`w-full bg-white border-l-4 ${g.accent} rounded-2xl p-2.5 text-left shadow-lg active:scale-95 transition-all ${FOCUS}`}
                         >
-                          <span className="text-2xl" aria-hidden="true">{g.icon}</span>
-                          <h3 className="font-black text-sm text-[#3b0764] mt-0.5">{g.title}</h3>
-                          <p className="text-[11px] text-slate-700 leading-snug">{g.blurb}</p>
+                          <span className="text-xl" aria-hidden="true">{g.icon}</span>
+                          <h3 className="font-black text-xs text-[#3b0764] mt-0.5">{g.title}</h3>
+                          <p className="text-[10px] text-slate-700 leading-snug">{g.blurb}</p>
                         </button>
                       ))
                     ) : (
                       /* ADULT & TEEN GAMES LIST */
                       [
+                        { key: 'careograms', icon: '🔤', title: 'Care-O-Grams', blurb: 'Unscramble services & learn local health options!', accent: 'border-l-[#e11d48]' },
+                        { key: 'wordsearch', icon: '🔍', title: 'Medical Word Search', blurb: 'Find health, career, and anatomy terms!', accent: 'border-l-[#fbbf24]' },
                         { key: 'mythbusters', icon: '🩺', title: 'Medical MythBusters', blurb: 'Test your health facts vs. popular myths!', accent: 'border-l-[#22d3ee]' },
-                        { key: 'rprc', icon: '🏥', title: 'Right Place, Right Care', blurb: 'Learn which clinic option fits your symptoms best.', accent: 'border-l-[#fbbf24]' }
+                        { key: 'cryptogram', icon: '🔐', title: 'Medical Cryptograms', blurb: 'Decode famous historic medical quotes!', accent: 'border-l-[#a78bfa]' },
+                        { key: 'rprc', icon: '🏥', title: 'Right Place, Right Care', blurb: 'Learn which clinic option fits your symptoms best.', accent: 'border-l-[#fb7185]' }
                       ].map((g) => (
                         <button
                           key={g.key}
                           onClick={() => setArcadeGame(g.key)}
-                          className={`w-full bg-white border-l-4 ${g.accent} rounded-2xl p-3.5 text-left shadow-lg active:scale-95 transition-all ${FOCUS}`}
+                          className={`w-full bg-white border-l-4 ${g.accent} rounded-2xl p-2.5 text-left shadow-lg active:scale-95 transition-all ${FOCUS}`}
                         >
-                          <span className="text-2xl" aria-hidden="true">{g.icon}</span>
-                          <h3 className="font-black text-sm text-[#3b0764] mt-0.5">{g.title}</h3>
-                          <p className="text-[11px] text-slate-700 leading-snug">{g.blurb}</p>
+                          <span className="text-xl" aria-hidden="true">{g.icon}</span>
+                          <h3 className="font-black text-xs text-[#3b0764] mt-0.5">{g.title}</h3>
+                          <p className="text-[10px] text-slate-700 leading-snug">{g.blurb}</p>
                         </button>
                       ))
                     )}
@@ -1767,16 +1773,40 @@ export default function App() {
 
                   <button
                     onClick={() => setAppMode('tour')}
-                    className={`w-full min-h-[48px] py-2.5 rounded-2xl text-xs uppercase ${BTN_GHOST} ${FOCUS}`}
+                    className={`w-full min-h-[44px] py-2 rounded-2xl text-xs uppercase ${BTN_GHOST} ${FOCUS}`}
                   >
                     Return to Map ➔
                   </button>
                 </div>
               )}
 
+              {/* CARE-O-GRAMS GAME */}
+              {appMode === 'gamesHub' && arcadeGame === 'careograms' && (
+                <CareOGrams
+                  onExit={() => setArcadeGame(null)}
+                  onLogEvent={logEvent}
+                />
+              )}
+
+              {/* MEDICAL WORD SEARCH GAME */}
+              {appMode === 'gamesHub' && arcadeGame === 'wordsearch' && (
+                <MedicalWordSearch
+                  onExit={() => setArcadeGame(null)}
+                  onLogEvent={logEvent}
+                />
+              )}
+
               {/* MYTHBUSTERS GAME */}
               {appMode === 'gamesHub' && arcadeGame === 'mythbusters' && (
                 <MedicalMythBusters
+                  onExit={() => setArcadeGame(null)}
+                  onLogEvent={logEvent}
+                />
+              )}
+
+              {/* CRYPTOGRAM GAME */}
+              {appMode === 'gamesHub' && arcadeGame === 'cryptogram' && (
+                <MedicalCryptogram
                   onExit={() => setArcadeGame(null)}
                   onLogEvent={logEvent}
                 />
