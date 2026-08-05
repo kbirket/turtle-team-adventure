@@ -39,14 +39,14 @@ const BTN_PLAIN =
   'bg-slate-100 active:bg-slate-200 border-2 border-slate-300 text-[#3b0764] font-bold active:scale-95 transition-all';
 
 const GAME_CARDS = [
-  '/characters/doctor/avatar.png',
-  '/characters/nurse/avatar.png',
-  '/characters/lab-tech/avatar.png',
-  '/characters/pt/avatar.png',
-  '/characters/radiology/avatar.png',
-  '/characters/dietary/avatar.png',
-  '/characters/behavioral-health/avatar.png',
-  '/characters/marketing/avatar.png'
+  '/characters/doctor/avatar.webp',
+  '/characters/nurse/avatar.webp',
+  '/characters/lab-tech/avatar.webp',
+  '/characters/pt/avatar.webp',
+  '/characters/radiology/avatar.webp',
+  '/characters/dietary/avatar.webp',
+  '/characters/behavioral-health/avatar.webp',
+  '/characters/marketing/avatar.webp'
 ];
 
 const AVAILABLE_CAREERS = [
@@ -417,17 +417,17 @@ export default function App() {
   /* ---------- artwork + titles ---------- */
   const getDynamicArtwork = (careerTrack) => {
     const track = (careerTrack || finalCareer || '').toLowerCase();
-    if (track.includes('doctor')) return '/characters/doctor/avatar.png';
-    if (track.includes('nurse')) return '/characters/nurse/avatar.png';
-    if (track.includes('radiology')) return '/characters/radiology/avatar.png';
+    if (track.includes('doctor')) return '/characters/doctor/avatar.webp';
+    if (track.includes('nurse')) return '/characters/nurse/avatar.webp';
+    if (track.includes('radiology')) return '/characters/radiology/avatar.webp';
     if (track.includes('lab')) return '/characters/lab-tech/avatar.png';
-    if (track.includes('therapy') || track.includes('rehab')) return '/characters/pt/avatar.png';
-    if (track.includes('dietary')) return '/characters/dietary/avatar.png';
-    if (track.includes('behavioral')) return '/characters/behavioral-health/avatar.png';
-    if (track.includes('maintenance')) return '/characters/maintenance/avatar.png';
-    if (track.includes('human resources')) return '/characters/hr/avatar.png';
-    if (track.includes('cna') || track.includes('tech')) return '/characters/lab-tech/avatar.png';
-    return '/characters/marketing/avatar.png';
+    if (track.includes('therapy') || track.includes('rehab')) return '/characters/pt/avatar.webp';
+    if (track.includes('dietary')) return '/characters/dietary/avatar.webp';
+    if (track.includes('behavioral')) return '/characters/behavioral-health/avatar.webp';
+    if (track.includes('maintenance')) return '/characters/maintenance/avatar.webp';
+    if (track.includes('human resources')) return '/characters/hr/avatar.webp';
+    if (track.includes('cna') || track.includes('tech')) return '/characters/lab-tech/avatar.webp';
+    return '/characters/marketing/avatar.webp';
   };
 
   const formatBadgeTitle = (rawCareer) =>
