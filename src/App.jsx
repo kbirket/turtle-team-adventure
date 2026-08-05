@@ -247,7 +247,9 @@ export default function App() {
   const [adminTab, setAdminTab] = useState('queue');
   const [adminName, setAdminName] = useState('');
   const [adminCareer, setAdminCareer] = useState(AVAILABLE_CAREERS[0]);
-  const [printQueue, setPrintQueue] = useState([]);
+const [printQueue, setPrintQueue] = useState([]);
+  const [photoQueue, setPhotoQueue] = useState([]);
+  const [photoFilter, setPhotoFilter] = useState('Pending');
   const [adminPreviewBadge, setAdminPreviewBadge] = useState(null);
   const [showAdminPinModal, setShowAdminPinModal] = useState(false);
   const [adminInputPin, setAdminInputPin] = useState('');
@@ -462,6 +464,42 @@ export default function App() {
       });
   }, []);
 
+  const fetchPhotoQueue = useCallback((status) => {
+    base('Scavenger Photos')
+      .select({
+        maxRecords: 50,
+        filterByFormula: `{Status} = '${status}'`
+      })
+      .firstPage((err, records) => {
+        if (err) {
+          console.error('Error fetching photos:', err);
+          return;
+        }
+        setPhotoQueue(
+          records.map((r) => ({
+            id: r.id,
+            url: r.fields['Photo URL'] || '',
+            item: r.fields['Hunt Item'] || '',
+            name: r.fields['Child Name'] || '',
+            consent: r.fields['Consent'] || 'No'
+          }))
+        );
+      });
+  }, []);
+
+  const setPhotoStatus = (recordId, status) => {
+    base('Scavenger Photos').update(
+      [{ id: recordId, fields: { Status: status } }],
+      (err) => {
+        if (err) {
+          showToast('Could not update photo.', 'warn');
+          return;
+        }
+        fetchPhotoQueue(photoFilter);
+      }
+    );
+  };
+
   const markPrinted = (recordId) => {
     if (!recordId) return;
     base('Badge Orders').update(
@@ -580,9 +618,15 @@ export default function App() {
     setGameWon(false);
   };
 
-  useEffect(() => {
+useEffect(() => {
     if (appMode === 'adminPortal') fetchPrintQueue();
   }, [appMode, fetchPrintQueue]);
+
+  useEffect(() => {
+    if (appMode === 'adminPortal' && adminTab === 'photos') {
+      fetchPhotoQueue(photoFilter);
+    }
+  }, [appMode, adminTab, photoFilter, fetchPhotoQueue]);
 
   const handleCardClick = (index) => {
     if (
