@@ -1489,7 +1489,8 @@ export default function App() {
 
               {/* SCAVENGER HUNT (CAMERA TAB) */}
               {appMode === 'scavengerHunt' && (
-                <ScavengerHunt 
+                 <ScavengerHunt 
+                  base={base}
                   onBackToArcade={() => {
                     setAppMode('tour');
                     const idx = tourStops.findIndex((s) => s.type === 'map');
