@@ -253,6 +253,8 @@ export default function App() {
   const [adminInputPin, setAdminInputPin] = useState('');
   const [pinError, setPinError] = useState('');
   const [reprintValue, setReprintValue] = useState('');
+  const [photoGallery, setPhotoGallery] = useState([]);
+  const [loadingPhotos, setLoadingPhotos] = useState(false);
 
   /* ---------- modals ---------- */
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -463,6 +465,37 @@ export default function App() {
         }
       });
   }, []);
+
+  const fetchApprovedPhotos = useCallback(() => {
+    setLoadingPhotos(true);
+    base('Badge Orders')
+      .select({
+        maxRecords: 20,
+        filterByFormula: "NOT({Photo Data} = '')"
+      })
+      .firstPage((err, records) => {
+        setLoadingPhotos(false);
+        if (err) {
+          console.error('Error fetching photos:', err);
+          return;
+        }
+        setPhotoGallery(
+          records.map((r) => ({
+            id: r.id,
+            name: r.fields['Child Name'] || 'EXPLORER',
+            career: r.fields['Career Selected'] || 'Explorer',
+            photo: r.fields['Photo Data'],
+            code: r.fields['Badge Code']
+          }))
+        );
+      });
+  }, []);
+
+  useEffect(() => {
+    if (appMode === 'adminPortal' && adminTab === 'photos') {
+      fetchApprovedPhotos();
+    }
+  }, [appMode, adminTab, fetchApprovedPhotos]);
 
   const markPrinted = (recordId) => {
     if (!recordId) return;
@@ -1333,20 +1366,60 @@ export default function App() {
                     </div>
                   )}
 
-                  {/* PHOTOS TAB IN ADMIN */}
+                  {/* PHOTOS TAB IN ADMIN — LIVE REVIEW GALLERY GRID */}
                   {adminTab === 'photos' && (
                     <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-300 flex flex-col gap-2">
-                      <h3 className="text-[11px] font-black uppercase text-slate-600 tracking-wider">
-                        Approve Scavenger Photos
-                      </h3>
-                      <p className="text-xs text-slate-500">
-                        Photos uploaded with parent permission are tagged for Facebook and gallery review.
-                      </p>
-                      <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl text-center">
-                        <p className="text-xs text-slate-600 font-medium">
-                          Cloudinary Tagging Active: Check your Cloudinary Console under <strong>'fb_approved'</strong> to download full-resolution social media photos!
-                        </p>
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h3 className="text-[11px] font-black uppercase text-slate-600 tracking-wider">
+                            Approved Kiosk Photos ({photoGallery.length})
+                          </h3>
+                          <p className="text-[10px] text-slate-500">
+                            Selfies captured with parent permission
+                          </p>
+                        </div>
+                        <button
+                          onClick={fetchApprovedPhotos}
+                          className="text-[10px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded-lg border border-slate-300 active:scale-95"
+                        >
+                          🔄 Refresh
+                        </button>
                       </div>
+
+                      {loadingPhotos ? (
+                        <div className="text-center py-8 text-xs font-bold text-slate-500 animate-pulse">
+                          Loading photos...
+                        </div>
+                      ) : photoGallery.length === 0 ? (
+                        <div className="p-6 bg-slate-50 border border-slate-200 rounded-xl text-center">
+                          <p className="text-xs text-slate-500 font-medium">
+                            No photos submitted yet! Take a selfie during badge setup.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-2 max-h-[340px] overflow-y-auto p-1">
+                          {photoGallery.map((item) => (
+                            <div
+                              key={item.id}
+                              className="bg-slate-50 border border-slate-300 p-2 rounded-xl flex flex-col items-center gap-1.5 shadow-sm"
+                            >
+                              <img
+                                src={item.photo}
+                                alt={item.name}
+                                className="w-full aspect-square object-cover rounded-lg bg-slate-200 border border-slate-200"
+                              />
+                              <div className="text-center w-full overflow-hidden">
+                                <span className="text-xs font-black text-slate-800 truncate block">
+                                  {item.name}
+                                </span>
+                                <span className="text-[10px] font-mono text-[#5b21b6] font-bold block">
+                                  {item.code}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
