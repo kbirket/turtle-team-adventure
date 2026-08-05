@@ -18,20 +18,20 @@ export function HospitalMap({
 
   // All 14 stops
   const stops = [
-    { id: 4.0,  label: 'PT & Rehab',  iconSrc: 'therapy.svg',          key: 'PT',          top: '3%',   left: '28%' },
-    { id: 5.0,  label: 'Clinic',      iconSrc: 'clinic.svg',           key: 'CLINIC',      top: '8%',   left: '60%' },
-    { id: 6.0,  label: 'Behavioral',  iconSrc: 'behavioralhealth.svg', key: 'BEHAVIORAL',  top: '14%',  left: '42%' },
-    { id: 7.0,  label: 'Lab',         iconSrc: 'lab.svg',              key: 'LAB',         top: '20%',  left: '66%' },
-    { id: 8.0,  label: 'Surgery',     iconSrc: 'surgery.svg',          key: 'SURGERY',     top: '27%',  left: '25%' },
-    { id: 9.0,  label: 'Radiology',   iconSrc: 'radiology.svg',        key: 'RADIOLOGY',   top: '34%',  left: '60%' },
-    { id: 10.0, label: 'Café',        iconSrc: 'cafe.svg',             key: 'CAFE',        top: '40%',  left: '40%' },
-    { id: 11.0, label: 'Business',    iconSrc: 'business.svg',         key: 'BUSINESS',    top: '47%',  left: '65%' },
-    { id: 12.0, label: 'IT Dept',     iconSrc: 'it.svg',               key: 'MECHANICAL',  top: '54%',  left: '22%' },
-    { id: 13.0, label: 'Emergency',   iconSrc: 'ED.svg',               key: 'EMERGENCY',   top: '61%',  left: '52%' },
-    { id: 14.0, label: 'HR',          iconSrc: 'hr.svg',               key: 'ADMIN',       top: '68%',  left: '22%' },
-    { id: 15.0, label: 'Hospital',    iconSrc: 'hospital.svg',         key: 'HOSPITAL',    top: '75%',  left: '58%' },
-    { id: 16.0, label: 'Marketing',   iconSrc: 'marketing.svg',        key: 'COMMUNITY',   top: '81%',  left: '26%' },
-    { id: 17.0, label: 'Maintenance', iconSrc: 'maintenance.svg',      key: 'MAINTENANCE', top: '86%',  left: '50%' }
+    { id: 4.0,  label: 'PT & Rehab',  iconSrc: 'therapy.webp',          key: 'PT',          top: '3%',   left: '28%' },
+    { id: 5.0,  label: 'Clinic',      iconSrc: 'clinic.webp',           key: 'CLINIC',      top: '8%',   left: '60%' },
+    { id: 6.0,  label: 'Behavioral',  iconSrc: 'behavioralhealth.webp', key: 'BEHAVIORAL',  top: '14%',  left: '42%' },
+    { id: 7.0,  label: 'Lab',         iconSrc: 'lab.webp',              key: 'LAB',         top: '20%',  left: '66%' },
+    { id: 8.0,  label: 'Surgery',     iconSrc: 'surgery.webp',          key: 'SURGERY',     top: '27%',  left: '25%' },
+    { id: 9.0,  label: 'Radiology',   iconSrc: 'radiology.webp',        key: 'RADIOLOGY',   top: '34%',  left: '60%' },
+    { id: 10.0, label: 'Café',        iconSrc: 'cafe.webp',             key: 'CAFE',        top: '40%',  left: '40%' },
+    { id: 11.0, label: 'Business',    iconSrc: 'business.webp',         key: 'BUSINESS',    top: '47%',  left: '65%' },
+    { id: 12.0, label: 'IT Dept',     iconSrc: 'it.webp',               key: 'MECHANICAL',  top: '54%',  left: '22%' },
+    { id: 13.0, label: 'Emergency',   iconSrc: 'ED.webp',               key: 'EMERGENCY',   top: '61%',  left: '52%' },
+    { id: 14.0, label: 'HR',          iconSrc: 'hr.webp',               key: 'ADMIN',       top: '68%',  left: '22%' },
+    { id: 15.0, label: 'Hospital',    iconSrc: 'hospital.webp',         key: 'HOSPITAL',    top: '75%',  left: '58%' },
+    { id: 16.0, label: 'Marketing',   iconSrc: 'marketing.webp',        key: 'COMMUNITY',   top: '81%',  left: '26%' },
+    { id: 17.0, label: 'Maintenance', iconSrc: 'maintenance.webp',      key: 'MAINTENANCE', top: '86%',  left: '50%' }
   ];
 
   return (
@@ -82,7 +82,7 @@ export function HospitalMap({
           >
             {/* Map background image locked to z-0 */}
             <img 
-              src="/icons/hospital-map.svg" 
+              src="/icons/hospital-map.webp" 
               alt="Hospital Map" 
               className="absolute inset-0 w-full h-full object-cover pointer-events-none z-0"
             />

@@ -420,7 +420,7 @@ export default function App() {
     if (track.includes('doctor')) return '/characters/doctor/avatar.webp';
     if (track.includes('nurse')) return '/characters/nurse/avatar.webp';
     if (track.includes('radiology')) return '/characters/radiology/avatar.webp';
-    if (track.includes('lab')) return '/characters/lab-tech/avatar.png';
+    if (track.includes('lab')) return '/characters/lab-tech/avatar.webp';
     if (track.includes('therapy') || track.includes('rehab')) return '/characters/pt/avatar.webp';
     if (track.includes('dietary')) return '/characters/dietary/avatar.webp';
     if (track.includes('behavioral')) return '/characters/behavioral-health/avatar.webp';
@@ -1063,7 +1063,7 @@ const submitBadgeOrder = () => {
           {!isNameConfirmed && appMode !== 'adminPortal' ? (
             <div 
               className="flex-1 bg-no-repeat bg-cover bg-center p-6 flex flex-col justify-end items-center h-full relative overflow-hidden select-none"
-              style={{ backgroundImage: `url('/splash-image.png')` }}
+              style={{ backgroundImage: `url('/splash-image.webp')` }}
             >
               {/* Wooden Signpost Box */}
               <div className="w-full max-w-[290px] mb-3 z-10 flex flex-col gap-3 bg-[#4a2810] p-4 rounded-3xl border-4 border-[#8b5a2b] shadow-[0_10px_25px_rgba(0,0,0,0.8)] text-center ring-2 ring-[#f59e0b]">
