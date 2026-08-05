@@ -26,48 +26,48 @@ const PUZZLES = [
 
 export default function MedicalCryptogram({ onExit, onLogEvent }) {
   const [puzzleIndex, setPuzzleIndex] = useState(0);
-  const [selectedCipherLetter, setSelectedCipherLetter] = useState(null);
-  const [guesses, setGuesses] = useState({}); // { CIPHER_LETTER: GUESSED_LETTER }
+  const [selectedNumber, setSelectedNumber] = useState(null);
+  const [guesses, setGuesses] = useState({}); // { NUMBER: GUESSED_LETTER }
 
   const currentPuzzle = PUZZLES[puzzleIndex];
 
-  // Generate a deterministic substitution cipher map for the quote
-  const cipherMap = useMemo(() => {
+  // Assign a unique number (1-26) to each unique letter in the alphabet
+  const numberMap = useMemo(() => {
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-    const shuffled = [...alphabet].sort(() => 0.5 - Math.random());
+    const shuffledNumbers = Array.from({ length: 26 }, (_, i) => i + 1).sort(() => 0.5 - Math.random());
     const map = {};
     alphabet.forEach((char, idx) => {
-      map[char] = shuffled[idx];
+      map[char] = shuffledNumbers[idx];
     });
     return map;
   }, [puzzleIndex]);
 
-  const handleCipherClick = (codeLetter) => {
-    setSelectedCipherLetter(codeLetter);
+  const handleNumberClick = (num) => {
+    setSelectedNumber(num);
   };
 
   const handleGuess = (plainLetter) => {
-    if (!selectedCipherLetter) return;
+    if (!selectedNumber) return;
     setGuesses((prev) => ({
       ...prev,
-      [selectedCipherLetter]: plainLetter
+      [selectedNumber]: plainLetter
     }));
-    setSelectedCipherLetter(null);
+    setSelectedNumber(null);
   };
 
   // Check if solved
   const isSolved = useMemo(() => {
     const uniqueChars = new Set(currentPuzzle.quote.replace(/[^A-Z]/g, '').split(''));
     for (let char of uniqueChars) {
-      const code = cipherMap[char];
-      if (guesses[code] !== char) return false;
+      const num = numberMap[char];
+      if (guesses[num] !== char) return false;
     }
     return true;
-  }, [currentPuzzle, cipherMap, guesses]);
+  }, [currentPuzzle, numberMap, guesses]);
 
   const nextPuzzle = () => {
     setGuesses({});
-    setSelectedCipherLetter(null);
+    setSelectedNumber(null);
     setPuzzleIndex((prev) => (prev + 1) % PUZZLES.length);
   };
 
@@ -79,7 +79,7 @@ export default function MedicalCryptogram({ onExit, onLogEvent }) {
           <h2 className="text-xs font-black text-[#22d3ee] uppercase tracking-wider">
             🔐 Medical Cryptogram
           </h2>
-          <p className="text-[10px] text-white/70">Tap a code letter, then select a real letter!</p>
+          <p className="text-[10px] text-white/70">Tap a clue number, then pick a letter!</p>
         </div>
         <button
           onClick={onExit}
@@ -89,13 +89,13 @@ export default function MedicalCryptogram({ onExit, onLogEvent }) {
         </button>
       </div>
 
-      {/* Quote Display Grid — Distinct Word Cards & Generous Word Spacing */}
+      {/* Quote Display Grid */}
       <div className="bg-white/10 border border-white/20 p-3 rounded-2xl my-auto text-center">
-        <div className="flex flex-wrap justify-center gap-x-4 gap-y-3 max-h-[250px] overflow-y-auto p-1">
+        <div className="flex flex-wrap justify-center gap-x-3 gap-y-3 max-h-[250px] overflow-y-auto p-1">
           {currentPuzzle.quote.split(' ').map((word, wordIdx) => (
             <div
               key={wordIdx}
-              className="flex gap-1 bg-black/20 p-1.5 rounded-xl border border-white/10 flex-shrink-0 shadow-sm"
+              className="flex gap-1 bg-black/25 p-1.5 rounded-xl border border-white/10 flex-shrink-0 shadow-sm"
             >
               {word.split('').map((char, charIdx) => {
                 const isLetter = /[A-Z]/.test(char);
@@ -107,28 +107,32 @@ export default function MedicalCryptogram({ onExit, onLogEvent }) {
                   );
                 }
 
-                const code = cipherMap[char];
-                const guess = guesses[code] || '';
-                const isSelected = selectedCipherLetter === code;
+                const num = numberMap[char];
+                const guess = guesses[num] || '';
+                const isSelected = selectedNumber === num;
+                const isCorrect = guess === char;
+                const isWrong = guess && !isCorrect;
 
                 return (
                   <button
                     key={charIdx}
                     type="button"
-                    onClick={() => handleCipherClick(code)}
+                    onClick={() => handleNumberClick(num)}
                     className={`flex flex-col items-center w-6 sm:w-7 rounded-lg p-0.5 transition-all ${
                       isSelected
                         ? 'bg-[#fbbf24] text-[#1e1b4b] ring-2 ring-white scale-110 z-10'
-                        : guess
-                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40'
-                          : 'bg-white/10 hover:bg-white/20 text-white'
+                        : isCorrect
+                          ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-400'
+                          : isWrong
+                            ? 'bg-rose-500/30 text-rose-300 border border-rose-400'
+                            : 'bg-white/10 hover:bg-white/20 text-white'
                     }`}
                   >
-                    <span className="text-xs font-black h-4 border-b border-white/40 w-full text-center text-[#22d3ee]">
+                    <span className="text-xs font-black h-4 border-b border-white/40 w-full text-center">
                       {guess || '_'}
                     </span>
-                    <span className="text-[10px] font-mono font-bold text-white/70 mt-0.5">
-                      {code}
+                    <span className="text-[10px] font-mono font-black text-[#22d3ee] mt-0.5">
+                      {num}
                     </span>
                   </button>
                 );
@@ -151,12 +155,12 @@ export default function MedicalCryptogram({ onExit, onLogEvent }) {
       {!isSolved ? (
         <div className="flex flex-col gap-2 flex-shrink-0 my-2">
           <p className="text-[10px] text-center text-white/80 font-medium">
-            {selectedCipherLetter ? (
-              <span className="text-[#22d3ee] font-black">
-                Select real letter for code letter "{selectedCipherLetter}":
+            {selectedNumber ? (
+              <span className="text-[#fbbf24] font-black">
+                Select real letter for Number {selectedNumber}:
               </span>
             ) : (
-              '1️⃣ Tap any coded letter above  ➔  2️⃣ Pick real letter below:'
+              '1️⃣ Tap any clue number above  ➔  2️⃣ Pick a letter below:'
             )}
           </p>
           <div className="grid grid-cols-7 gap-1 max-w-[320px] mx-auto">
@@ -164,7 +168,7 @@ export default function MedicalCryptogram({ onExit, onLogEvent }) {
               <button
                 key={letter}
                 type="button"
-                disabled={!selectedCipherLetter}
+                disabled={!selectedNumber}
                 onClick={() => handleGuess(letter)}
                 className="py-1.5 bg-white/20 active:bg-white/40 disabled:opacity-30 rounded-lg text-xs font-black text-white hover:bg-[#22d3ee] hover:text-[#1e1b4b] transition-all"
               >
