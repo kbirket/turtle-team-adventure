@@ -1,32 +1,50 @@
 // src/components/CareOGrams.jsx
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 
 const PUZZLES = [
   {
-    scrambled: "X - R - A - Y",
     answer: "XRAY",
     service: "Radiology & Imaging",
     spotlight: "Patterson Health Center offers 3D Mammography, Ultrasound, and CT scans right here in Harper County—no long drive required!"
   },
   {
-    scrambled: "R - E - H - A - B",
     answer: "REHAB",
     service: "Physical & Occupational Therapy",
     spotlight: "Recover from surgery or injury close to home with our expert local physical and occupational therapy team."
   },
   {
-    scrambled: "S - C - R - U - B",
     answer: "SCRUB",
     service: "Surgical Services",
     spotlight: "From outpatient procedures to specialist surgeries, our surgical suite is equipped with modern medical technology."
   },
   {
-    scrambled: "C - L - I - N - I - C",
     answer: "CLINIC",
     service: "Family Medicine & Rural Health",
     spotlight: "Need a wellness check or same-day care? Our primary care clinics in Harper and Anthony are here for your whole family."
+  },
+  {
+    answer: "DOCTOR",
+    service: "Primary & Specialty Care",
+    spotlight: "Our compassionate physicians and providers are dedicated to providing personalized care for all generations."
   }
 ];
+
+// Helper function to scramble a string guarantees it won't equal the original
+function scrambleWord(word) {
+  if (word.length <= 1) return word;
+  let scrambled = word;
+  let attempts = 0;
+  while (scrambled === word && attempts < 20) {
+    attempts++;
+    const arr = word.split('');
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    scrambled = arr.join('');
+  }
+  return scrambled.split('').join(' - ');
+}
 
 export default function CareOGrams({ onExit, onLogEvent }) {
   const [index, setIndex] = useState(0);
@@ -35,6 +53,9 @@ export default function CareOGrams({ onExit, onLogEvent }) {
   const [error, setError] = useState(false);
 
   const current = PUZZLES[index];
+
+  // Dynamically scramble the target word whenever index changes
+  const displayScrambled = useMemo(() => scrambleWord(current.answer), [index]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -80,8 +101,8 @@ export default function CareOGrams({ onExit, onLogEvent }) {
               Scrambled Word {index + 1} of {PUZZLES.length}
             </span>
             
-            <div className="text-2xl font-black text-white tracking-widest my-2 bg-white/10 py-3 rounded-xl border border-white/20">
-              {current.scrambled}
+            <div className="text-2xl font-black text-[#fbbf24] tracking-widest my-2 bg-white/10 py-3 rounded-xl border border-white/20">
+              {displayScrambled}
             </div>
 
             <input

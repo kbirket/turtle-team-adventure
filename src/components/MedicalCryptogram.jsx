@@ -3,23 +3,23 @@ import React, { useState, useMemo } from 'react';
 
 const PUZZLES = [
   {
-    quote: "WHEREVER THE ART OF MEDICINE IS LOVED, THERE IS ALSO A LOVE OF HUMANITY.",
+    quote: "WHEREVER THE ART OF MEDICINE IS LOVED THERE IS ALSO A LOVE OF HUMANITY",
     author: "Hippocrates"
   },
   {
-    quote: "THE GOOD PHYSICIAN TREATS THE DISEASE; THE GREAT PHYSICIAN TREATS THE PATIENT WHO HAS THE DISEASE.",
+    quote: "THE GOOD PHYSICIAN TREATS THE DISEASE THE GREAT PHYSICIAN TREATS THE PATIENT",
     author: "William Osler"
   },
   {
-    quote: "THE ART OF MEDICINE CONSISTS OF AMUSING THE PATIENT WHILE NATURE CURES THE DISEASE.",
+    quote: "THE ART OF MEDICINE CONSISTS OF AMUSING THE PATIENT WHILE NATURE CURES",
     author: "Voltaire"
   },
   {
-    quote: "CURE SOMETIMES, TREAT OFTEN, COMFORT ALWAYS.",
+    quote: "CURE SOMETIMES TREAT OFTEN COMFORT ALWAYS",
     author: "Hippocrates"
   },
   {
-    quote: "THE FIRST DUTY OF MEDICINE IS TO PRESERVE HEALTH AND PREVENT DISEASE.",
+    quote: "THE FIRST DUTY OF MEDICINE IS TO PRESERVE HEALTH AND PREVENT DISEASE",
     author: "Francis Bacon"
   }
 ];
@@ -42,15 +42,6 @@ export default function MedicalCryptogram({ onExit, onLogEvent }) {
     return map;
   }, [puzzleIndex]);
 
-  // Inverse cipher to know what code letter represents what true letter
-  const reverseCipher = useMemo(() => {
-    const rev = {};
-    Object.entries(cipherMap).forEach(([plain, code]) => {
-      rev[code] = plain;
-    });
-    return rev;
-  }, [cipherMap]);
-
   const handleCipherClick = (codeLetter) => {
     setSelectedCipherLetter(codeLetter);
   };
@@ -62,14 +53,6 @@ export default function MedicalCryptogram({ onExit, onLogEvent }) {
       [selectedCipherLetter]: plainLetter
     }));
     setSelectedCipherLetter(null);
-  };
-
-  const handleClearGuess = (codeLetter) => {
-    setGuesses((prev) => {
-      const copy = { ...prev };
-      delete copy[codeLetter];
-      return copy;
-    });
   };
 
   // Check if solved
@@ -89,14 +72,14 @@ export default function MedicalCryptogram({ onExit, onLogEvent }) {
   };
 
   return (
-    <div className="flex-1 bg-[#1e1b4b] p-4 flex flex-col justify-between h-full text-white overflow-y-auto">
+    <div className="flex-1 bg-[#1e1b4b] p-3 flex flex-col justify-between h-full text-white overflow-y-auto">
       {/* Header */}
-      <div className="flex justify-between items-center bg-white/10 p-3 rounded-2xl flex-shrink-0 mb-2">
+      <div className="flex justify-between items-center bg-white/10 p-2.5 rounded-2xl flex-shrink-0 mb-2">
         <div>
           <h2 className="text-xs font-black text-[#22d3ee] uppercase tracking-wider">
             🔐 Medical Cryptogram
           </h2>
-          <p className="text-[10px] text-white/70">Decode the famous quote!</p>
+          <p className="text-[10px] text-white/70">Tap a code letter, then select a real letter!</p>
         </div>
         <button
           onClick={onExit}
@@ -106,11 +89,14 @@ export default function MedicalCryptogram({ onExit, onLogEvent }) {
         </button>
       </div>
 
-      {/* Quote Display Grid */}
+      {/* Quote Display Grid — Distinct Word Cards & Generous Word Spacing */}
       <div className="bg-white/10 border border-white/20 p-3 rounded-2xl my-auto text-center">
-        <div className="flex flex-wrap justify-center gap-x-2 gap-y-3 max-h-[220px] overflow-y-auto p-1">
+        <div className="flex flex-wrap justify-center gap-x-4 gap-y-3 max-h-[250px] overflow-y-auto p-1">
           {currentPuzzle.quote.split(' ').map((word, wordIdx) => (
-            <div key={wordIdx} className="flex gap-1 mb-1">
+            <div
+              key={wordIdx}
+              className="flex gap-1 bg-black/20 p-1.5 rounded-xl border border-white/10 flex-shrink-0 shadow-sm"
+            >
               {word.split('').map((char, charIdx) => {
                 const isLetter = /[A-Z]/.test(char);
                 if (!isLetter) {
@@ -128,17 +114,20 @@ export default function MedicalCryptogram({ onExit, onLogEvent }) {
                 return (
                   <button
                     key={charIdx}
+                    type="button"
                     onClick={() => handleCipherClick(code)}
                     className={`flex flex-col items-center w-6 sm:w-7 rounded-lg p-0.5 transition-all ${
                       isSelected
-                        ? 'bg-[#fbbf24] text-[#1e1b4b] ring-2 ring-white scale-110'
-                        : 'bg-white/10 hover:bg-white/20 text-white'
+                        ? 'bg-[#fbbf24] text-[#1e1b4b] ring-2 ring-white scale-110 z-10'
+                        : guess
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40'
+                          : 'bg-white/10 hover:bg-white/20 text-white'
                     }`}
                   >
-                    <span className="text-xs font-black h-4 border-b border-white/30 w-full text-center text-[#22d3ee]">
+                    <span className="text-xs font-black h-4 border-b border-white/40 w-full text-center text-[#22d3ee]">
                       {guess || '_'}
                     </span>
-                    <span className="text-[10px] font-mono text-white/60 mt-0.5">
+                    <span className="text-[10px] font-mono font-bold text-white/70 mt-0.5">
                       {code}
                     </span>
                   </button>
@@ -161,15 +150,20 @@ export default function MedicalCryptogram({ onExit, onLogEvent }) {
       {/* Letter Picker Keyboard */}
       {!isSolved ? (
         <div className="flex flex-col gap-2 flex-shrink-0 my-2">
-          <p className="text-[10px] text-center text-white/70">
-            {selectedCipherLetter
-              ? `Select real letter for coded letter "${selectedCipherLetter}":`
-              : 'Tap any coded letter above, then choose a replacement below:'}
+          <p className="text-[10px] text-center text-white/80 font-medium">
+            {selectedCipherLetter ? (
+              <span className="text-[#22d3ee] font-black">
+                Select real letter for code letter "{selectedCipherLetter}":
+              </span>
+            ) : (
+              '1️⃣ Tap any coded letter above  ➔  2️⃣ Pick real letter below:'
+            )}
           </p>
           <div className="grid grid-cols-7 gap-1 max-w-[320px] mx-auto">
             {'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map((letter) => (
               <button
                 key={letter}
+                type="button"
                 disabled={!selectedCipherLetter}
                 onClick={() => handleGuess(letter)}
                 className="py-1.5 bg-white/20 active:bg-white/40 disabled:opacity-30 rounded-lg text-xs font-black text-white hover:bg-[#22d3ee] hover:text-[#1e1b4b] transition-all"
@@ -181,6 +175,7 @@ export default function MedicalCryptogram({ onExit, onLogEvent }) {
         </div>
       ) : (
         <button
+          type="button"
           onClick={nextPuzzle}
           className="w-full py-3 bg-[#fbbf24] active:bg-[#f59e0b] text-[#1e1b4b] font-black text-xs uppercase tracking-wider rounded-xl shadow-lg my-2"
         >
@@ -189,7 +184,7 @@ export default function MedicalCryptogram({ onExit, onLogEvent }) {
       )}
 
       {/* FOOTER & MEDICAL DISCLAIMER */}
-      <div className="mt-2 text-center flex flex-col gap-1 flex-shrink-0">
+      <div className="mt-1 text-center flex flex-col gap-0.5 flex-shrink-0">
         <p className="text-[9px] text-white/50 leading-tight">
           📋 <em>Educational quote puzzle only. Does not constitute medical advice. In an emergency, call 911.</em>
         </p>
