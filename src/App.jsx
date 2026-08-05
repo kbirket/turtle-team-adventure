@@ -5,6 +5,7 @@ import TurtleBooth from './TurtleBooth';
 import BadgeCard from './components/BadgeCard';
 import RightPlaceRightCare from './components/RightPlaceRightCare';
 import HandwashingGame from './components/HandwashingGame';
+import MedicalMythBusters from './components/MedicalMythBusters';
 import { HospitalMap } from './components/HospitalMap';
 import IconSprite from './components/IconSprite';
 import ScavengerHunt from './components/ScavengerHunt';
@@ -232,6 +233,7 @@ export default function App() {
   const [photoPermission, setPhotoPermission] = useState(null);
 
   /* ---------- arcade ---------- */
+  const [arcadeCategory, setArcadeCategory] = useState('kids'); // 'kids' or 'adults'
   const [memoryDeck, setMemoryDeck] = useState([]);
   const [flippedIndices, setFlippedIndices] = useState([]);
   const [matchedPairs, setMatchedPairs] = useState([]);
@@ -315,7 +317,8 @@ export default function App() {
           if (stop.character) new Image().src = stop.character;
         });
 
-     GAME_CARDS.forEach((src) => {
+        // Preload arcade memory cards for instant game load
+        GAME_CARDS.forEach((src) => {
           const img = new Image();
           img.src = src;
         });
@@ -376,6 +379,7 @@ export default function App() {
     setLookupValue('');
     setShowResetConfirm(false);
     setArcadeGame(null);
+    setArcadeCategory('kids');
     
     // Clear Scavenger Hunt session data
     localStorage.removeItem('tta_scavenger_consent');
@@ -708,7 +712,7 @@ export default function App() {
     logEvent('quiz_started');
   };
 
-const submitBadgeOrder = () => {
+  const submitBadgeOrder = () => {
     if (!childName.trim()) {
       showToast('Confirm your name first!', 'warn');
       return;
@@ -1065,7 +1069,6 @@ const submitBadgeOrder = () => {
               className="flex-1 bg-no-repeat bg-cover bg-center p-6 flex flex-col justify-end items-center h-full relative overflow-hidden select-none"
               style={{ backgroundImage: `url('/splash-image.webp')` }}
             >
-              {/* Wooden Signpost Box */}
               <div className="w-full max-w-[290px] mb-3 z-10 flex flex-col gap-3 bg-[#4a2810] p-4 rounded-3xl border-4 border-[#8b5a2b] shadow-[0_10px_25px_rgba(0,0,0,0.8)] text-center ring-2 ring-[#f59e0b]">
                 <label 
                   htmlFor="child-name" 
@@ -1115,16 +1118,17 @@ const submitBadgeOrder = () => {
                       )}
                     </div>
 
-                    <div className="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-xl border border-slate-300">
+                    <div className="grid grid-cols-4 gap-1 bg-slate-100 p-1 rounded-xl border border-slate-300">
                       {[
                         { key: 'queue', label: 'Queue' },
                         { key: 'manual', label: 'Manual' },
-                        { key: 'backs', label: 'Backs' }
+                        { key: 'backs', label: 'Backs' },
+                        { key: 'photos', label: 'Photos 📸' }
                       ].map((t) => (
                         <button
                           key={t.key}
                           onClick={() => setAdminTab(t.key)}
-                          className={`py-2 text-xs font-black rounded-lg transition-all ${FOCUS_CARD} ${
+                          className={`py-2 text-[11px] font-black rounded-lg transition-all ${FOCUS_CARD} ${
                             adminTab === t.key
                               ? 'bg-[#5b21b6] text-white shadow'
                               : 'text-slate-700'
@@ -1286,6 +1290,23 @@ const submitBadgeOrder = () => {
                       >
                         🖨️ Print Card Back
                       </button>
+                    </div>
+                  )}
+
+                  {/* PHOTOS TAB IN ADMIN */}
+                  {adminTab === 'photos' && (
+                    <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-300 flex flex-col gap-2">
+                      <h3 className="text-[11px] font-black uppercase text-slate-600 tracking-wider">
+                        Approve Scavenger Photos
+                      </h3>
+                      <p className="text-xs text-slate-500">
+                        Photos uploaded with parent permission are tagged for Facebook and gallery review.
+                      </p>
+                      <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl text-center">
+                        <p className="text-xs text-slate-600 font-medium">
+                          Cloudinary Tagging Active: Check your Cloudinary Console under <strong>'fb_approved'</strong> to download full-resolution social media photos!
+                        </p>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1676,72 +1697,92 @@ const submitBadgeOrder = () => {
 
               {/* ARCADE MENU */}
               {appMode === 'gamesHub' && !arcadeGame && (
-                <div className="flex-1 bg-[#3b0764] p-5 flex flex-col justify-between h-full text-white overflow-y-auto">
-                  <div className="text-center mt-2">
-                    <span className="text-4xl">🎮</span>
-                    <h2 className="text-xl font-black tracking-wide">Turtle Arcade</h2>
-                    <p className="text-xs text-white/75">Pick a game</p>
+                <div className="flex-1 bg-[#3b0764] p-4 flex flex-col justify-between h-full text-white overflow-y-auto">
+                  <div className="text-center mt-1">
+                    <span className="text-3xl">🎮</span>
+                    <h2 className="text-lg font-black tracking-wide">Patterson Arcade</h2>
+                    <p className="text-xs text-white/75">Pick a game mode</p>
+
+                    {/* CATEGORY SWITCHER TOGGLE */}
+                    <div className="grid grid-cols-2 gap-1 bg-white/10 p-1 rounded-xl mt-2.5 border border-white/20">
+                      <button
+                        onClick={() => setArcadeCategory('kids')}
+                        className={`py-1.5 text-xs font-black rounded-lg transition-all ${
+                          arcadeCategory === 'kids' ? 'bg-[#fbbf24] text-[#3b0764]' : 'text-white/70'
+                        }`}
+                      >
+                        🐢 Kids Zone
+                      </button>
+                      <button
+                        onClick={() => setArcadeCategory('adults')}
+                        className={`py-1.5 text-xs font-black rounded-lg transition-all ${
+                          arcadeCategory === 'adults' ? 'bg-[#22d3ee] text-[#3b0764]' : 'text-white/70'
+                        }`}
+                      >
+                        🩺 Adult & Teen
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="flex flex-col gap-3 my-auto">
-                    {[
-                      {
-                        key: 'scavenger',
-                        icon: '📸',
-                        title: 'Photo Scavenger Hunt',
-                        blurb: 'Snap fair photos & get featured on Facebook!',
-                        accent: 'border-l-[#e11d48]'
-                      },
-                      {
-                        key: 'rprc',
-                        icon: '🩺',
-                        title: 'Right Place, Right Care',
-                        blurb: 'ER or clinic? Test your instincts.',
-                        accent: 'border-l-[#fb7185]'
-                      },
-                      {
-                        key: 'handwash',
-                        icon: '🧼',
-                        title: 'The 20-Second Scrub',
-                        blurb: 'Zap the germs and wash your hands right.',
-                        accent: 'border-l-[#22d3ee]'
-                      },
-                      {
-                        key: 'memory',
-                        icon: '🧩',
-                        title: 'Turtle Memory Match',
-                        blurb: 'Find all the matching pairs.',
-                        accent: 'border-l-[#a78bfa]'
-                      }
-                    ].map((g) => (
-                      <button
-                        key={g.key}
-                        onClick={() => {
-                          if (g.key === 'scavenger') {
-                            setAppMode('scavengerHunt');
-                          } else {
-                            setArcadeGame(g.key);
-                            if (g.key === 'memory') startNewMemoryGame();
-                          }
-                        }}
-                        className={`w-full bg-white border-l-4 ${g.accent} rounded-2xl p-4 text-left shadow-lg active:scale-95 transition-all ${FOCUS}`}
-                      >
-                        <span className="text-3xl" aria-hidden="true">{g.icon}</span>
-                        <h3 className="font-black text-base text-[#3b0764] mt-1">{g.title}</h3>
-                        <p className="text-xs text-slate-700 leading-snug mt-0.5">{g.blurb}</p>
-                      </button>
-                    ))}
+                  <div className="flex flex-col gap-2.5 my-auto">
+                    {arcadeCategory === 'kids' ? (
+                      /* KIDS GAMES LIST */
+                      [
+                        { key: 'scavenger', icon: '📸', title: 'Photo Scavenger Hunt', blurb: 'Snap fair photos & get featured!', accent: 'border-l-[#e11d48]' },
+                        { key: 'rprc', icon: '🩺', title: 'Right Place, Right Care', blurb: 'ER or clinic? Test your instincts.', accent: 'border-l-[#fb7185]' },
+                        { key: 'handwash', icon: '🧼', title: 'The 20-Second Scrub', blurb: 'Zap germs and wash your hands right.', accent: 'border-l-[#22d3ee]' },
+                        { key: 'memory', icon: '🧩', title: 'Turtle Memory Match', blurb: 'Find all the matching card pairs.', accent: 'border-l-[#a78bfa]' }
+                      ].map((g) => (
+                        <button
+                          key={g.key}
+                          onClick={() => {
+                            if (g.key === 'scavenger') setAppMode('scavengerHunt');
+                            else { setArcadeGame(g.key); if (g.key === 'memory') startNewMemoryGame(); }
+                          }}
+                          className={`w-full bg-white border-l-4 ${g.accent} rounded-2xl p-3 text-left shadow-lg active:scale-95 transition-all ${FOCUS}`}
+                        >
+                          <span className="text-2xl" aria-hidden="true">{g.icon}</span>
+                          <h3 className="font-black text-sm text-[#3b0764] mt-0.5">{g.title}</h3>
+                          <p className="text-[11px] text-slate-700 leading-snug">{g.blurb}</p>
+                        </button>
+                      ))
+                    ) : (
+                      /* ADULT & TEEN GAMES LIST */
+                      [
+                        { key: 'mythbusters', icon: '🩺', title: 'Medical MythBusters', blurb: 'Test your health facts vs. popular myths!', accent: 'border-l-[#22d3ee]' },
+                        { key: 'rprc', icon: '🏥', title: 'Right Place, Right Care', blurb: 'Learn which clinic option fits your symptoms best.', accent: 'border-l-[#fbbf24]' }
+                      ].map((g) => (
+                        <button
+                          key={g.key}
+                          onClick={() => setArcadeGame(g.key)}
+                          className={`w-full bg-white border-l-4 ${g.accent} rounded-2xl p-3.5 text-left shadow-lg active:scale-95 transition-all ${FOCUS}`}
+                        >
+                          <span className="text-2xl" aria-hidden="true">{g.icon}</span>
+                          <h3 className="font-black text-sm text-[#3b0764] mt-0.5">{g.title}</h3>
+                          <p className="text-[11px] text-slate-700 leading-snug">{g.blurb}</p>
+                        </button>
+                      ))
+                    )}
                   </div>
 
                   <button
                     onClick={() => setAppMode('tour')}
-                    className={`w-full min-h-[52px] py-3 rounded-2xl text-sm uppercase ${BTN_GHOST} ${FOCUS}`}
+                    className={`w-full min-h-[48px] py-2.5 rounded-2xl text-xs uppercase ${BTN_GHOST} ${FOCUS}`}
                   >
                     Return to Map ➔
                   </button>
                 </div>
               )}
 
+              {/* MYTHBUSTERS GAME */}
+              {appMode === 'gamesHub' && arcadeGame === 'mythbusters' && (
+                <MedicalMythBusters
+                  onExit={() => setArcadeGame(null)}
+                  onLogEvent={logEvent}
+                />
+              )}
+
+              {/* RIGHT PLACE RIGHT CARE GAME */}
               {appMode === 'gamesHub' && arcadeGame === 'rprc' && (
                 <RightPlaceRightCare
                   onExit={() => setArcadeGame(null)}
@@ -1749,6 +1790,7 @@ const submitBadgeOrder = () => {
                 />
               )}
 
+              {/* HANDWASHING GAME */}
               {appMode === 'gamesHub' && arcadeGame === 'handwash' && (
                 <HandwashingGame
                   onExit={() => setArcadeGame(null)}
@@ -1756,6 +1798,7 @@ const submitBadgeOrder = () => {
                 />
               )}
 
+              {/* MEMORY MATCH GAME */}
               {appMode === 'gamesHub' && arcadeGame === 'memory' && (
                 <div className="flex-1 bg-[#3b0764] p-4 flex flex-col justify-between h-full text-white overflow-y-auto">
                   <div className="text-center mt-1">
