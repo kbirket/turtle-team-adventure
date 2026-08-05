@@ -4,8 +4,8 @@ import React, { useState } from 'react';
 const CLOUD_NAME = 'dbvm7hy4d';
 const UPLOAD_PRESET = 'ScavengerHunt';
 
-export default function ScavengerHunt({ onBackToArcade, base }) {
-  const [uploading, setUploading] = useState(false);
+export default function ScavengerHunt({ onBackToArcade, base, childName }) {
+    const [uploading, setUploading] = useState(false);
 
   // Read saved consent synchronously to prevent flicker
   const [facebookConsent, setFacebookConsent] = useState(() => {
@@ -76,6 +76,7 @@ export default function ScavengerHunt({ onBackToArcade, base }) {
             fields: {
               'Photo URL': data.secure_url,
               'Hunt Item': item.label,
+              'Child Name': childName || '',
               'Consent': facebookConsent ? 'Yes' : 'No',
               'Status': 'Pending'
             }

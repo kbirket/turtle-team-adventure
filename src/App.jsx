@@ -1491,6 +1491,7 @@ export default function App() {
               {appMode === 'scavengerHunt' && (
                  <ScavengerHunt 
                   base={base}
+                  childName={childName}
                   onBackToArcade={() => {
                     setAppMode('tour');
                     const idx = tourStops.findIndex((s) => s.type === 'map');
