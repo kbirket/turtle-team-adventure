@@ -715,7 +715,8 @@ export default function App() {
     logEvent('quiz_started');
   };
 
-  const submitBadgeOrder = () => {
+  /* ---------- BADGE SUBMISSION WITH CLOUDINARY UPLOAD ---------- */
+  const submitBadgeOrder = async () => {
     if (!childName.trim()) {
       showToast('Confirm your name first!', 'warn');
       return;
@@ -727,6 +728,37 @@ export default function App() {
 
     setSubmittingBadge(true);
 
+    let uploadedPhotoUrl = null;
+
+    // 1. Upload to Cloudinary IF photo exists & Parent gave permission ('Yes')
+    if (capturedPhoto && photoPermission === true) {
+      try {
+        const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+        const uploadPreset = import.meta.env.VITE_CLOUDINARY_PRESET;
+
+        if (cloudName && uploadPreset) {
+          const formData = new FormData();
+          formData.append('file', rawPhoto || capturedPhoto);
+          formData.append('upload_preset', uploadPreset);
+          formData.append('tags', 'fb_approved,kiosk_selfie');
+
+          const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+            method: 'POST',
+            body: formData
+          });
+
+          const cloudData = await res.json();
+          if (cloudData.secure_url) {
+            uploadedPhotoUrl = cloudData.secure_url;
+            console.log('✅ Photo uploaded to Cloudinary:', uploadedPhotoUrl);
+          }
+        }
+      } catch (err) {
+        console.error('❌ Cloudinary upload error:', err);
+      }
+    }
+
+    // 2. Prepare Airtable Badge Record
     const fields = {
       'Child Name': String(childName).toUpperCase().trim(),
       'Career Selected': String(finalCareer || 'Doctor'),
@@ -735,6 +767,11 @@ export default function App() {
       'Badge Code': String(assignedPin || generateBadgeCode()),
       'Print Status': 'Needs Printing'
     };
+
+    // Attach photo data if permission was granted
+    if (photoPermission === true) {
+      fields['Photo Data'] = uploadedPhotoUrl || capturedPhoto;
+    }
 
     const queueIt = () => {
       const queue = readCache(ORDER_QUEUE_KEY, []);
@@ -757,7 +794,7 @@ export default function App() {
         queueIt();
       } else {
         console.log('✅ BADGE CREATED SUCCESSFULLY:', records[0].id);
-        logEvent('badge_ordered', { career: finalCareer });
+        logEvent('badge_ordered', { career: finalCareer, photoUploaded: !!uploadedPhotoUrl });
       }
       setAppMode('badgeSuccess');
     });
