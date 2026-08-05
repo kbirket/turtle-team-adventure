@@ -442,7 +442,7 @@ export default function App() {
   const formatBadgeTitle = (rawCareer) =>
     rawCareer ? rawCareer.toUpperCase() : 'EXPLORER';
 
-  /* ---------- admin ---------- */
+  /* ---------- admin & photo moderation ---------- */
   const fetchPrintQueue = useCallback(() => {
     base('Badge Orders')
       .select({
@@ -466,12 +466,12 @@ export default function App() {
       });
   }, []);
 
-  const fetchApprovedPhotos = useCallback(() => {
+  const fetchPendingPhotos = useCallback(() => {
     setLoadingPhotos(true);
     base('Badge Orders')
       .select({
-        maxRecords: 20,
-        filterByFormula: "NOT({Photo Data} = '')"
+        maxRecords: 30,
+        filterByFormula: "AND(NOT({Photo Data} = ''), OR({Photo Status} = 'Pending Approval', {Photo Status} = ''))"
       })
       .firstPage((err, records) => {
         setLoadingPhotos(false);
@@ -485,17 +485,34 @@ export default function App() {
             name: r.fields['Child Name'] || 'EXPLORER',
             career: r.fields['Career Selected'] || 'Explorer',
             photo: r.fields['Photo Data'],
-            code: r.fields['Badge Code']
+            code: r.fields['Badge Code'],
+            status: r.fields['Photo Status'] || 'Pending'
           }))
         );
       });
   }, []);
 
+  const handlePhotoModeration = (recordId, newStatus) => {
+    if (!recordId) return;
+
+    base('Badge Orders').update(
+      [{ id: recordId, fields: { 'Photo Status': newStatus } }],
+      (err) => {
+        if (err) {
+          showToast('Could not update photo status.', 'warn');
+          return;
+        }
+        showToast(newStatus === 'Approved' ? 'Photo approved! ✅' : 'Photo rejected. ❌', 'info');
+        setPhotoGallery((prev) => prev.filter((item) => item.id !== recordId));
+      }
+    );
+  };
+
   useEffect(() => {
     if (appMode === 'adminPortal' && adminTab === 'photos') {
-      fetchApprovedPhotos();
+      fetchPendingPhotos();
     }
-  }, [appMode, adminTab, fetchApprovedPhotos]);
+  }, [appMode, adminTab, fetchPendingPhotos]);
 
   const markPrinted = (recordId) => {
     if (!recordId) return;
@@ -798,7 +815,8 @@ export default function App() {
       'Stamps Collected': Number(completedStops?.length || 0),
       'Order Date': new Date().toISOString().split('T')[0],
       'Badge Code': String(assignedPin || generateBadgeCode()),
-      'Print Status': 'Needs Printing'
+      'Print Status': 'Needs Printing',
+      'Photo Status': photoPermission === true ? 'Pending Approval' : 'No Consent'
     };
 
     // Attach photo data if permission was granted
@@ -1366,20 +1384,20 @@ export default function App() {
                     </div>
                   )}
 
-                  {/* PHOTOS TAB IN ADMIN — LIVE REVIEW GALLERY GRID */}
+                  {/* PHOTOS MODERATION TAB IN ADMIN */}
                   {adminTab === 'photos' && (
                     <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-300 flex flex-col gap-2">
                       <div className="flex justify-between items-center">
                         <div>
                           <h3 className="text-[11px] font-black uppercase text-slate-600 tracking-wider">
-                            Approved Kiosk Photos ({photoGallery.length})
+                            Photo Approval Queue ({photoGallery.length})
                           </h3>
                           <p className="text-[10px] text-slate-500">
-                            Selfies captured with parent permission
+                            Review & approve selfies before publishing
                           </p>
                         </div>
                         <button
-                          onClick={fetchApprovedPhotos}
+                          onClick={fetchPendingPhotos}
                           className="text-[10px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded-lg border border-slate-300 active:scale-95"
                         >
                           🔄 Refresh
@@ -1388,20 +1406,20 @@ export default function App() {
 
                       {loadingPhotos ? (
                         <div className="text-center py-8 text-xs font-bold text-slate-500 animate-pulse">
-                          Loading photos...
+                          Loading pending photos...
                         </div>
                       ) : photoGallery.length === 0 ? (
                         <div className="p-6 bg-slate-50 border border-slate-200 rounded-xl text-center">
                           <p className="text-xs text-slate-500 font-medium">
-                            No photos submitted yet! Take a selfie during badge setup.
+                            🎉 All caught up! No photos waiting for approval.
                           </p>
                         </div>
                       ) : (
-                        <div className="grid grid-cols-2 gap-2 max-h-[340px] overflow-y-auto p-1">
+                        <div className="grid grid-cols-2 gap-2.5 max-h-[340px] overflow-y-auto p-1">
                           {photoGallery.map((item) => (
                             <div
                               key={item.id}
-                              className="bg-slate-50 border border-slate-300 p-2 rounded-xl flex flex-col items-center gap-1.5 shadow-sm"
+                              className="bg-slate-50 border border-slate-300 p-2 rounded-xl flex flex-col items-center gap-2 shadow-sm"
                             >
                               <img
                                 src={item.photo}
@@ -1415,6 +1433,22 @@ export default function App() {
                                 <span className="text-[10px] font-mono text-[#5b21b6] font-bold block">
                                   {item.code}
                                 </span>
+                              </div>
+
+                              {/* APPROVAL BUTTONS */}
+                              <div className="grid grid-cols-2 gap-1 w-full pt-1">
+                                <button
+                                  onClick={() => handlePhotoModeration(item.id, 'Rejected')}
+                                  className="py-1.5 bg-rose-500 active:bg-rose-600 text-white font-black text-[10px] uppercase rounded-lg shadow-sm transition-all"
+                                >
+                                  ❌ Reject
+                                </button>
+                                <button
+                                  onClick={() => handlePhotoModeration(item.id, 'Approved')}
+                                  className="py-1.5 bg-emerald-500 active:bg-emerald-600 text-white font-black text-[10px] uppercase rounded-lg shadow-sm transition-all"
+                                >
+                                  ✅ Approve
+                                </button>
                               </div>
                             </div>
                           ))}
