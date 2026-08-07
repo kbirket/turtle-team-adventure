@@ -1339,7 +1339,7 @@ export default function App() {
                       {adminPreviewBadge && (
                         <div className="flex flex-col gap-2">
                           <div
-                            className="w-full max-w-[340px] aspect-[1000/630] mx-auto overflow-hidden relative select-none bg-contain bg-no-repeat bg-center rounded-2xl border border-slate-300 shadow-xl"
+                            className="w-full max-w-[340px] aspect-[1000/630] mx-auto overflow-hidden relative select-none bg-contain bg-no-repeat bg-center rounded-2xl border-2 border-slate-300 shadow-lg ring-1 ring-slate-200"
                             style={{ backgroundImage: `url(/badge-template.png)` }}
                           >
                             <BadgeCard
@@ -1756,7 +1756,7 @@ export default function App() {
                   </button>
 
                   <div
-                    className="w-full max-w-[340px] aspect-[1000/630] mx-auto my-auto overflow-hidden relative flex-shrink-0 select-none bg-contain bg-no-repeat bg-center rounded-2xl shadow-2xl"
+                    className="w-full max-w-[340px] aspect-[1000/630] mx-auto my-auto overflow-hidden relative flex-shrink-0 select-none bg-contain bg-no-repeat bg-center rounded-2xl shadow-2xl border-4 border-white/90 ring-2 ring-purple-400/40"
                     style={{ backgroundImage: `url(/badge-template.png)` }}
                   >
                     <BadgeCard
@@ -2071,7 +2071,7 @@ export default function App() {
                   ) : (
                     <div className="my-auto flex flex-col gap-3">
                       <div
-                        className="w-full max-w-[340px] aspect-[1000/630] mx-auto overflow-hidden relative select-none bg-contain bg-no-repeat bg-center rounded-2xl shadow-2xl"
+                        className="w-full max-w-[340px] aspect-[1000/630] mx-auto overflow-hidden relative select-none bg-contain bg-no-repeat bg-center rounded-2xl shadow-2xl border-4 border-white/90 ring-2 ring-purple-400/40"
                         style={{ backgroundImage: `url(/badge-template.png)` }}
                       >
                         <BadgeCard
