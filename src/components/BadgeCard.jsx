@@ -25,8 +25,8 @@ export default function BadgeCard({
 
   return (
     <>
-      {/* CIRCULAR PHOTO WITH GOLD MEDALLION BORDER */}
-      <div className="absolute top-[24%] left-[4%] w-[33%] aspect-square rounded-full bg-white p-1 border-4 border-[#fbbf24] ring-2 ring-[#b45309]/30 shadow-md flex items-center justify-center overflow-hidden z-10">
+      {/* CIRCULAR PHOTO WITH GOLD MEDALLION BORDER — SHIFTED DOWN & SIZED TO FIT */}
+      <div className="absolute top-[28.5%] left-[5%] w-[30.5%] aspect-square rounded-full bg-white p-0.5 border-4 border-[#fbbf24] ring-2 ring-[#b45309]/20 shadow-md flex items-center justify-center overflow-hidden z-10">
         <img 
           src={avatarSrc || '/characters/doctor/avatar.webp'} 
           alt="" 
