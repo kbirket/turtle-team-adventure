@@ -243,18 +243,18 @@ export default function App() {
   const [gameWon, setGameWon] = useState(false);
   const [arcadeGame, setArcadeGame] = useState(null);
 
-  /* ---------- admin ---------- */
+  /* ---------- admin & moderation queue ---------- */
   const [adminTab, setAdminTab] = useState('queue');
   const [adminName, setAdminName] = useState('');
   const [adminCareer, setAdminCareer] = useState(AVAILABLE_CAREERS[0]);
-const [printQueue, setPrintQueue] = useState([]);
-  const [photoQueue, setPhotoQueue] = useState([]);
-  const [photoFilter, setPhotoFilter] = useState('Pending');
+  const [printQueue, setPrintQueue] = useState([]);
   const [adminPreviewBadge, setAdminPreviewBadge] = useState(null);
   const [showAdminPinModal, setShowAdminPinModal] = useState(false);
   const [adminInputPin, setAdminInputPin] = useState('');
   const [pinError, setPinError] = useState('');
   const [reprintValue, setReprintValue] = useState('');
+  const [photoGallery, setPhotoGallery] = useState([]);
+  const [loadingPhotos, setLoadingPhotos] = useState(false);
 
   /* ---------- modals ---------- */
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -440,7 +440,7 @@ const [printQueue, setPrintQueue] = useState([]);
   const formatBadgeTitle = (rawCareer) =>
     rawCareer ? rawCareer.toUpperCase() : 'EXPLORER';
 
-  /* ---------- admin ---------- */
+  /* ---------- admin & airtable photo moderation ---------- */
   const fetchPrintQueue = useCallback(() => {
     base('Badge Orders')
       .select({
@@ -464,41 +464,53 @@ const [printQueue, setPrintQueue] = useState([]);
       });
   }, []);
 
-  const fetchPhotoQueue = useCallback((status) => {
-    base('Scavenger Photos')
+  const fetchPendingPhotos = useCallback(() => {
+    setLoadingPhotos(true);
+    base('Badge Orders')
       .select({
-        maxRecords: 50,
-        filterByFormula: `{Status} = '${status}'`
+        maxRecords: 30,
+        filterByFormula: "AND(NOT({Photo Data} = ''), OR({Photo Status} = 'Pending Approval', {Photo Status} = ''))"
       })
       .firstPage((err, records) => {
+        setLoadingPhotos(false);
         if (err) {
           console.error('Error fetching photos:', err);
           return;
         }
-        setPhotoQueue(
+        setPhotoGallery(
           records.map((r) => ({
             id: r.id,
-            url: r.fields['Photo URL'] || '',
-            item: r.fields['Hunt Item'] || '',
-            name: r.fields['Child Name'] || '',
-            consent: r.fields['Consent'] || 'No'
+            name: r.fields['Child Name'] || 'EXPLORER',
+            career: r.fields['Career Selected'] || 'Explorer',
+            photo: r.fields['Photo Data'],
+            code: r.fields['Badge Code'],
+            status: r.fields['Photo Status'] || 'Pending'
           }))
         );
       });
   }, []);
 
-  const setPhotoStatus = (recordId, status) => {
-    base('Scavenger Photos').update(
-      [{ id: recordId, fields: { Status: status } }],
+  const handlePhotoModeration = (recordId, newStatus) => {
+    if (!recordId) return;
+
+    base('Badge Orders').update(
+      [{ id: recordId, fields: { 'Photo Status': newStatus } }],
       (err) => {
         if (err) {
-          showToast('Could not update photo.', 'warn');
+          showToast('Could not update photo status.', 'warn');
           return;
         }
-        fetchPhotoQueue(photoFilter);
+        showToast(newStatus === 'Approved' ? 'Photo approved! ✅' : 'Photo rejected. ❌', 'info');
+        setPhotoGallery((prev) => prev.filter((item) => item.id !== recordId));
       }
     );
   };
+
+  useEffect(() => {
+    if (appMode === 'adminPortal' && adminTab === 'photos') {
+      fetchPendingPhotos();
+    }
+  }, [appMode, adminTab, fetchPendingPhotos]);
 
   const markPrinted = (recordId) => {
     if (!recordId) return;
@@ -618,15 +630,9 @@ const [printQueue, setPrintQueue] = useState([]);
     setGameWon(false);
   };
 
-useEffect(() => {
+  useEffect(() => {
     if (appMode === 'adminPortal') fetchPrintQueue();
   }, [appMode, fetchPrintQueue]);
-
-  useEffect(() => {
-    if (appMode === 'adminPortal' && adminTab === 'photos') {
-      fetchPhotoQueue(photoFilter);
-    }
-  }, [appMode, adminTab, photoFilter, fetchPhotoQueue]);
 
   const handleCardClick = (index) => {
     if (
@@ -805,7 +811,8 @@ useEffect(() => {
       'Stamps Collected': Number(completedStops?.length || 0),
       'Order Date': new Date().toISOString().split('T')[0],
       'Badge Code': String(assignedPin || generateBadgeCode()),
-      'Print Status': 'Needs Printing'
+      'Print Status': 'Needs Printing',
+      'Photo Status': photoPermission === true ? 'Pending Approval' : 'No Consent'
     };
 
     if (photoPermission === true) {
@@ -902,6 +909,9 @@ useEffect(() => {
     );
   }
 
+  /* ---------- Date Check for Fair Booth Pickup (Up to Aug 15, 2026) ---------- */
+  const isFairTime = new Date() <= new Date('2026-08-15T23:59:59');
+
   /* ---------- what the printer renders ---------- */
   const isAdmin = appMode === 'adminPortal';
   const activePrintName = isAdmin
@@ -917,8 +927,6 @@ useEffect(() => {
     ? (adminPreviewBadge?.photo || capturedPhoto)
     : capturedPhoto;
   const printingBacks = isAdmin && adminTab === 'backs';
-
-  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dbvm7hy4d';
 
   return (
     <div
@@ -1374,89 +1382,76 @@ useEffect(() => {
                     </div>
                   )}
 
-{/* PHOTOS TAB — APPROVAL QUEUE */}
+                  {/* PHOTOS MODERATION TAB IN ADMIN */}
                   {adminTab === 'photos' && (
-                    <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-300 flex flex-col gap-3">
-                      <div className="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-xl border border-slate-300">
-                        {['Pending', 'Approved', 'Rejected'].map((s) => (
-                          <button
-                            key={s}
-                            onClick={() => setPhotoFilter(s)}
-                            className={`py-2 text-[11px] font-black rounded-lg transition-all ${FOCUS_CARD} ${
-                              photoFilter === s ? 'bg-[#5b21b6] text-white shadow' : 'text-slate-700'
-                            }`}
-                          >
-                            {s}
-                          </button>
-                        ))}
+                    <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-300 flex flex-col gap-2">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h3 className="text-[11px] font-black uppercase text-slate-600 tracking-wider">
+                            Photo Approval Queue ({photoGallery.length})
+                          </h3>
+                          <p className="text-[10px] text-slate-500">
+                            Review & approve selfies in Airtable
+                          </p>
+                        </div>
+                        <button
+                          onClick={fetchPendingPhotos}
+                          className="text-[10px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded-lg border border-slate-300 active:scale-95"
+                        >
+                          🔄 Refresh
+                        </button>
                       </div>
 
-                      {photoQueue.length === 0 && (
-                        <p className="text-xs text-slate-600 py-6 text-center">
-                          No {photoFilter.toLowerCase()} photos.
-                        </p>
-                      )}
-
-                      <div className="flex flex-col gap-3 max-h-[420px] overflow-y-auto">
-                        {photoQueue.map((p) => (
-                          <div key={p.id} className="border border-slate-300 rounded-xl overflow-hidden">
-                            <img
-                              src={p.url}
-                              alt={p.item}
-                              className="w-full h-40 object-cover bg-slate-100"
-                            />
-                            <div className="p-2.5 flex flex-col gap-2">
-                              <div className="flex justify-between items-start gap-2">
-                                <div className="text-left min-w-0">
-                                  <p className="text-xs font-black text-slate-800 truncate">
-                                    {p.name || 'No name given'}
-                                  </p>
-                                  <p className="text-[11px] text-slate-600 truncate">{p.item}</p>
-                                </div>
-                                <span className={`text-[10px] font-black px-2 py-1 rounded-lg flex-shrink-0 ${
-                                  p.consent === 'Yes'
-                                    ? 'bg-emerald-100 text-emerald-800'
-                                    : 'bg-rose-100 text-rose-800'
-                                }`}>
-                                  {p.consent === 'Yes' ? 'CONSENT: YES' : 'CONSENT: NO'}
+                      {loadingPhotos ? (
+                        <div className="text-center py-8 text-xs font-bold text-slate-500 animate-pulse">
+                          Loading pending photos...
+                        </div>
+                      ) : photoGallery.length === 0 ? (
+                        <div className="p-6 bg-slate-50 border border-slate-200 rounded-xl text-center">
+                          <p className="text-xs text-slate-500 font-medium">
+                            🎉 All caught up! No photos waiting for approval.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-2.5 max-h-[340px] overflow-y-auto p-1">
+                          {photoGallery.map((item) => (
+                            <div
+                              key={item.id}
+                              className="bg-slate-50 border border-slate-300 p-2 rounded-xl flex flex-col items-center gap-2 shadow-sm"
+                            >
+                              <img
+                                src={item.photo}
+                                alt={item.name}
+                                className="w-full aspect-square object-cover rounded-lg bg-slate-200 border border-slate-200"
+                              />
+                              <div className="text-center w-full overflow-hidden">
+                                <span className="text-xs font-black text-slate-800 truncate block">
+                                  {item.name}
+                                </span>
+                                <span className="text-[10px] font-mono text-[#5b21b6] font-bold block">
+                                  {item.code}
                                 </span>
                               </div>
 
-                              {p.consent !== 'Yes' && (
-                                <p className="text-[10px] font-bold text-rose-700 bg-rose-50 rounded-lg py-1.5 px-2 text-left">
-                                  Parent declined Facebook use. Do not post.
-                                </p>
-                              )}
-
-                              <div className="grid grid-cols-3 gap-1.5">
-                                <a 
-                                  href={p.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className={`py-2 text-[11px] font-black uppercase rounded-lg bg-slate-100 text-slate-800 text-center ${FOCUS_CARD}`}
-                                >
-                                  Open
-                                </a>
+                              {/* APPROVAL BUTTONS */}
+                              <div className="grid grid-cols-2 gap-1 w-full pt-1">
                                 <button
-                                  onClick={() => setPhotoStatus(p.id, 'Approved')}
-                                  disabled={p.consent !== 'Yes'}
-                                  className={`py-2 text-[11px] font-black uppercase rounded-lg text-white disabled:opacity-30 ${FOCUS_CARD} ${
-                                    p.consent === 'Yes' ? 'bg-emerald-600 active:bg-emerald-700' : 'bg-slate-400'
-                                  }`}
+                                  onClick={() => handlePhotoModeration(item.id, 'Rejected')}
+                                  className="py-1.5 bg-rose-500 active:bg-rose-600 text-white font-black text-[10px] uppercase rounded-lg shadow-sm transition-all"
                                 >
-                                  Approve
+                                  ❌ Reject
                                 </button>
                                 <button
-                                  onClick={() => setPhotoStatus(p.id, 'Rejected')}
-                                  className={`py-2 text-[11px] font-black uppercase rounded-lg bg-rose-600 active:bg-rose-700 text-white ${FOCUS_CARD}`}
+                                  onClick={() => handlePhotoModeration(item.id, 'Approved')}
+                                  className="py-1.5 bg-emerald-500 active:bg-emerald-600 text-white font-black text-[10px] uppercase rounded-lg shadow-sm transition-all"
                                 >
-                                  Reject
+                                  ✅ Approve
                                 </button>
                               </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -1579,9 +1574,7 @@ useEffect(() => {
 
               {/* SCAVENGER HUNT (CAMERA TAB) */}
               {appMode === 'scavengerHunt' && (
-                 <ScavengerHunt 
-                  base={base}
-                  childName={childName}
+                <ScavengerHunt 
                   onBackToArcade={() => {
                     setAppMode('tour');
                     const idx = tourStops.findIndex((s) => s.type === 'map');
@@ -1677,58 +1670,68 @@ useEffect(() => {
 
               {/* CAREER INFO */}
               {appMode === 'careerInfo' && (
-                <div className="flex-1 bg-[#3b0764] p-5 flex flex-col justify-between overflow-y-auto h-full">
-                  <div className="text-center">
+                <div className="flex-1 bg-[#3b0764] p-4 sm:p-5 flex flex-col justify-between overflow-y-auto h-full">
+                  <div className="text-center flex-shrink-0">
                     <img
                       src={getDynamicArtwork(finalCareer)}
                       alt=""
-                      className="w-24 h-24 object-contain mx-auto"
+                      className="w-20 h-20 sm:w-24 sm:h-24 object-contain mx-auto"
                     />
-                    <h2 className="text-xl font-black text-white mt-1">{finalCareer}</h2>
-                    <p className="text-xs font-bold text-[#fbbf24] uppercase tracking-wide mt-0.5">
+                    <h2 className="text-lg sm:text-xl font-black text-white mt-1">{finalCareer}</h2>
+                    <p className="text-[11px] sm:text-xs font-bold text-[#fbbf24] uppercase tracking-wide mt-0.5">
                       {careerInfo[finalCareer]?.headline || 'A real job at Patterson Health Center'}
                     </p>
                   </div>
 
-                  <div className="flex flex-col gap-3 my-4">
+                  <div className="flex flex-col gap-2.5 my-3 overflow-y-auto">
                     {careerInfo[finalCareer]?.description && (
-                      <div className="bg-white rounded-2xl p-3.5 border-l-4 border-[#22d3ee] shadow-lg">
-                        <h3 className="text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1">
+                      <div className="bg-white rounded-2xl p-3 border-l-4 border-[#22d3ee] shadow-lg">
+                        <h3 className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-0.5">
                           What they do
                         </h3>
-                        <p className="text-sm text-slate-800 leading-relaxed">
+                        <p className="text-xs sm:text-sm text-slate-800 leading-relaxed">
                           {careerInfo[finalCareer].description}
                         </p>
                       </div>
                     )}
                     {careerInfo[finalCareer]?.training && (
-                      <div className="bg-white rounded-2xl p-3.5 border-l-4 border-[#a78bfa] shadow-lg">
-                        <h3 className="text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1">
+                      <div className="bg-white rounded-2xl p-3 border-l-4 border-[#a78bfa] shadow-lg">
+                        <h3 className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-0.5">
                           How you get there
                         </h3>
-                        <p className="text-sm text-slate-800 leading-relaxed">
+                        <p className="text-xs sm:text-sm text-slate-800 leading-relaxed">
                           {careerInfo[finalCareer].training}
                         </p>
                       </div>
                     )}
                     {careerInfo[finalCareer]?.local && (
-                      <div className="bg-white rounded-2xl p-3.5 border-l-4 border-[#fbbf24] shadow-lg">
-                        <h3 className="text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1">
+                      <div className="bg-white rounded-2xl p-3 border-l-4 border-[#fbbf24] shadow-lg">
+                        <h3 className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-0.5">
                           Right here in Harper County
                         </h3>
-                        <p className="text-sm text-slate-800 leading-relaxed">
+                        <p className="text-xs sm:text-sm text-slate-800 leading-relaxed">
                           {careerInfo[finalCareer].local}
                         </p>
                       </div>
                     )}
                   </div>
 
-                  <button
-                    onClick={() => setAppMode('avatarBuilder')}
-                    className={`w-full min-h-[56px] py-3 rounded-2xl uppercase text-base tracking-wide ${BTN_CORAL} ${FOCUS}`}
-                  >
-                    Build My Badge ➔
-                  </button>
+                  {/* NAVIGATION BUTTONS */}
+                  <div className="flex flex-col gap-2 flex-shrink-0 mt-1">
+                    <button
+                      onClick={() => setAppMode('avatarBuilder')}
+                      className={`w-full min-h-[50px] py-3 rounded-2xl uppercase text-xs sm:text-sm tracking-wide ${BTN_CORAL} ${FOCUS}`}
+                    >
+                      Build My Badge as {finalCareer} ➔
+                    </button>
+
+                    <button
+                      onClick={() => setAppMode(careerResults.length > 0 ? 'careerResultsView' : 'careerQuiz')}
+                      className={`w-full py-2.5 rounded-xl uppercase text-xs font-bold text-white/80 hover:text-white bg-white/10 hover:bg-white/20 border border-white/20 transition-all ${FOCUS}`}
+                    >
+                      ◀ View Other Matches
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -1817,7 +1820,7 @@ useEffect(() => {
                 </div>
               )}
 
-              {/* SUCCESS */}
+              {/* SUCCESS / BADGE ORDERED SCREEN */}
               {appMode === 'badgeSuccess' && (
                 <div className="flex-1 bg-[#3b0764] p-6 flex flex-col justify-center items-center text-center h-full text-white">
                   <div className="w-24 h-24 bg-[#fbbf24] rounded-full text-[#3b0764] flex items-center justify-center text-5xl shadow-2xl animate-bounce mb-5">
@@ -1825,14 +1828,15 @@ useEffect(() => {
                   </div>
                   <h2 className="text-3xl font-black">Badge Ordered!</h2>
                   <p className="text-sm mt-3 px-2 leading-relaxed text-white/85">
-                    Nice work, <strong>{childName}</strong>! Show this code at the booth
-                    to pick up your printed badge:
+                    Nice work, <strong>{childName}</strong>! {isFairTime ? 'Show this code at the Patterson Health Center booth to pick up your printed badge:' : 'Printed badges are not currently available.'}
                   </p>
-                  <div className="mt-4 bg-white rounded-2xl px-6 py-4 shadow-2xl">
-                    <span className="text-3xl font-mono font-black text-[#3b0764] tracking-widest">
-                      {assignedPin}
-                    </span>
-                  </div>
+                  {isFairTime && (
+                    <div className="mt-4 bg-white rounded-2xl px-6 py-4 shadow-2xl">
+                      <span className="text-3xl font-mono font-black text-[#3b0764] tracking-widest">
+                        {assignedPin}
+                      </span>
+                    </div>
+                  )}
                   {pendingCount > 0 && (
                     <p className="text-[11px] text-[#fbbf24] mt-3 font-black">
                       Saved on this tablet — it will send when wifi returns.
@@ -2104,7 +2108,7 @@ useEffect(() => {
         >
           {[
             {
-              icon: '🗺️', label: 'Map', aria: 'Go to hospital map',
+              icon: 'MAP', label: 'Map', aria: 'Go to hospital map',
               onClick: () => {
                 setAppMode('tour');
                 const idx = tourStops.findIndex((s) => s.type === 'map');
