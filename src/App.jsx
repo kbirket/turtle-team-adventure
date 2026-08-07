@@ -763,7 +763,7 @@ export default function App() {
     logEvent('quiz_started');
   };
 
-  /* ---------- BADGE SUBMISSION WITH CLOUDINARY UPLOAD ---------- */
+  /* ---------- BULLETPROOF BADGE SUBMISSION ---------- */
   const submitBadgeOrder = async () => {
     if (!childName.trim()) {
       showToast('Confirm your name first!', 'warn');
@@ -837,6 +837,7 @@ export default function App() {
       setSubmittingBadge(false);
       if (err) {
         console.error('❌ AIRTABLE API ERROR:', err);
+        showToast('Airtable Error: Saved offline', 'warn');
         queueIt();
       } else {
         console.log('✅ BADGE CREATED SUCCESSFULLY:', records[0].id);
