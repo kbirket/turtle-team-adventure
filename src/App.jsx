@@ -2108,7 +2108,7 @@ export default function App() {
         >
           {[
             {
-              icon: 'MAP', label: 'Map', aria: 'Go to hospital map',
+              icon: '🗺️', label: 'Map', aria: 'Go to hospital map',
               onClick: () => {
                 setAppMode('tour');
                 const idx = tourStops.findIndex((s) => s.type === 'map');
