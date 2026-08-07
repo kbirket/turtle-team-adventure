@@ -25,8 +25,13 @@ export default function BadgeCard({
 
   return (
     <>
-      <div className="absolute top-[26%] left-[4%] w-[32.5%] h-[60%] flex items-center justify-center">
-        <img src={avatarSrc} alt="" className="w-full h-full object-contain" />
+      {/* PHOTO CONTAINER WITH RESTORED BORDER & FRAME */}
+      <div className="absolute top-[25%] left-[4.5%] w-[31%] aspect-square bg-white p-1 rounded-xl border-2 border-[#0c2340] shadow-md flex items-center justify-center overflow-hidden z-10">
+        <img 
+          src={avatarSrc || '/characters/doctor/avatar.webp'} 
+          alt="" 
+          className="w-full h-full object-cover rounded-lg" 
+        />
       </div>
 
       <div className="absolute top-[26.5%] left-[39.5%] right-[19.5%] text-center">
