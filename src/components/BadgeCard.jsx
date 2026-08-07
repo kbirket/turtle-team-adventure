@@ -25,12 +25,12 @@ export default function BadgeCard({
 
   return (
     <>
-      {/* PHOTO CONTAINER WITH RESTORED BORDER & FRAME */}
-      <div className="absolute top-[25%] left-[4.5%] w-[31%] aspect-square bg-white p-1 rounded-xl border-2 border-[#0c2340] shadow-md flex items-center justify-center overflow-hidden z-10">
+      {/* CIRCULAR PHOTO WITH GOLD MEDALLION BORDER */}
+      <div className="absolute top-[24%] left-[4%] w-[33%] aspect-square rounded-full bg-white p-1 border-4 border-[#fbbf24] ring-2 ring-[#b45309]/30 shadow-md flex items-center justify-center overflow-hidden z-10">
         <img 
           src={avatarSrc || '/characters/doctor/avatar.webp'} 
           alt="" 
-          className="w-full h-full object-cover rounded-lg" 
+          className="w-full h-full object-cover rounded-full" 
         />
       </div>
 
@@ -41,7 +41,6 @@ export default function BadgeCard({
       </div>
 
       <div className="absolute top-[48.5%] left-[39.5%] right-[19.5%] text-center">
-        {/* Replaced 'truncate' with whitespace-nowrap and dynamic getTitleSize */}
         <div className={`${getTitleSize(careerTitle)} text-[#d93856] font-black uppercase leading-none whitespace-nowrap`}>
           {careerTitle}
         </div>
